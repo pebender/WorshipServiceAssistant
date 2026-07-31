@@ -1,0 +1,94 @@
+
+[FILES]
+cshelp.h
+cshelp.txt
+topic.h
+topic.ali
+CSS\MicrosoftOfficeHelp.css
+Script\Script.js
+HTML\WSA.htm
+HTML\WSA\HowTo.htm
+HTML\WSA\HowTo\EquipmentSetup.htm
+HTML\WSA\HowTo\SongCreate.htm
+HTML\WSA\HowTo\SongCategorize.htm
+HTML\WSA\HowTo\SongSort.htm
+HTML\WSA\HowTo\SongIndex.htm
+HTML\WSA\HowTo\SlideDisplay.htm
+HTML\WSA\HowTo\ManualPresentationDisplay.htm
+HTML\WSA\HowTo\TimedPresentationDisplay.htm
+HTML\WSA\CommandBar.htm
+HTML\WSA\CommandBar\Navigator.htm
+HTML\WSA\CommandBar\Navigator\General.htm
+HTML\WSA\CommandBar\Navigator\General\Exit.htm
+HTML\WSA\CommandBar\Navigator\General\Help.htm
+HTML\WSA\CommandBar\Navigator\PresentationSelection.htm
+HTML\WSA\CommandBar\Navigator\PresentationSelection\Title.htm
+HTML\WSA\CommandBar\Navigator\PresentationSelection\Prev.htm
+HTML\WSA\CommandBar\Navigator\PresentationSelection\Next.htm
+HTML\WSA\CommandBar\Navigator\SlideSelection.htm
+HTML\WSA\CommandBar\Navigator\SlideSelection\Number.htm
+HTML\WSA\CommandBar\Navigator\SlideSelection\Title.htm
+HTML\WSA\CommandBar\Navigator\SlideSelection\Clear.htm
+HTML\WSA\CommandBar\Navigator\SlideSelection\List.htm
+HTML\WSA\CommandBar\Navigator\SlideShow.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\Load.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\Hide.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\Run.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\Pause.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\NextEffect.htm
+HTML\WSA\CommandBar\Navigator\SlideShow\PrevEffect.htm
+HTML\WSA\CommandBar\Load.htm
+HTML\WSA\CommandBar\Hide.htm
+HTML\WSA\CommandBar\SongEdit.htm
+HTML\WSA\CommandBar\SongEdit\Category.htm
+HTML\WSA\CommandBar\SongEdit\Sort.htm
+HTML\WSA\CommandBar\SongEdit\Index.htm
+HTML\WSA\CommandBar\Debug.htm
+HTML\WSA\CommandBar\Debug\SSWDisplay.htm
+HTML\WSA\CommandBar\Debug\SSWSize.htm
+HTML\WSA\CommandBar\Help.htm
+HTML\WSA\CommandBar\Help\Help.htm
+HTML\WSA\CommandBar\Help\HelpHowTo.htm
+HTML\WSA\CommandBar\Help\HelpCommandBar.htm
+HTML\WSA\CommandBar\Help\HelpCopyright.htm
+HTML\WSA\CommandBar\Help\HelpLicense.htm
+HTML\WSA\CommandBar\Help\Debug.htm
+HTML\WSA\CommandBar\Help\VisitHomepage.htm
+HTML\WSA\CommandBar\Help\EmailAuthor.htm
+HTML\WSA\CommandBar\Help\About.htm
+HTML\WSA\Copyright.htm
+HTML\WSA\License.htm
+
+[ALIAS]
+#include Topic.ali
+
+[MAP]
+#include Topic.h
+
+[TEXT POPUPS]
+cshelp.h
+cshelp.txt
+
+[INFOTYPES]
+
+[OPTIONS]
+Auto Index=Yes
+Binary TOC=Yes
+Compatibility=1.1 or later
+Compiled File=..\..\WorshipServiceAssistant.chm
+Contents File=WorshipServiceAssistant.hhc
+Default Window=WSA
+Default Topic=HTML\WSA.htm
+Display compile progress=No
+Enhanced decompilation=Yes
+Error log file=
+Full-text search=Yes
+Index File=WorshipServiceAssistant.hhk
+Language=0x409 English (United States)
+Title=Worship Service Assistant
+Binary Index=Yes
+Default Font=
+Create CHI file=No
+
+[WINDOWS]
+WSA="Worship Service Assistant","WorshipServiceAssistant.hhc","WorshipServiceAssistant.hhk","HTML\WSA.htm","HTML\WSA.htm",,,,,0x20520,300,0x204E,[0,0,750,550],0xB0000,,,,,,0

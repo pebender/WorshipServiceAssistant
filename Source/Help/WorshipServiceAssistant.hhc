@@ -1,0 +1,250 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD>
+<BODY>
+   <OBJECT type="text/site properties">
+     <param name="Window Styles" value="0x800025">
+     <param name="comment" value="title:Online Help">
+     <param name="comment" value="base:index.htm">
+   </OBJECT>
+   <UL>
+      <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Worship Service Assistant">
+            <param name="Local" value="HTML\WSA.htm">
+          </OBJECT>
+      <UL>
+         <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="How To ...">
+               <param name="Local" value="HTML\WSA\HowTo.htm">
+             </OBJECT>
+         <UL>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Set Up the Equipment">
+                  <param name="Local" value="HTML\WSA\HowTo\EquipmentSetup.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Create a Song File">
+                  <param name="Local" value="HTML\WSA\HowTo\SongCreate.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Categorize Songs">
+                  <param name="Local" value="HTML\WSA\HowTo\SongCategorize.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Sort Songs">
+                  <param name="Local" value="HTML\WSA\HowTo\SongSort.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Create a Song Index">
+                  <param name="Local" value="HTML\WSA\HowTo\SongIndex.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Display a Slide">
+                  <param name="Local" value="HTML\WSA\HowTo\SlideDisplay.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Display a Manual Presentations">
+                  <param name="Local" value="HTML\WSA\HowTo\ManualPresentationDisplay.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Display a Timed Presentations">
+                  <param name="Local" value="HTML\WSA\HowTo\TimedPresentationDisplay.htm">
+                </OBJECT>
+         </UL>
+         <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="command bar">
+               <param name="Local" value="HTML\WSA\CommandBar.htm">
+             </OBJECT>
+         <UL>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Navigator button">
+                  <param name="Local" value="HTML\WSA\CommandBar\Navigator.htm">
+                </OBJECT>
+            <UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="General frame">
+                     <param name="Local" value="HTML\WSA\CommandBar\Navigator\General.htm">
+                   </OBJECT>
+               <UL>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Exit button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\General\Exit.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Help button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\General\Help.htm">
+                      </OBJECT>
+               </UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Presentation Selection frame">
+                     <param name="Local" value="HTML\WSA\CommandBar\Navigator\PresentationSelection.htm">
+                   </OBJECT>
+               <UL>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Title display">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\PresentationSelection\Title.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Prev button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\PresentationSelection\Prev.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Next button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\PresentationSelection\Next.htm">
+                      </OBJECT>
+               </UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Slide Selection frame">
+                     <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideSelection.htm">
+                   </OBJECT>
+               <UL>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Number display">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideSelection\Number.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Title display">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideSelection\Title.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Clear button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideSelection\Clear.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="List display">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideSelection\List.htm">
+                      </OBJECT>
+               </UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Slide Show frame">
+                     <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow.htm">
+                   </OBJECT>
+               <UL>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Load button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\Load.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Hide/Show button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\Hide.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Run button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\Run.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Pause button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\Pause.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Prev Effect button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\PrevEffect.htm">
+                      </OBJECT>
+                  <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Next Effect button">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\NextEffect.htm">
+                      </OBJECT>
+               </UL>
+            </UL>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Load button">
+                  <param name="Local" value="HTML\WSA\CommandBar\Load.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Hide button">
+                  <param name="Local" value="HTML\WSA\CommandBar\Hide.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Song Edit menu">
+                  <param name="Local" value="HTML\WSA\CommandBar\SongEdit.htm">
+                </OBJECT>
+            <UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Set Category menu">
+                     <param name="Local" value="HTML\WSA\CommandBar\SongEdit\Category.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Sort menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\SongEdit\Sort.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Create Index menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\SongEdit\Index.htm">
+                   </OBJECT>
+            </UL>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Category display">
+                  <param name="Local" value="HTML\WSA\CommandBar\Category.htm">
+                </OBJECT>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Debug menu">
+                  <param name="Local" value="HTML\WSA\CommandBar\Debug.htm">
+                </OBJECT>
+            <UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="SSW Display menu">
+                     <param name="Local" value="HTML\WSA\CommandBar\Debug\SSWDisplay.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="SSW Size menu">
+                     <param name="Local" value="HTML\WSA\CommandBar\Debug\SSWSize.htm">
+                   </OBJECT>
+            </UL>
+            <LI><OBJECT type="text/sitemap">
+                  <param name="Name" value="Help menu">
+                  <param name="Local" value="HTML\WSA\CommandBar\Help.htm">
+                </OBJECT>
+            <UL>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Help menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\Help.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Help on How To ... menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpHowTo.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Help on Command Bar menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCommandBar.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Help on Copyright menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyright.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Help on License menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpLicense.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Debug menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\Debug.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Visit the Homepage menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\VisitHomepage.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Email the Author menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\EmailAuthor.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="About menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\About.htm">
+                   </OBJECT>
+            </UL>
+         </UL>
+         <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="Copyright">
+               <param name="Local" value="HTML\WSA\Copyright.htm">
+             </OBJECT>
+         <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="License">
+               <param name="Local" value="HTML\WSA\License.htm">
+             </OBJECT>
+      </UL>
+   </UL>
+</BODY>
+</HTML>
