@@ -133,7 +133,7 @@ Private HelpDebugControl            As Office.CommandBarButton
 '-------------------------------------------------------------------------------
 Public Sub Menu_Unload()
     Dim Bar As Office.CommandBar
-    Dim CONTROL As Office.CommandBarControl
+    Dim Control As Office.CommandBarControl
     
     '
     ' Uninstall any "Worship Service Assistant" command bars.
@@ -147,10 +147,10 @@ Public Sub Menu_Unload()
     Next
     For Each Bar In Application.CommandBars
         If (Bar.BuiltIn = False) Then
-            For Each CONTROL In Bar.controls
-                If (CONTROL.BuiltIn = False) Then
-                    If (Left(CONTROL.Tag, Len(MenuName)) = MenuName) Then
-                        CONTROL.Delete
+            For Each Control In Bar.controls
+                If (Control.BuiltIn = False) Then
+                    If (Left(Control.Tag, Len(MenuName)) = MenuName) Then
+                        Control.Delete
                     End If
                 End If
             Next

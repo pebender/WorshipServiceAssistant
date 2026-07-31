@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} NavigatorForm 
    Caption         =   "Navigator"
-   ClientHeight    =   5625
+   ClientHeight    =   5700
    ClientLeft      =   45
    ClientTop       =   330
-   ClientWidth     =   5190
+   ClientWidth     =   5310
    OleObjectBlob   =   "NavigatorForm.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -72,6 +72,15 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0003:
+'     (1) Fixed errors in control tip text.
+'     (2) Fixed errors in form re-sizing in UpdateFormSize.
+'     (3) Changed LoadPresentationView and UnloadPresentationView
+'         so that the slide miniture window will not be displayed and
+'         so that the slides will zoom to fit.
+'     (4) Changed form so that it does not resize based on page.
+'     (5) Changed SlideShowLoad so that transitions between presentations
+'         would be more seamless.
 '   1.01.0002:
 '     (1) Added banner color support.
 '     (2) Replaced NavigatorForm with Me.
@@ -134,6 +143,8 @@ Private NavigatorFormLoaded As Boolean
 ' to be the active window.  During this time, the focus must be unlocked.
 '
 Private NavigatorFormLocked As Boolean
+
+Private ActiveSlideShow As PowerPoint.SlideShowWindow
 
 '===============================================================================
 ' Public Subroutines and Functions.
@@ -373,6 +384,21 @@ Private Sub UpdateBannerControls(ByVal W As PowerPoint.DocumentWindow)
         Me.ControlBannerShowHide.Caption = "Show"
     End If
     
+    '
+    ' Set banner color name colors.
+    '
+    If (Banner.Enabled = True) Then
+        With Me.ControlBannerColorName
+            .BackColor = RGB(0, 0, 0)
+            .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
+        End With
+    Else
+        With Me.ControlBannerColorName
+            .BackColor = RGB(0, 0, 0)
+            .ForeColor = RGB(0, 0, 0)
+        End With
+    End If
+    
     If (Banner.Enabled = False) Then
         Me.ControlBannerShowLoad.Enabled = False
         Me.ControlBannerShowHide.Enabled = False
@@ -402,7 +428,6 @@ Private Sub GeneralNextPage(ByVal W As PowerPoint.DocumentWindow)
     NavigatorFormLocked = True
     
     UpdateControls W
-    UpdateFormSize
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -415,19 +440,36 @@ Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
         Me.ControlSlideSelectionTitle.Caption = ""
         UpdateSlideList W
     End If
+        
+    Me.Hide
     
+    '
+    ' Create slide show if one does not exist.
+    '
     If (ActiveSlideShowExists(W.Presentation) = False) Then
-        Me.Hide
-        SlideShow_End
         SlideShow_Begin W
         Banner.Apply W.Presentation.SlideShowWindow
-    Else
-        Me.Hide
-        W.Presentation.SlideShowWindow.Activate
     End If
     
     SlideShow_Load W
+    
+    W.Presentation.SlideShowWindow.Activate
         
+    If (Not (W.Presentation.SlideShowWindow Is ActiveSlideShow)) Then
+        Set ActiveSlideShow = W.Presentation.SlideShowWindow
+        '
+        ' Black other slide shows.
+        ' This will stop the slide shows from running.
+        '
+        Dim SSW As PowerPoint.SlideShowWindow
+        For Each SSW In Application.SlideShowWindows
+            If ((Not (SSW Is W.Presentation.SlideShowWindow)) And _
+                (Not Banner.IsBanner(SSW))) Then
+                SSW.View.State = ppSlideShowBlackScreen
+            End If
+        Next
+    End If
+    
     W.Activate
     
     UpdateControls W
@@ -686,29 +728,6 @@ Private Sub BannerShowHide(ByVal W As PowerPoint.DocumentWindow)
     UpdateControls W
 End Sub
 
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub BannerConfigurationBannerColorInitialize()
-    Dim Color(6, 3) As Variant
-    
-    Color(0, 0) = "Red":     Color(0, 1) = 255: Color(0, 2) = 0:   Color(0, 3) = 0
-    Color(1, 0) = "Green":   Color(1, 1) = 0:   Color(1, 2) = 255: Color(1, 3) = 0
-    Color(2, 0) = "Blue":    Color(2, 1) = 0:   Color(2, 2) = 0:   Color(2, 3) = 255
-    Color(3, 0) = "Yellow":  Color(3, 1) = 255: Color(3, 2) = 255: Color(3, 3) = 0
-    Color(4, 0) = "Magenta": Color(4, 1) = 255: Color(4, 2) = 0:   Color(4, 3) = 255
-    Color(5, 0) = "Cyan":    Color(5, 1) = 0:   Color(5, 2) = 255: Color(5, 3) = 255
-    Color(6, 0) = "White":   Color(6, 1) = 255: Color(6, 2) = 255: Color(6, 3) = 255
-    
-    With Me.ControlBannerColorName
-        .List = Color
-        .ListIndex = 1
-        .BackColor = RGB(0, 0, 0)
-        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
-    End With
-End Sub
-
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
@@ -722,9 +741,8 @@ Private Sub BannerColorPrev(ByVal W As PowerPoint.DocumentWindow)
         Else
             .ListIndex = .ListCount - 1
         End If
-        .BackColor = RGB(0, 0, 0)
-        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
     End With
+    UpdateControls W
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -740,9 +758,8 @@ Private Sub BannerColorNext(ByVal W As PowerPoint.DocumentWindow)
         Else
             .ListIndex = 0
         End If
-        .BackColor = RGB(0, 0, 0)
-        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
     End With
+    UpdateControls W
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -960,6 +977,8 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim ViewType As PowerPoint.PpViewType
     Dim SplitHorizontal As Long
     Dim SplitVertical As Long
+    Dim View_DisplaySlideMiniature As Office.MsoTriState
+    Dim View_ZoomToFit As Office.MsoTriState
     Dim W As PowerPoint.DocumentWindow
     Dim Saved As Office.MsoTriState
     
@@ -970,16 +989,20 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
     '
     WindowState = W.WindowState
     ViewType = W.ViewType
-    If (ViewType = ppViewNormal) Then
+    If (ViewType = PowerPoint.ppViewNormal) Then
         SplitHorizontal = W.SplitHorizontal
         SplitVertical = W.SplitVertical
     End If
+    View_DisplaySlideMiniature = W.View.DisplaySlideMiniature
+    View_ZoomToFit = W.View.ZoomToFit
     
     Saved = P.Saved
     P.Tags.Add "WorshipServiceAssistant_Window_WindowState", WindowState
     P.Tags.Add "WorshipServiceAssistant_Window_ViewType", ViewType
     P.Tags.Add "WorshipServiceAssistant_Window_SplitHorizontal", SplitHorizontal
     P.Tags.Add "WorshipServiceAssistant_Window_SplitVertical", SplitVertical
+    P.Tags.Add "WorshipServiceAssistant_Window_View_DisplaySlideMiniature", View_DisplaySlideMiniature
+    P.Tags.Add "WorshipServiceAssistant_Window_View_ZoomToFit", View_ZoomToFit
     P.Saved = Saved
     
     '
@@ -989,6 +1012,8 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
     W.ViewType = ppViewNormal
     W.SplitHorizontal = 0
     W.SplitVertical = 100
+    W.View.DisplaySlideMiniature = Office.msoFalse
+    W.View.ZoomToFit = Office.msoTrue
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -999,6 +1024,8 @@ Private Sub UnloadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim ViewType As PowerPoint.PpViewType
     Dim SplitHorizontal As Long
     Dim SplitVertical As Long
+    Dim View_DisplaySlideMiniature As Office.MsoTriState
+    Dim View_ZoomToFit As Office.MsoTriState
     Dim W As PowerPoint.DocumentWindow
     
     Set W = P.Windows(1)
@@ -1010,13 +1037,17 @@ Private Sub UnloadPresentationView(ByVal P As PowerPoint.Presentation)
     ViewType = P.Tags("WorshipServiceAssistant_Window_ViewType")
     SplitHorizontal = P.Tags("WorshipServiceAssistant_Window_SplitHorizontal")
     SplitVertical = P.Tags("WorshipServiceAssistant_Window_SplitVertical")
+    View_DisplaySlideMiniature = P.Tags("WorshipServiceAssistant_Window_View_DisplaySlideMiniature")
+    View_ZoomToFit = P.Tags("WorshipServiceAssistant_Window_View_ZoomToFit")
     
     W.WindowState = WindowState
     W.ViewType = ViewType
-    If (W.ViewType = ppViewNormal) Then
+    If (W.ViewType = PowerPoint.ppViewNormal) Then
         W.SplitHorizontal = SplitHorizontal
         W.SplitVertical = SplitVertical
     End If
+    W.View.DisplaySlideMiniature = View_DisplaySlideMiniature
+    W.View.ZoomToFit = View_ZoomToFit
 End Sub
 
 
@@ -1091,8 +1122,7 @@ Private Sub UserForm_Initialize()
     Me.Left = Application.Left - Me.Width
     Me.Top = Application.Top
     
-    UpdateFormSize
-    BannerConfigurationBannerColorInitialize
+    InitializeForm
     
     Me.Refresh
 End Sub
@@ -1440,15 +1470,15 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
     Set W = Application.ActiveWindow
     
     Dim SHIFT As Boolean
-    Dim CONTROL As Boolean
+    Dim Control As Boolean
     Dim ALTERNATE As Boolean
     
     SHIFT = KeyModifier And 1
-    CONTROL = KeyModifier And 2
+    Control = KeyModifier And 2
     ALTERNATE = KeyModifier And 4
     
     If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
-        If ((SHIFT = False) And (CONTROL = False) And (ALTERNATE = False)) Then
+        If ((SHIFT = False) And (Control = False) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 13:                    ' RETURN
                     SlideShowLoad W
@@ -1463,7 +1493,7 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
                 Case 40:                    ' DOWN_ARROW
                     SlideSelectionNext W
             End Select
-        ElseIf ((SHIFT = False) And (CONTROL = True) And (ALTERNATE = False)) Then
+        ElseIf ((SHIFT = False) And (Control = True) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 72, 83:                ' "H", "S"
                     SlideShowHide W
@@ -1478,7 +1508,7 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
             End Select
         End If
     ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
-        If ((SHIFT = False) And (CONTROL = False) And (ALTERNATE = False)) Then
+        If ((SHIFT = False) And (Control = False) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 13:                    ' RETURN
                     BannerShowLoad W
@@ -1489,7 +1519,7 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
                 Case 39:                    ' RIGHT_ARROW
                     BannerColorNext W
             End Select
-        ElseIf ((SHIFT = False) And (CONTROL = True) And (ALTERNATE = False)) Then
+        ElseIf ((SHIFT = False) And (Control = True) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 72, 83:                ' "H", "S"
                     BannerShowHide W
@@ -1498,7 +1528,7 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
             End Select
         End If
     End If
-    If ((SHIFT = False) And (CONTROL = False) And (ALTERNATE = False)) Then
+    If ((SHIFT = False) And (Control = False) And (ALTERNATE = False)) Then
         Select Case KeyCode
             Case 9:                     ' TAB
                 GeneralNextPage W
@@ -1514,36 +1544,44 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub UpdateFormSize()
+Private Sub InitializeForm()
+    '
+    ' Initialize sizes.
+    '
     Const FormOverhead As Integer = 22
-    Const PageOverhead As Integer = 0
+    Const PageOverhead As Integer = 6
     Const FrameOverhead As Integer = 14
-    If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
-        Me.Height = Application.Height
-        Me.Pages.Height = _
-            Me.Height - _
-            Me.Pages.Top - _
-            FormOverhead
-        Me.FrameSlideSelection.Height = _
-            Me.Pages.Height - _
-            PageOverhead - _
-            Me.FrameSlideSelection.Top
-        Me.ControlSlideSelectionList.Height = _
-            Me.FrameSlideSelection.Height - _
-            FrameOverhead - _
-            Me.ControlSlideSelectionList.Top
-    ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
-        Me.Height = _
-            FormOverhead + _
-            PageOverhead + _
-            Me.Pages.Top + _
-            Me.FrameBannerSelection.Top + _
-            Me.FrameBannerSelection.Height
-        Me.Pages.Height = _
-            Me.Height - _
-            FormOverhead
-    Else
-    End If
+    Me.Height = Application.Height
+    Me.Pages.Height = _
+        Me.Height - _
+        Me.Pages.Top - _
+        FormOverhead
+    Me.FrameSlideSelection.Height = _
+        Me.Pages.Height - _
+        PageOverhead - _
+        Me.FrameSlideSelection.Top
+    Me.ControlSlideSelectionList.Height = _
+        Me.FrameSlideSelection.Height - _
+        FrameOverhead - _
+        Me.ControlSlideSelectionList.Top
+    
+    '
+    ' Initialize values.
+    '
+    Dim Color(6, 3) As Variant
+    
+    Color(0, 0) = "Red":     Color(0, 1) = 255: Color(0, 2) = 0:   Color(0, 3) = 0
+    Color(1, 0) = "Green":   Color(1, 1) = 0:   Color(1, 2) = 255: Color(1, 3) = 0
+    Color(2, 0) = "Blue":    Color(2, 1) = 0:   Color(2, 2) = 0:   Color(2, 3) = 255
+    Color(3, 0) = "Yellow":  Color(3, 1) = 255: Color(3, 2) = 255: Color(3, 3) = 0
+    Color(4, 0) = "Magenta": Color(4, 1) = 255: Color(4, 2) = 0:   Color(4, 3) = 255
+    Color(5, 0) = "Cyan":    Color(5, 1) = 0:   Color(5, 2) = 255: Color(5, 3) = 255
+    Color(6, 0) = "White":   Color(6, 1) = 255: Color(6, 2) = 255: Color(6, 3) = 255
+    
+    With Me.ControlBannerColorName
+        .List = Color
+        .ListIndex = 1
+    End With
 End Sub
 
 '-------------------------------------------------------------------------------

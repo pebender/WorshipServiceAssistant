@@ -238,12 +238,16 @@ Public Sub SlideShow_Begin(ByVal W As PowerPoint.DocumentWindow)
     PSaved = P.Saved
     
     '
-    ' Start a slide show window for the presentation currentPresentation.
-    ' If a slide show window already exists, a new window will not be
-    ' started.  This will also activate the slide show window.
+    ' Unfortunately, there appears to be no way to start the slide show
+    ' with a black screen.  However, the first slide will flash for a
+    ' moment.
     '
-    P.SlideShowSettings.Run
-
+    If (ActiveSlideExists(W) = True) Then
+        P.SlideShowSettings.Run.View.GotoSlide ActiveSlide(W).SlideIndex, msoTrue
+    Else
+        P.SlideShowSettings.Run
+    End If
+    
     '
     ' Set the slide show window size.
     '

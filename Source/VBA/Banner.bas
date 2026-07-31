@@ -178,7 +178,6 @@ Public Sub Create()
                     With .Font
                         .NameAscii = "Arial"
                         .Size = 28
-                        .Color.RGB = RGB(0, 0, 0)
                         .Bold = msoFalse
                         .Italic = msoFalse
                         .Underline = msoFalse
@@ -190,12 +189,6 @@ Public Sub Create()
                 End With
             End With
         End With
-        '
-        ' The next line should not be needed here as the font color
-        ' should have been set above.  However, there appears to be
-        ' a bug in setting the font color and this works around it.
-        '
-        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
         Pres.slides.Add 1, ppLayoutTitleOnly
         SlideShow_Setup Pres
     End If
@@ -208,7 +201,7 @@ Public Sub Create()
         '
         ' If there is just one slide show window,
         ' then will make sure that it is on top.
-        ' Otherwise, it is not know which one is on top.
+        ' Otherwise, we do not know which one is on top.
         '
         If (Application.SlideShowWindows.Count = 1) Then
             Set SSW = Application.SlideShowWindows(1)
