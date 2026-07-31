@@ -6,8 +6,7 @@ Attribute VB_Name = "Win32_User32"
 ' Description:
 '   Interfaces to the Windows 32-bit (Win32) User Interface (User32) API.
 '   This module only contains the needed parts of the API, not the complete
-'   API. For an overview of this API, visit
-'   <http://msdn.microsoft.com/library/default.asp?URL=/library/psdk/buildapp/win32api_5rtx.htm>
+'   API.
 '
 ' Author:
 '   Paul Bender <pbender@alumni.ucsd.edu>

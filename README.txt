@@ -11,7 +11,7 @@ the Samples folder containing sample presentation files.
 
 (2) What is Worship Service Assistant?
 
-Worship Service Assistant is a Microsoft PowerPoint 2000 add-in
+Worship Service Assistant is a Microsoft PowerPoint 2002 add-in
 that simplifies the use of Microsoft PowerPoint in a worship service.
 More details can be found in the Worship Service Assistant HTML help
 file (WorshipServiceAssistant.chm).
@@ -22,8 +22,8 @@ Before using Worship Service Assistant, you must read and accept the
 copyright and license found in the Worship Service Assistant HTML help
 file (WorshipServiceAssistant.chm).
 
-Worship Service Assistant has been tested using Microsoft PowerPoint 2000
-running on Microsoft Windows 2000 and Microsoft Windows XP. If you are using
+Worship Service Assistant has been tested using Microsoft PowerPoint 2002
+(aka as XP) running on Microsoft Windows XP (aka 2002). If you are using
 a different version of PowerPoint, then it is likely that Worship
 Service Assistant will not work correctly.  If you are using an older
 version of Windows, then it is likely that Worship Service Assistant will

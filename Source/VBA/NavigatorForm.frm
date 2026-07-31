@@ -72,7 +72,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
-'   1.00.1006:
+'   1.02.0000:
+'     (1) Added code that configures PowerPoint options to the most
+'         appropiate values for running the Navigator.
+'   1.01.0006:
 '     (1) Worked around a PowerPoint 2002 bug that would cause
 '         PowerPoint to prompt the user to save the banner presentation
 '         even though it was already marked as saved.
@@ -1112,6 +1115,12 @@ Private Sub UserForm_Initialize()
     NavigatorFormLocked = True
     
     '
+    ' Configure the PowerPoint options to the most appropiate values
+    ' for running the Navigator.
+    '
+    ConfigurePowerPointOptions
+
+    '
     ' Hide any floating or pop-up menus so that they do not interfere with
     ' the Navigator form.
     '
@@ -1788,4 +1797,143 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
             W.View.Slide = P.Slides(1)
         End If
     End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Function GetPowerPointOption(ByRef OptionName As String, ByRef OptionValue) As Boolean
+    Dim Result As Long
+    Dim KeyHandle As Long
+    Dim OptionPath As String
+    Dim OptionType As Long
+    Dim OptionBuffer As Long
+    Dim OptionBufferSize As Long
+    
+    GetPowerPointOption = False
+    
+    OptionPath = _
+        "Software\Microsoft\Office" & _
+        "\" & Application.Version & _
+        "\" & "PowerPoint" & _
+        "\" & "Options"
+    
+    Result = Win32_AdvAPI32.RegOpenKeyEx _
+        (Win32_AdvAPI32.HKEY_CURRENT_USER, _
+         OptionPath, _
+         0, _
+         Win32_AdvAPI32.KEY_QUERY_VALUE, _
+         KeyHandle)
+    If (Result = Win32_AdvAPI32.ERROR_SUCCESS) Then
+        Result = Win32_AdvAPI32.RegQueryValueEx _
+            (KeyHandle, _
+             OptionName, _
+             0&, _
+             OptionType, _
+             ByVal 0&, _
+             OptionBufferSize)
+        If (Result = Win32_AdvAPI32.ERROR_SUCCESS) Then
+            If (OptionType = Win32_AdvAPI32.REG_DWORD) Then
+                Result = Win32_AdvAPI32.RegQueryValueEx _
+                    (KeyHandle, _
+                     OptionName, _
+                     0&, _
+                     OptionType, _
+                     OptionBuffer, _
+                     OptionBufferSize)
+                If (Result = Win32_AdvAPI32.ERROR_SUCCESS) Then
+                    GetPowerPointOption = True
+                    OptionValue = OptionBuffer
+                End If
+            End If
+        End If
+        Result = Win32_AdvAPI32.RegCloseKey _
+            (KeyHandle)
+    End If
+End Function
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub SetPowerPointOptionDialogTab(Index As Long)
+    Dim Result As Boolean
+    Dim Value As Long
+    
+    Result = GetPowerPointOption("Options dialog current tab", Value)
+    If ((Result = True) And (Value <> Index)) Then
+        While ((Result = True) And (Value <> Index))
+            Application.CommandBars.FindControl(Id:=522).Execute
+            SendKeys "^{TAB}", True
+            SendKeys "{ENTER}", True
+            Result = GetPowerPointOption("Options dialog current tab", Value)
+        Wend
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub ConfigurePowerPointOptions()
+    Dim Result As Boolean
+    Dim Value As Long
+    
+    Result = GetPowerPointOption("SSRightMouse", Value)
+    If (Result = False) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%P", True
+        SendKeys "{ENTER}", True
+        Result = GetPowerPointOption("SSRightMouse", Value)
+    End If
+    If ((Result = True) And (Value <> 0)) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%P", True
+        SendKeys "{ENTER}", True
+    End If
+    
+    Result = GetPowerPointOption("SSMenuButton", Value)
+    If (Result = False) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%S", True
+        SendKeys "{ENTER}", True
+        Result = GetPowerPointOption("SSMenuButton", Value)
+    End If
+    If ((Result = True) And (Value <> 0)) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%S", True
+        SendKeys "{ENTER}", True
+    End If
+    
+    Result = GetPowerPointOption("SSEndOnBlankSlide", Value)
+    If (Result = False) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%E", True
+        SendKeys "{ENTER}", True
+        Result = GetPowerPointOption("SSEndOnBlankSlide", Value)
+    End If
+    If ((Result = True) And (Value <> 0)) Then
+        SetPowerPointOptionDialogTab 0
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%E", True
+        SendKeys "{ENTER}", True
+    End If
+    
+    Result = GetPowerPointOption("SaveAutoRecoveryInfo", Value)
+    If (Result = False) Then
+        SetPowerPointOptionDialogTab 4
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%S", True
+        SendKeys "{ENTER}", True
+        Result = GetPowerPointOption("SaveAutoRecoveryInfo", Value)
+    End If
+    If ((Result = True) And (Value <> 0)) Then
+        SetPowerPointOptionDialogTab 4
+        Application.CommandBars.FindControl(Id:=522).Execute
+        SendKeys "%S", True
+        SendKeys "{ENTER}", True
+    End If
 End Sub

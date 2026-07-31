@@ -4,7 +4,7 @@ Attribute VB_Name = "Main"
 '   WorshipServiceAssistant.Main
 '
 ' Description:
-'   This is a PowerPoint 9.0 (aka 2000) and 10.0 (aka 2002) add-in.
+'   This is a PowerPoint 10.0 (aka 2002) add-in.
 '   It is intended for use in dual monitor PowerPoint presentations.
 '
 ' Author:
@@ -41,10 +41,13 @@ Attribute VB_Name = "Main"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.02.0000:
+'     (1) Removed support for Microsoft Windows 5.0 (aka 2000).
+'     (2) Removed support for Microsoft PowerPoint 9.0 (aka 2000)
 '   1.01.0004:
-'     Added a check for Microsoft Office 10.0.
+'     (1) Added a check for Microsoft PowerPoint 10.0 (aka 2002).
 '   1.01.0000:
-'     Added a text banner above the slide show.
+'     (1) Added a text banner above the slide show.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -142,8 +145,6 @@ Private Function ValidOperatingSystem() As Boolean
     ' indicates the operating system is valid.
     '
     Select Case ApplicationOperatingSystem
-        Case "Windows (32-bit) 5.00"
-            ValidOperatingSystem = True
         Case "Windows (32-bit) 5.01"
             ValidOperatingSystem = True
         Case Else
@@ -195,8 +196,6 @@ Private Function ValidApplication() As Boolean
     ' Only allow the add-in to start if they are all valid.
     '
     Select Case ApplicationName & " " & ApplicationVersion
-        Case "Microsoft PowerPoint 9.0"
-            ValidApplication = True
         Case "Microsoft PowerPoint 10.0"
             ValidApplication = True
         Case Else

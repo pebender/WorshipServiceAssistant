@@ -53,6 +53,10 @@ Attribute VB_Name = "Menu"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.02.0000:
+'     (1) Fixed bug that caused the "Debug" "Display" "Default" menu item
+'         to set to default the slide show's size rather than the slide show's
+'         display.
 '   1.01.0007:
 '     (1) Added 'Help on Known Issues' to the 'Help' menu.
 '   1.01.0001:
@@ -149,7 +153,7 @@ Public Sub Menu_Unload()
     Next
     For Each Bar In Application.CommandBars
         If (Bar.BuiltIn = False) Then
-            For Each Control In Bar.controls
+            For Each Control In Bar.Controls
                 If (Control.BuiltIn = False) Then
                     If (Left(Control.Tag, Len(MenuName)) = MenuName) Then
                         Control.Delete
@@ -254,11 +258,11 @@ Public Sub Menu_Disable()
         DebugControl.Enabled = False
         DebugSSWDisplayControl.Enabled = False
         DebugSSWSizeControl.Enabled = False
-        For Index = 1 To DebugSSWDisplayControl.controls.Count Step 1
-            DebugSSWDisplayControl.controls(Index).State = msoButtonUp
+        For Index = 1 To DebugSSWDisplayControl.Controls.Count Step 1
+            DebugSSWDisplayControl.Controls(Index).State = msoButtonUp
         Next
-        For Index = 1 To DebugSSWSizeControl.controls.Count Step 1
-            DebugSSWSizeControl.controls(Index).State = msoButtonUp
+        For Index = 1 To DebugSSWSizeControl.Controls.Count Step 1
+            DebugSSWSizeControl.Controls(Index).State = msoButtonUp
         Next
     End If
 End Sub
@@ -337,8 +341,8 @@ Public Sub Menu_Refresh()
         DebugSSWDisplayControl.Enabled = True
         DebugSSWSizeControl.Enabled = True
         
-        DebugSSWDisplayControl.controls(SlideShow_GetWindowDisplay + 1).State = msoButtonDown
-        DebugSSWSizeControl.controls(SlideShow_GetWindowSize + 1).State = msoButtonDown
+        DebugSSWDisplayControl.Controls(SlideShow_GetWindowDisplay + 1).State = msoButtonDown
+        DebugSSWSizeControl.Controls(SlideShow_GetWindowSize + 1).State = msoButtonDown
     End If
 End Sub
 
@@ -860,7 +864,7 @@ Private Sub AddNavigatorControl()
     '
     ' Install the 'Navigator' control.
     '
-    Set NavigatorControl = MenuCommandBar.controls.Add( _
+    Set NavigatorControl = MenuCommandBar.Controls.Add( _
         Type:=msoControlButton, _
         Temporary:=True)
     
@@ -889,7 +893,7 @@ Private Sub AddSongEditControl()
     '
     ' Install the 'SongEdit' control.
     '
-    Set SongEditControl = MenuCommandBar.controls.Add( _
+    Set SongEditControl = MenuCommandBar.Controls.Add( _
         Type:=msoControlPopup, _
         Temporary:=True)
     
@@ -903,14 +907,14 @@ Private Sub AddSongEditControl()
         .BeginGroup = True
         .Width = 72
         
-        Set SongEditSetCategoryControl = .controls.Add( _
+        Set SongEditSetCategoryControl = .Controls.Add( _
             Type:=msoControlPopup, _
             Temporary:=True)
         SongEditSetCategoryControl.Caption = "Set Category"
         SongEditSetCategoryControl.TooltipText = "Set the category of the selected slides"
         SongEditSetCategoryControl.BeginGroup = False
         
-        Set SongEditSortControl = .controls.Add( _
+        Set SongEditSortControl = .Controls.Add( _
             Type:=msoControlButton, _
             Temporary:=True)
         SongEditSortControl.Caption = "Sort"
@@ -918,7 +922,7 @@ Private Sub AddSongEditControl()
         SongEditSortControl.OnAction = "Menu_OnActionSongEditSort"
         SongEditSortControl.BeginGroup = False
         
-        Set SongEditCreateIndexControl = .controls.Add( _
+        Set SongEditCreateIndexControl = .Controls.Add( _
             Type:=msoControlButton, _
             Temporary:=True)
         SongEditCreateIndexControl.Caption = "Create Index"
@@ -935,20 +939,20 @@ Private Sub AddSongEditControl()
     Project_Categories(4) = "Children"
     Project_Categories(5) = "Liturgy"
     With SongEditSetCategoryControl
-        Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         Button.Caption = "<none>"
         Button.TooltipText = "Set slide category to '<none>'"
         Button.OnAction = "Menu_OnActionSongEditSetCategoryButton"
         Button.BeginGroup = False
     
         For Category = LBound(Project_Categories) To UBound(Project_Categories) Step 1
-            Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+            Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
             Button.Caption = Project_Categories(Category)
             Button.OnAction = "Menu_OnActionSongEditSetCategoryButton"
             Button.BeginGroup = False
         Next
-        If (.controls.Count >= 2) Then
-            .controls(2).BeginGroup = True
+        If (.Controls.Count >= 2) Then
+            .Controls(2).BeginGroup = True
         End If
     End With
 End Sub
@@ -963,7 +967,7 @@ Private Sub AddCategoryControl()
     '
     ' Install the 'Category' control.
     '
-    Set CategoryControl = MenuCommandBar.controls.Add( _
+    Set CategoryControl = MenuCommandBar.Controls.Add( _
         Type:=msoControlEdit, _
         Temporary:=True)
     
@@ -992,7 +996,7 @@ Private Sub AddDebugControl()
     '
     ' Install the 'Debug' control.
     '
-    Set DebugControl = MenuCommandBar.controls.Add( _
+    Set DebugControl = MenuCommandBar.Controls.Add( _
         Type:=msoControlPopup, _
         Temporary:=True)
     
@@ -1006,14 +1010,14 @@ Private Sub AddDebugControl()
         .BeginGroup = True
         .Width = 72
         
-        Set DebugSSWDisplayControl = .controls.Add( _
+        Set DebugSSWDisplayControl = .Controls.Add( _
             Type:=msoControlPopup, _
             Temporary:=True)
         DebugSSWDisplayControl.Caption = "SSW Display"
         DebugSSWDisplayControl.TooltipText = "Set the slide show window monitor"
         DebugSSWDisplayControl.BeginGroup = False
         
-        Set DebugSSWSizeControl = .controls.Add( _
+        Set DebugSSWSizeControl = .Controls.Add( _
             Type:=msoControlPopup, _
             Temporary:=True)
         DebugSSWSizeControl.Caption = "SSW Size"
@@ -1023,42 +1027,42 @@ Private Sub AddDebugControl()
     End With
     
     With DebugSSWDisplayControl
-        Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         Button.Caption = "Default"
-        Button.OnAction = "Menu_OnActionDebugSSWSizeButton"
+        Button.OnAction = "Menu_OnActionDebugSSWDisplayButton"
         Button.BeginGroup = False
         Button.State = msoButtonUp
         Display = 1
         While Display <= Win32_User32.GetSystemMetrics(Win32_User32.SM_CMONITORS)
-            Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+            Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
             Button.Caption = "Monitor " & Display
             Button.OnAction = "Menu_OnActionDebugSSWDisplayButton"
             Button.BeginGroup = False
             Button.State = msoButtonUp
             Display = Display + 1
         Wend
-        If (.controls.Count >= 2) Then
-            .controls(2).BeginGroup = True
+        If (.Controls.Count >= 2) Then
+            .Controls(2).BeginGroup = True
         End If
     End With
     
     With DebugSSWSizeControl
-        Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         Button.Caption = "Default"
         Button.OnAction = "Menu_OnActionDebugSSWSizeButton"
         Button.BeginGroup = False
         Button.State = msoButtonUp
         Size = 1
         While Size <= 64
-            Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
+            Set Button = .Controls.Add(Type:=msoControlButton, Temporary:=True)
             Button.Caption = "1/" & Size
             Button.OnAction = "Menu_OnActionDebugSSWSizeButton"
             Button.BeginGroup = False
             Button.State = msoButtonUp
             Size = Size * 2
         Wend
-        If (.controls.Count >= 2) Then
-            .controls(2).BeginGroup = True
+        If (.Controls.Count >= 2) Then
+            .Controls(2).BeginGroup = True
         End If
     End With
     
@@ -1076,7 +1080,7 @@ Private Function AddHelpControl() As Boolean
     '
     ' Install the 'Help' control.
     '
-    Set HelpControl = MenuCommandBar.controls.Add( _
+    Set HelpControl = MenuCommandBar.Controls.Add( _
         Type:=msoControlPopup, _
         Temporary:=True)
     
@@ -1090,49 +1094,49 @@ Private Function AddHelpControl() As Boolean
         .BeginGroup = True
         .Width = 72
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "&Help"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' help"
         MenuItem.OnAction = "Menu_OnActionHelpHelp"
         MenuItem.BeginGroup = False
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Help on How To ..."
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' How To ... help"
         MenuItem.OnAction = "Menu_OnActionHelpHelpHowTo"
         MenuItem.BeginGroup = False
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Help on Command Bar"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' Command Bar help"
         MenuItem.OnAction = "Menu_OnActionHelpHelpCommandBar"
         MenuItem.BeginGroup = False
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Help on Known Issues"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' known issues"
         MenuItem.OnAction = "Menu_OnActionHelpHelpKnownIssues"
         MenuItem.BeginGroup = False
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Help on Copyright and Permisison"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' copyright and permission notice"
         MenuItem.OnAction = "Menu_OnActionHelpHelpCopyrightPermission"
         MenuItem.BeginGroup = False
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Visit the Homepage"
         MenuItem.TooltipText = "Visit the '" & ProjectNamePretty & "' homepage"
         MenuItem.OnAction = "Menu_OnActionHelpVisitHomepage"
         MenuItem.BeginGroup = True
                
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "Email the Author"
         MenuItem.TooltipText = "Email the '" & ProjectNamePretty & "' author"
         MenuItem.OnAction = "Menu_OnActionHelpEmailAuthor"
         MenuItem.BeginGroup = False
                
-        Set HelpDebugControl = .controls.Add( _
+        Set HelpDebugControl = .Controls.Add( _
             Type:=msoControlButton, _
             Temporary:=True)
         HelpDebugControl.Caption = "Debug"
@@ -1141,7 +1145,7 @@ Private Function AddHelpControl() As Boolean
         HelpDebugControl.BeginGroup = True
         HelpDebugControl.State = msoButtonUp
         
-        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        Set MenuItem = .Controls.Add(Type:=msoControlButton, Temporary:=True)
         MenuItem.Caption = "&About"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' about box"
         MenuItem.OnAction = "Menu_OnActionHelpAbout"
