@@ -9,7 +9,7 @@ Attribute VB_Name = "SlideShow"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -39,6 +39,11 @@ Attribute VB_Name = "SlideShow"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0007:
+'     (1) Fixed bug that would cause SlideShow_IsSlideShow to crash
+'         when the presentation has no document windows.
+'     (2) Made changes to the SlideShow_Prev and SlideShow_Next routines
+'         so that they would work under PowerPoint 2002.
 '   1.01.0000:
 '     (1) Made room for the text banner above the slide show.
 '     (2) Moved slide show scaling into a separate routine so that it could
@@ -87,9 +92,26 @@ Private SlideShowWindowSize As Integer
 ' Description:
 '-------------------------------------------------------------------------------
 Public Function SlideShow_IsSlideShow(ByVal P As PowerPoint.Presentation) As Boolean
-    SlideShow_IsSlideShow = _
-        (ActiveWindowSlideExists(P.Windows(1)) = True) And _
-        (Banner.IsBanner(P) = False)
+    Dim IsSlideShow As Boolean
+    
+    IsSlideShow = True
+    If (IsSlideShow) Then
+        If (P.Windows.Count = 0) Then
+            IsSlideShow = False
+        End If
+    End If
+    If (IsSlideShow) Then
+        If (ActiveWindowSlideExists(P.Windows(1)) = False) Then
+            IsSlideShow = False
+        End If
+    End If
+    If (IsSlideShow) Then
+        If (Banner.IsBanner(P) = True) Then
+            IsSlideShow = False
+        End If
+    End If
+    
+    SlideShow_IsSlideShow = IsSlideShow
 End Function
 
 '-------------------------------------------------------------------------------
@@ -209,20 +231,20 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Public Sub SlideShow_End()
-    Dim i As Long
+    Dim I As Long
     
     '
     ' Exit all slide shows.  For the sake of appearance, all slide shows
     ' are blacked before any slide shows are exited.
     '
-    For i = Application.SlideShowWindows.Count To 1 Step -1
-        If (Presentation.IsPresentation(Application.SlideShowWindows(i).Presentation) = True) Then
-            Application.SlideShowWindows(i).View.State = ppSlideShowBlackScreen
+    For I = Application.SlideShowWindows.Count To 1 Step -1
+        If (Presentation.IsPresentation(Application.SlideShowWindows(I).Presentation) = True) Then
+            Application.SlideShowWindows(I).View.State = ppSlideShowBlackScreen
         End If
     Next
-    For i = Application.SlideShowWindows.Count To 1 Step -1
-        If (Presentation.IsPresentation(Application.SlideShowWindows(i).Presentation) = True) Then
-            Application.SlideShowWindows(i).View.Exit
+    For I = Application.SlideShowWindows.Count To 1 Step -1
+        If (Presentation.IsPresentation(Application.SlideShowWindows(I).Presentation) = True) Then
+            Application.SlideShowWindows(I).View.Exit
         End If
     Next
 End Sub
@@ -310,8 +332,6 @@ Public Sub SlideShow_Load(ByVal W As PowerPoint.DocumentWindow)
     
     Index = ActiveSlide(W).SlideIndex
     W.Presentation.SlideShowWindow.View.GotoSlide Index, msoFalse
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -416,10 +436,19 @@ Public Sub SlideShow_Next(ByVal W As PowerPoint.DocumentWindow)
         Exit Sub
     End If
     
+    Dim Index As Long
+    
+    '
+    ' PowerPoint 2002 effects may not advance correctly
+    ' if the slide show is not running.
+    ' Therefore, start the slide show running if it is not running.
+    '
+    If (W.Presentation.SlideShowWindow.View.State <> ppSlideShowRunning) Then
+        SlideShow_Run W
+    End If
+    
     W.Presentation.SlideShowWindow.View.Next
     W.View.Slide = W.Presentation.SlideShowWindow.View.Slide
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -440,10 +469,19 @@ Public Sub SlideShow_Prev(ByVal W As PowerPoint.DocumentWindow)
         Exit Sub
     End If
     
+    Dim Index As Long
+    
+    '
+    ' PowerPoint 2002 effects may not advance correctly
+    ' if the slide show is not running.
+    ' Therefore, start the slide show running if it is not running.
+    '
+    If (W.Presentation.SlideShowWindow.View.State <> ppSlideShowRunning) Then
+        SlideShow_Run W
+    End If
+    
     W.Presentation.SlideShowWindow.View.Previous
     W.View.Slide = W.Presentation.SlideShowWindow.View.Slide
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
 End Sub
 
 '===============================================================================

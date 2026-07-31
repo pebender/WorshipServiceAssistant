@@ -10,7 +10,7 @@ Attribute VB_Name = "Help"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -40,6 +40,8 @@ Attribute VB_Name = "Help"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0007:
+'     (1) Added KnownIssues help constants.
 '   1.01.0001:
 '     (1) Updated help constants.
 '   1.01.0000:
@@ -82,13 +84,15 @@ Public Const IDH_Topic_WSA                        As Long = 10000
 Public Const IDH_Topic_WSAHowTo                   As Long = 11000
 Public Const IDH_Topic_WSACommandBar              As Long = 12000
 Public Const IDH_Topic_WSACommandBarNavigator     As Long = 12100
-Public Const IDH_Topic_WSACopyrightPermission     As Long = 10100
-Public Const IDH_Topic_WSAHistory                 As Long = 10200
+Public Const IDH_Topic_WSAKnownIssues             As Long = 10100
+Public Const IDH_Topic_WSACopyrightPermission     As Long = 10200
+Public Const IDH_Topic_WSAHistory                 As Long = 10300
 
 Public Const IDH_TopicPath_WSA                    As String = "HTML/WSA.htm"
 Public Const IDH_TopicPath_WSAHowTo               As String = "HTML/WSA/HowTo.htm"
 Public Const IDH_TopicPath_WSACommandBar          As String = "HTML/WSA/CommandBar.htm"
 Public Const IDH_TopicPath_WSACommandBarNavigator As String = "HTML/WSA/CommandBar/Navigator.htm"
+Public Const IDH_TopicPath_WSAKnownIssues         As String = "HTML/WSA/KnownIssues.htm"
 Public Const IDH_TopicPath_WSACopyrightPermission As String = "HTML/WSA/CopyrightPermission.htm"
 Public Const IDH_TopicPath_WSAHistory             As String = "HTML/WSA/History.htm"
 

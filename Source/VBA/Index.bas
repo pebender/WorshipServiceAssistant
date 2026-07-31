@@ -82,7 +82,7 @@ Option Base 0
 '-------------------------------------------------------------------------------
 Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
     Dim P As PowerPoint.Presentation
-    Dim i As PowerPoint.Presentation
+    Dim I As PowerPoint.Presentation
     Dim CategoryIndex As Long
     Dim IndexTitle As String
     Dim SlideTitle, SlideTitleLast As String
@@ -114,8 +114,8 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
         '
         ReDim CategoryList(0)
         For Each Category In Project_Categories
-            For Index = 1 To P.slides.Count Step 1
-                If (P.slides(Index).Tags("Category") = Category) Then
+            For Index = 1 To P.Slides.Count Step 1
+                If (P.Slides(Index).Tags("Category") = Category) Then
                     CategoryList(UBound(CategoryList)) = Category
                     ReDim Preserve CategoryList(UBound(CategoryList) + 1)
                     Exit For
@@ -127,8 +127,8 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
         ' Find all the slide categories that are not in the category list,
         ' preserving the order of occurance in the slides.
         '
-        For Index = 1 To P.slides.Count Step 1
-            Category = P.slides(Index).Tags("Category")
+        For Index = 1 To P.Slides.Count Step 1
+            Category = P.Slides(Index).Tags("Category")
             For CategoryIndex = LBound(CategoryList) To UBound(CategoryList) - 1 Step 1
                 If (Category = CategoryList(CategoryIndex)) Then
                     Exit For
@@ -142,17 +142,17 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
         
         ReDim Preserve CategoryList(UBound(CategoryList) - 1)
         
-        Set i = AddIndex()
+        Set I = AddIndex()
             
-        With i.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
+        With I.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
             RowHeight = .SpaceBefore + .SpaceWithin + .SpaceAfter
         End With
         ColWidth = 72 * 2.5
-        ColMax = i.PageSetup.SlideWidth
+        ColMax = I.PageSetup.SlideWidth
         ColMax = Int(ColMax / ColWidth)
-        RowMax = i.PageSetup.SlideHeight
-        If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
-            RowMax = RowMax - i.SlideMaster.Shapes.Title.Height
+        RowMax = I.PageSetup.SlideHeight
+        If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
+            RowMax = RowMax - I.SlideMaster.Shapes.Title.Height
         End If
         RowMax = Int(RowMax / RowHeight)
         
@@ -172,19 +172,19 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
             SlideTitleLast = ""
             SlideTitleRemaining = 0
             BlockTitleRemaining = 0
-            If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
-                BlockBottomLast = i.SlideMaster.Shapes.Title.Height
+            If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
+                BlockBottomLast = I.SlideMaster.Shapes.Title.Height
             Else
                 BlockBottomLast = 0
             End If
             SlideTitleLast = ""
-            For Index = 1 To P.slides.Count Step 1
-                If (P.slides(Index).Tags("Category") = Category) Then
+            For Index = 1 To P.Slides.Count Step 1
+                If (P.Slides(Index).Tags("Category") = Category) Then
                     '
                     ' Get the slide's title
                     '
-                    If (P.slides(Index).Shapes.HasTitle = msoTrue) Then
-                        SlideTitle = CleanIndexTitle(P.slides(Index).Shapes.Title.TextFrame.TextRange.Text)
+                    If (P.Slides(Index).Shapes.HasTitle = msoTrue) Then
+                        SlideTitle = CleanIndexTitle(P.Slides(Index).Shapes.Title.TextFrame.TextRange.Text)
                     Else
                         SlideTitle = ""
                     End If
@@ -213,7 +213,7 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
                             If (ColIndex > ColMax) Then
                                 RowIndex = 1
                                 ColIndex = 1
-                                Set S = AddIndexSlide(i)
+                                Set S = AddIndexSlide(I)
                                 AddIndexTitle S, IndexTitle
                             End If
                             Set Block = AddIndexCategory(S, ColIndex, RowIndex, 2, Category)
@@ -221,10 +221,10 @@ Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
                             Block.Fill.ForeColor.RGB = RGB(255, 255, 255)
                             RowIndex = RowIndex + 2
                             BlockTitleRemaining = 0
-                            If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
+                            If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
                                 BlockBottomLast = _
-                                    i.SlideMaster.Shapes.Title.Top + _
-                                    i.SlideMaster.Shapes.Title.Height
+                                    I.SlideMaster.Shapes.Title.Top + _
+                                    I.SlideMaster.Shapes.Title.Height
                             Else
                                 BlockBottomLast = 0
                             End If
@@ -440,7 +440,7 @@ Private Function AddIndexSlide(ByVal P As PowerPoint.Presentation) As PowerPoint
     Dim Index As Long
     Dim TitleShape As PowerPoint.Shape
     
-    Set S = P.slides.Add(P.slides.Count + 1, ppLayoutText)
+    Set S = P.Slides.Add(P.Slides.Count + 1, ppLayoutText)
     
     Set TitleShape = S.Shapes.Title
     
@@ -644,8 +644,8 @@ Dim Group, GroupLast As String
 Dim Index As Long
 Dim Count As Long
 
-    If (P.slides(Start).Shapes.HasTitle = msoTrue) Then
-        Title = CleanIndexTitle(P.slides(Start).Shapes.Title.TextFrame.TextRange.Text)
+    If (P.Slides(Start).Shapes.HasTitle = msoTrue) Then
+        Title = CleanIndexTitle(P.Slides(Start).Shapes.Title.TextFrame.TextRange.Text)
     Else
         Title = ""
     End If
@@ -653,12 +653,12 @@ Dim Count As Long
         TitleLast = Title
         Group = Asc(LCase(Left(Title, 1))) - Asc("a") + 1
         GroupLast = Group
-        Category = P.slides(Start).Tags("Category")
+        Category = P.Slides(Start).Tags("Category")
         Count = 1
-        For Index = Start To P.slides.Count Step 1
-            If (P.slides(Index).Tags("Category") = Category) Then
-                If (P.slides(Index).Shapes.HasTitle = msoTrue) Then
-                    Title = CleanIndexTitle(P.slides(Index).Shapes.Title.TextFrame.TextRange.Text)
+        For Index = Start To P.Slides.Count Step 1
+            If (P.Slides(Index).Tags("Category") = Category) Then
+                If (P.Slides(Index).Shapes.HasTitle = msoTrue) Then
+                    Title = CleanIndexTitle(P.Slides(Index).Shapes.Title.TextFrame.TextRange.Text)
                 Else
                     Title = ""
                 End If

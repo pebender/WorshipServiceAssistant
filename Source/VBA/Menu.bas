@@ -23,7 +23,7 @@ Attribute VB_Name = "Menu"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -53,7 +53,9 @@ Attribute VB_Name = "Menu"
 '   of the copyright holder.
 '
 ' Change History:
-'   1.01.0000:
+'   1.01.0007:
+'     (1) Added 'Help on Known Issues' to the 'Help' menu.
+'   1.01.0001:
 '     (1) Changed Help menu to merge 'Help on Copyright' and 'Help on License'
 '         menus into a single 'Help on Copyright and Permission' menu.
 '   1.01.0000:
@@ -677,6 +679,33 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
+Public Sub Menu_OnActionHelpHelpKnownIssues()
+    '
+    ' Load the project if the project is not loaded
+    '
+    If (Project_Loaded = False) Then
+        Project_Load
+        Exit Sub
+    End If
+    
+    Dim HelpFile As String
+    
+    HelpFile = Help_GetHelpFileName(True)
+    
+    If (HelpFile = "") Then
+        Exit Sub
+     End If
+    
+    Call Help.HtmlHelp( _
+        0&, _
+        HelpFile, _
+        Help.HH_DISPLAY_TOPIC, _
+        Help.IDH_TopicPath_WSAKnownIssues)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
 Public Sub Menu_OnActionHelpHelpCopyrightPermission()
     '
     ' Load the project if the project is not loaded
@@ -1077,6 +1106,12 @@ Private Function AddHelpControl() As Boolean
         MenuItem.Caption = "Help on Command Bar"
         MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' Command Bar help"
         MenuItem.OnAction = "Menu_OnActionHelpHelpCommandBar"
+        MenuItem.BeginGroup = False
+        
+        Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)
+        MenuItem.Caption = "Help on Known Issues"
+        MenuItem.TooltipText = "View the '" & ProjectNamePretty & "' known issues"
+        MenuItem.OnAction = "Menu_OnActionHelpHelpKnownIssues"
         MenuItem.BeginGroup = False
         
         Set MenuItem = .controls.Add(Type:=msoControlButton, Temporary:=True)

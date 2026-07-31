@@ -3,9 +3,6 @@
 CSS\MicrosoftOfficeHelp.css
 HTML\WSA.htm
 HTML\WSA\CommandBar.htm
-HTML\WSA\CopyrightPermission.htm
-HTML\WSA\History.htm
-HTML\WSA\HowTo.htm
 HTML\WSA\CommandBar\Debug.htm
 HTML\WSA\CommandBar\Help.htm
 HTML\WSA\CommandBar\Navigator.htm
@@ -57,6 +54,7 @@ HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Hide.htm
 HTML\WSA\CommandBar\SongEdit\Category.htm
 HTML\WSA\CommandBar\SongEdit\Index.htm
 HTML\WSA\CommandBar\SongEdit\Sort.htm
+HTML\WSA\HowTo.htm
 HTML\WSA\HowTo\EquipmentSetup.htm
 HTML\WSA\HowTo\ManualPresentationDisplay.htm
 HTML\WSA\HowTo\SlideDisplay.htm
@@ -65,6 +63,9 @@ HTML\WSA\HowTo\SongCreate.htm
 HTML\WSA\HowTo\SongIndex.htm
 HTML\WSA\HowTo\SongSort.htm
 HTML\WSA\HowTo\TimedPresentationDisplay.htm
+HTML\WSA\KnownIssues.htm
+HTML\WSA\CopyrightPermission.htm
+HTML\WSA\History.htm
 Script\Script.js
 
 [OPTIONS]

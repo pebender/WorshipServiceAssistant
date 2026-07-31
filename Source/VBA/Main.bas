@@ -4,7 +4,7 @@ Attribute VB_Name = "Main"
 '   WorshipServiceAssistant.Main
 '
 ' Description:
-'   This is a PowerPoint 9.0 (aka 2000) and 10.0 (aka XP) add-in.
+'   This is a PowerPoint 9.0 (aka 2000) and 10.0 (aka 2002) add-in.
 '   It is intended for use in dual monitor PowerPoint presentations.
 '
 ' Author:

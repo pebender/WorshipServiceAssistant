@@ -40,8 +40,8 @@ Attribute VB_Name = "Banner"
 '
 ' Change History:
 '   1.00.1005:
-'     (1) Worked around problem under Windows XP with PowerPoint XP
-'         that would cause the banner to fail to display.
+'     (1) Worked around problem under PowerPoint 2002 that would cause
+'         the banner to fail to display.
 '   1.00.0002:
 '     (1) Added support for abitrary banner color.
 '   1.00.0000:
@@ -121,18 +121,18 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Public Sub Create()
-    Dim i As Integer
+    Dim I As Integer
     Dim S As PowerPoint.Shape
     
     Set Pres = Nothing
     
-    For i = 1 To Application.Presentations.Count Step 1
-        If (Banner.IsBanner(Application.Presentations(i)) = True) Then
+    For I = 1 To Application.Presentations.Count Step 1
+        If (Banner.IsBanner(Application.Presentations(I)) = True) Then
             Exit For
         End If
     Next
-    If (i <= Application.Presentations.Count) Then
-        Set Pres = Application.Presentations(i)
+    If (I <= Application.Presentations.Count) Then
+        Set Pres = Application.Presentations(I)
     Else
         Set Pres = Application.Presentations.Add(msoTrue)
         Pres.Tags.Add "WorshipServiceAssistantType", "Banner"
@@ -141,8 +141,8 @@ Public Sub Create()
             .SlideSize = ppSlideSizeOnScreen
             .SlideOrientation = msoOrientationHorizontal
         End With
-        For i = Pres.slides.Count To 1 Step -1
-            Pres.slides(i).Delete
+        For I = Pres.Slides.Count To 1 Step -1
+            Pres.Slides(I).Delete
         Next
         With Pres.SlideMaster
             With .Background
@@ -152,8 +152,8 @@ Public Sub Create()
                     .ForeColor.RGB = RGB(0, 0, 0)
                 End With
             End With
-            For i = .Shapes.Count To 1 Step -1
-                .Shapes(i).Delete
+            For I = .Shapes.Count To 1 Step -1
+                .Shapes(I).Delete
             Next
             .Shapes.AddTitle
             With .Shapes.Title
@@ -192,16 +192,16 @@ Public Sub Create()
                 End With
             End With
         End With
-        Pres.slides.Add 1, ppLayoutTitleOnly
+        Pres.Slides.Add 1, ppLayoutTitleOnly
         
         '
         ' There should be no need to fill in the title text.
-        ' However, it appears that under Windows XP with PowerPoint XP,
+        ' However, it appears that under PowerPoint 2002,
         ' if there is no title text when the slide show is started,
         ' then no title text can be added later.
         '
         Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
-        Pres.slides(1).Shapes.Title.TextFrame.TextRange.Text = "Welcome"
+        Pres.Slides(1).Shapes.Title.TextFrame.TextRange.Text = "Welcome"
         Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
         
         SlideShow_Setup Pres
@@ -254,7 +254,7 @@ Public Sub Load(ByVal BannerString As String, ByVal Red As Integer, ByVal Green 
     End If
     
     Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
-    Pres.slides(1).Shapes.Title.TextFrame.TextRange.Text = BannerString
+    Pres.Slides(1).Shapes.Title.TextFrame.TextRange.Text = BannerString
     Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(Red, Green, Blue)
     Banner.Visible = True
     Pres.Saved = msoTrue

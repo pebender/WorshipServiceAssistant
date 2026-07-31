@@ -130,7 +130,7 @@ End Function
 '-------------------------------------------------------------------------------
 Public Function ActiveWindowSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
     ActiveWindowSlideExists = False
-    If (W.Presentation.slides.Count = 0) Then
+    If (W.Presentation.Slides.Count = 0) Then
         Exit Function
     End If
     ActiveWindowSlideExists = True

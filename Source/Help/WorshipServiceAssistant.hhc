@@ -301,6 +301,10 @@
             </UL>
          </UL>
          <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="Known Issues">
+               <param name="Local" value="HTML\WSA\KnownIssues.htm">
+             </OBJECT>
+         <LI><OBJECT type="text/sitemap">
                <param name="Name" value="Copyright and Permission">
                <param name="Local" value="HTML\WSA\CopyrightPermission.htm">
              </OBJECT>

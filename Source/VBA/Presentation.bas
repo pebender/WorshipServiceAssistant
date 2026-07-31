@@ -87,7 +87,7 @@ Public Function Exists() As Boolean
     For Each P In Application.Presentations
         If (Banner.IsBanner(P) = False) Then
             If (P.Windows.Count > 0) Then
-                If (P.slides.Count > 0) Then
+                If (P.Slides.Count > 0) Then
                     Exists = True
                 End If
             End If
@@ -99,7 +99,7 @@ Public Function IsPresentation(ByVal P As PowerPoint.Presentation) As Boolean
     IsPresentation = False
     If (Banner.IsBanner(P) = False) Then
         If (P.Windows.Count > 0) Then
-            If (P.slides.Count > 0) Then
+            If (P.Slides.Count > 0) Then
                 IsPresentation = True
             End If
         End If

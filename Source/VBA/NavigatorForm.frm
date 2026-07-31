@@ -73,8 +73,9 @@ Attribute VB_Exposed = False
 '
 ' Change History:
 '   1.00.1006:
-'     (1) Worked around problem where PowerPoint XP would ask the user
-'         to save some presentations already marked as saved.
+'     (1) Worked around a PowerPoint 2002 bug that would cause
+'         PowerPoint to prompt the user to save the banner presentation
+'         even though it was already marked as saved.
 '   1.01.0005:
 '     (1) Changed UserForm_Initialize so that it hide all visible
 '         floating and pop-up command bars, because floating and pop-up
@@ -470,8 +471,8 @@ Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
         Me.ControlSlideSelectionTitle.Caption = ""
         UpdateSlideList W
     End If
-        
-    Me.Hide
+    
+    Me.hide
     
     '
     ' Create slide show if one does not exist.
@@ -485,6 +486,8 @@ Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
     
     W.Presentation.SlideShowWindow.Activate
         
+' Exit Sub
+    
     If (Not (W.Presentation.SlideShowWindow Is ActiveSlideShow)) Then
         Set ActiveSlideShow = W.Presentation.SlideShowWindow
         '
@@ -570,7 +573,7 @@ Private Sub SlideShowNextEffect(ByVal W As PowerPoint.DocumentWindow)
     If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
-    
+        
     SlideShow_Next W
     
     ControlSlideSelectionClear_Click
@@ -590,24 +593,24 @@ Private Sub PresentationSelectionPrev(ByVal W As PowerPoint.DocumentWindow)
         Exit Sub
     End If
     
-    Dim i As Long
+    Dim I As Long
     Dim J As Long
     
-    For i = Application.Presentations.Count To 1 Step -1
-        If (Application.Presentations(i) Is W.Presentation) Then
+    For I = Application.Presentations.Count To 1 Step -1
+        If (Application.Presentations(I) Is W.Presentation) Then
             Exit For
         End If
     Next
     
-    J = i
+    J = I
     Do
         J = J - 1
         If (J < 1) Then
             J = Application.Presentations.Count
         End If
-    Loop While ((J <> i) And (SlideShow_IsSlideShow(Application.Presentations(J)) = False))
+    Loop While ((J <> I) And (SlideShow_IsSlideShow(Application.Presentations(J)) = False))
     
-    If (J <> i) Then
+    If (J <> I) Then
         Application.Presentations(J).Windows(1).Activate
         Set W = Application.ActiveWindow
         UpdatePresentationName W
@@ -624,24 +627,24 @@ Private Sub PresentationSelectionNext(ByVal W As PowerPoint.DocumentWindow)
         Exit Sub
     End If
     
-    Dim i As Long
+    Dim I As Long
     Dim J As Long
     
-    For i = 1 To Application.Presentations.Count Step 1
-        If (Application.Presentations(i) Is W.Presentation) Then
+    For I = 1 To Application.Presentations.Count Step 1
+        If (Application.Presentations(I) Is W.Presentation) Then
             Exit For
         End If
     Next
     
-    J = i
+    J = I
     Do
         J = J + 1
         If (J > Application.Presentations.Count) Then
             J = 1
         End If
-    Loop While ((J <> i) And (SlideShow_IsSlideShow(Application.Presentations(J)) = False))
+    Loop While ((J <> I) And (SlideShow_IsSlideShow(Application.Presentations(J)) = False))
     
-    If (J <> i) Then
+    If (J <> I) Then
         Application.Presentations(J).Windows(1).Activate
         Set W = Application.ActiveWindow
         UpdatePresentationName W
@@ -675,7 +678,7 @@ Private Sub SlideSelectionUpdate(ByVal W As PowerPoint.DocumentWindow)
     With Me.ControlSlideSelectionList
         If (.ListIndex >= 0) Then
             sIndex = .List(.ListIndex, 0)
-            W.View.Slide = W.Presentation.slides(sIndex)
+            W.View.Slide = W.Presentation.Slides(sIndex)
         End If
     End With
     UpdateControls W
@@ -809,7 +812,7 @@ End Sub
 Private Function NavigatorValid() As Boolean
     NavigatorValid = False
     If (ActiveWindowExists = False) Then
-        Me.Hide
+        Me.hide
         Exit Function
     End If
     NavigatorValid = True
@@ -824,7 +827,7 @@ Private Sub UpdateSlideTitles(ByVal P As PowerPoint.Presentation)
     Dim Saved As Boolean
     
     Saved = P.Saved
-    For Each S In P.slides
+    For Each S In P.Slides
         If (S.Shapes.HasTitle = msoTrue) Then
             Title = S.Shapes.Title.TextFrame.TextRange.Text
         Else
@@ -1013,38 +1016,40 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim W As PowerPoint.DocumentWindow
     Dim Saved As Office.MsoTriState
     
-    Set W = P.Windows(1)
-    
-    '
-    ' Save current view.
-    '
-    WindowState = W.WindowState
-    ViewType = W.ViewType
-    If (ViewType = PowerPoint.ppViewNormal) Then
-        SplitHorizontal = W.SplitHorizontal
-        SplitVertical = W.SplitVertical
+    If (P.Windows.Count > 0) Then
+        Set W = P.Windows(1)
+        
+        '
+        ' Save current view.
+        '
+        WindowState = W.WindowState
+        ViewType = W.ViewType
+        If (ViewType = PowerPoint.ppViewNormal) Then
+            SplitHorizontal = W.SplitHorizontal
+            SplitVertical = W.SplitVertical
+        End If
+        View_DisplaySlideMiniature = W.View.DisplaySlideMiniature
+        View_ZoomToFit = W.View.ZoomToFit
+        
+        Saved = P.Saved
+        P.Tags.Add "WorshipServiceAssistant_Window_WindowState", WindowState
+        P.Tags.Add "WorshipServiceAssistant_Window_ViewType", ViewType
+        P.Tags.Add "WorshipServiceAssistant_Window_SplitHorizontal", SplitHorizontal
+        P.Tags.Add "WorshipServiceAssistant_Window_SplitVertical", SplitVertical
+        P.Tags.Add "WorshipServiceAssistant_Window_View_DisplaySlideMiniature", View_DisplaySlideMiniature
+        P.Tags.Add "WorshipServiceAssistant_Window_View_ZoomToFit", View_ZoomToFit
+        P.Saved = Saved
+        
+        '
+        ' Set view.
+        '
+        W.WindowState = ppWindowMaximized
+        W.ViewType = ppViewNormal
+        W.SplitHorizontal = 0
+        W.SplitVertical = 100
+        W.View.DisplaySlideMiniature = Office.msoFalse
+        W.View.ZoomToFit = Office.msoTrue
     End If
-    View_DisplaySlideMiniature = W.View.DisplaySlideMiniature
-    View_ZoomToFit = W.View.ZoomToFit
-    
-    Saved = P.Saved
-    P.Tags.Add "WorshipServiceAssistant_Window_WindowState", WindowState
-    P.Tags.Add "WorshipServiceAssistant_Window_ViewType", ViewType
-    P.Tags.Add "WorshipServiceAssistant_Window_SplitHorizontal", SplitHorizontal
-    P.Tags.Add "WorshipServiceAssistant_Window_SplitVertical", SplitVertical
-    P.Tags.Add "WorshipServiceAssistant_Window_View_DisplaySlideMiniature", View_DisplaySlideMiniature
-    P.Tags.Add "WorshipServiceAssistant_Window_View_ZoomToFit", View_ZoomToFit
-    P.Saved = Saved
-    
-    '
-    ' Set view.
-    '
-    W.WindowState = ppWindowMaximized
-    W.ViewType = ppViewNormal
-    W.SplitHorizontal = 0
-    W.SplitVertical = 100
-    W.View.DisplaySlideMiniature = Office.msoFalse
-    W.View.ZoomToFit = Office.msoTrue
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -1059,26 +1064,28 @@ Private Sub UnloadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim View_ZoomToFit As Office.MsoTriState
     Dim W As PowerPoint.DocumentWindow
     
-    Set W = P.Windows(1)
-    
-    '
-    ' Unload current view.
-    '
-    WindowState = P.Tags("WorshipServiceAssistant_Window_WindowState")
-    ViewType = P.Tags("WorshipServiceAssistant_Window_ViewType")
-    SplitHorizontal = P.Tags("WorshipServiceAssistant_Window_SplitHorizontal")
-    SplitVertical = P.Tags("WorshipServiceAssistant_Window_SplitVertical")
-    View_DisplaySlideMiniature = P.Tags("WorshipServiceAssistant_Window_View_DisplaySlideMiniature")
-    View_ZoomToFit = P.Tags("WorshipServiceAssistant_Window_View_ZoomToFit")
-    
-    W.WindowState = WindowState
-    W.ViewType = ViewType
-    If (W.ViewType = PowerPoint.ppViewNormal) Then
-        W.SplitHorizontal = SplitHorizontal
-        W.SplitVertical = SplitVertical
+    If (P.Windows.Count > 0) Then
+        Set W = P.Windows(1)
+        
+        '
+        ' Unload current view.
+        '
+        WindowState = P.Tags("WorshipServiceAssistant_Window_WindowState")
+        ViewType = P.Tags("WorshipServiceAssistant_Window_ViewType")
+        SplitHorizontal = P.Tags("WorshipServiceAssistant_Window_SplitHorizontal")
+        SplitVertical = P.Tags("WorshipServiceAssistant_Window_SplitVertical")
+        View_DisplaySlideMiniature = P.Tags("WorshipServiceAssistant_Window_View_DisplaySlideMiniature")
+        View_ZoomToFit = P.Tags("WorshipServiceAssistant_Window_View_ZoomToFit")
+        
+        W.WindowState = WindowState
+        W.ViewType = ViewType
+        If (W.ViewType = PowerPoint.ppViewNormal) Then
+            W.SplitHorizontal = SplitHorizontal
+            W.SplitVertical = SplitVertical
+        End If
+        W.View.DisplaySlideMiniature = View_DisplaySlideMiniature
+        W.View.ZoomToFit = View_ZoomToFit
     End If
-    W.View.DisplaySlideMiniature = View_DisplaySlideMiniature
-    W.View.ZoomToFit = View_ZoomToFit
 End Sub
 
 
@@ -1198,18 +1205,29 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If (Response = vbYes) Then
         Cancel = 0
         
-        Me.Hide
+        Me.hide
         
         Set W = Application.ActiveWindow
         For Each P In Application.Presentations
             If (SlideShow_IsSlideShow(P) = True) Then
                 UnloadPresentationView P
             End If
-            P.Saved = msoTrue
         Next
         W.Activate
         
         UpdateApplicationView False
+        
+        '
+        ' Work around a PowerPoint 2002 bug that causes the
+        ' user to be prompted to save the banner presentation,
+        ' even though the banner presentation was marked
+        ' as saved after all changes were made.
+        '
+        For Each P In Application.Presentations
+            If (Banner.IsBanner(P)) Then
+                P.Saved = msoTrue
+            End If
+        Next
     Else
         Cancel = 1
     End If
@@ -1677,7 +1695,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     End If
     
     If (ActiveSlideExists(W) = False) Then
-        W.View.Slide = P.slides(1)
+        W.View.Slide = P.Slides(1)
     End If
     SelectedSlideIndex = ActiveSlide(W).SlideIndex
     If (Me.ControlSlideSelectionNumber <> "") Then
@@ -1693,14 +1711,14 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     ' As a result, the comparisons can be bypassed.
     '
     If (FilterTextLen = 0) Then
-        ListCount = P.slides.Count
+        ListCount = P.Slides.Count
         ListIndex = SelectedSlideIndex - 1
         If (ListCount > 0) Then
             ReDim List(ListCount - 1, 1) As String
-            For SlideIndex = P.slides.Count To 1 Step -1
+            For SlideIndex = P.Slides.Count To 1 Step -1
                 ListCount = ListCount - 1
                 List(ListCount, 0) = SlideIndex
-                List(ListCount, 1) = P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
+                List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
             Next
             Me.ControlSlideSelectionList.List() = List
         End If
@@ -1709,7 +1727,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     ' As a result, the looping and comparisons can be bypassed.
     '
     ElseIf (IsNumeric(FilterText)) Then
-        If ((FilterText > 0) And (FilterText <= P.slides.Count)) Then
+        If ((FilterText > 0) And (FilterText <= P.Slides.Count)) Then
             ListCount = 1
         Else
             ListCount = 0
@@ -1720,7 +1738,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
             SlideIndex = FilterText
             ListCount = ListCount - 1
             List(ListCount, 0) = SlideIndex
-            List(ListCount, 1) = P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
+            List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
             Me.ControlSlideSelectionList.List() = List
         End If
     '
@@ -1734,20 +1752,20 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
         ' as assign the array to the ListBox list.
         '
         ListCount = 0
-        For SlideIndex = 1 To P.slides.Count Step 1
-            If ((Left(P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
-                (Left(P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
+        For SlideIndex = 1 To P.Slides.Count Step 1
+            If ((Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
+                (Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
                 ListCount = ListCount + 1
             End If
         Next
         If (ListCount > 0) Then
             ReDim List(ListCount - 1, 1) As String
-            For SlideIndex = P.slides.Count To 1 Step -1
-                If ((Left(P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
-                    (Left(P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
+            For SlideIndex = P.Slides.Count To 1 Step -1
+                If ((Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
+                    (Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
                     ListCount = ListCount - 1
                     List(ListCount, 0) = SlideIndex
-                    List(ListCount, 1) = P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
+                    List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
                     If (SlideIndex = SelectedSlideIndex) Then
                         ListIndex = ListCount
                     End If
@@ -1765,9 +1783,9 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
                 .ListIndex = 0
             End If
             .TopIndex = .ListIndex
-            W.View.Slide = P.slides(Val(.List(.ListIndex, 0)))
+            W.View.Slide = P.Slides(Val(.List(.ListIndex, 0)))
         Else
-            W.View.Slide = P.slides(1)
+            W.View.Slide = P.Slides(1)
         End If
     End With
 End Sub

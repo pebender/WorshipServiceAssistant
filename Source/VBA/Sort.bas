@@ -87,12 +87,12 @@ Public Sub Sort_Run(ByVal W As PowerPoint.DocumentWindow)
     SortSlidesByTitle _
         P:=W.Presentation, _
         LowerIndex:=1, _
-        UpperIndex:=W.Presentation.slides.Count
+        UpperIndex:=W.Presentation.Slides.Count
         '
         ' Collapse the pasted slide by selecting the slides, and using the
         ' control identifier to find and execute the "Collapse" command.
         '
-        W.Presentation.slides.Range.Select
+        W.Presentation.Slides.Range.Select
         Application.CommandBars.FindControl(Id:=138).Execute
 End Sub
 
@@ -107,44 +107,44 @@ End Sub
 Private Sub SortSlidesByTitle(ByVal P As PowerPoint.Presentation, ByVal LowerIndex As Long, ByVal UpperIndex As Long)
     Dim JDelta As Long
     Dim Index
-    Dim i As Long
+    Dim I As Long
     
     If ((LowerIndex < 1) Or _
-        (UpperIndex > P.slides.Count) Or _
+        (UpperIndex > P.Slides.Count) Or _
         (LowerIndex >= UpperIndex)) Then
         Exit Sub
     End If
     
-    For i = LowerIndex + 1 To UpperIndex Step 1
-        If (P.slides(i).Shapes.HasTitle = msoTrue) Then
+    For I = LowerIndex + 1 To UpperIndex Step 1
+        If (P.Slides(I).Shapes.HasTitle = msoTrue) Then
             JDelta = 1
-            While (JDelta < (i - LowerIndex + 1))
+            While (JDelta < (I - LowerIndex + 1))
                 JDelta = JDelta * 2
             Wend
             Index = LowerIndex - 1 + JDelta / 2
             While JDelta > 1
                 JDelta = JDelta / 2
                 If (Index - JDelta >= 1) Then
-                    If (P.slides(Index - JDelta).Shapes.HasTitle = msoTrue) Then
-                        If (P.slides(i).Shapes.Title.TextFrame.TextRange.Text < _
-                            P.slides(Index - JDelta).Shapes.Title.TextFrame.TextRange.Text) Then
+                    If (P.Slides(Index - JDelta).Shapes.HasTitle = msoTrue) Then
+                        If (P.Slides(I).Shapes.Title.TextFrame.TextRange.Text < _
+                            P.Slides(Index - JDelta).Shapes.Title.TextFrame.TextRange.Text) Then
                             Index = Index - JDelta
                         End If
                     End If
                 End If
-                If (Index + JDelta - 1 < i) Then
-                    If (P.slides(Index + JDelta - 1).Shapes.HasTitle = msoTrue) Then
-                        If (P.slides(i).Shapes.Title.TextFrame.TextRange.Text >= _
-                            P.slides(Index + JDelta - 1).Shapes.Title.TextFrame.TextRange.Text) Then
+                If (Index + JDelta - 1 < I) Then
+                    If (P.Slides(Index + JDelta - 1).Shapes.HasTitle = msoTrue) Then
+                        If (P.Slides(I).Shapes.Title.TextFrame.TextRange.Text >= _
+                            P.Slides(Index + JDelta - 1).Shapes.Title.TextFrame.TextRange.Text) Then
                             Index = Index + JDelta
                         End If
                     End If
                 End If
             Wend
-            If (Index <> i) Then
-                P.slides(i).Copy
-                P.slides(i).Delete
-                P.slides.Paste Index
+            If (Index <> I) Then
+                P.Slides(I).Copy
+                P.Slides(I).Delete
+                P.Slides.Paste Index
             End If
         End If
     Next
@@ -153,39 +153,39 @@ End Sub
 Private Sub SortSlidesByCategory(ByVal P As PowerPoint.Presentation, ByVal LowerIndex As Long, ByVal UpperIndex As Long)
     Dim JDelta As Long
     Dim Index
-    Dim i As Long
+    Dim I As Long
     
     If ((LowerIndex < 1) Or _
-        (UpperIndex > P.slides.Count) Or _
+        (UpperIndex > P.Slides.Count) Or _
         (LowerIndex >= UpperIndex)) Then
         Exit Sub
     End If
     
-    For i = LowerIndex + 1 To UpperIndex Step 1
+    For I = LowerIndex + 1 To UpperIndex Step 1
         JDelta = 1
-        While (JDelta < (i - LowerIndex + 1))
+        While (JDelta < (I - LowerIndex + 1))
             JDelta = JDelta * 2
         Wend
         Index = LowerIndex - 1 + JDelta / 2
         While JDelta > 1
             JDelta = JDelta / 2
             If (Index - JDelta >= 1) Then
-                If (P.slides(i).Tags("CategoryIndex") < _
-                    P.slides(Index - JDelta).Tags("CategoryIndex")) Then
+                If (P.Slides(I).Tags("CategoryIndex") < _
+                    P.Slides(Index - JDelta).Tags("CategoryIndex")) Then
                     Index = Index - JDelta
                 End If
             End If
-            If (Index + JDelta - 1 < i) Then
-                If (P.slides(i).Tags("CategoryIndex") >= _
-                    P.slides(Index + JDelta - 1).Tags("CategoryIndex")) Then
+            If (Index + JDelta - 1 < I) Then
+                If (P.Slides(I).Tags("CategoryIndex") >= _
+                    P.Slides(Index + JDelta - 1).Tags("CategoryIndex")) Then
                     Index = Index + JDelta
                 End If
             End If
         Wend
-        If (Index <> i) Then
-            P.slides(i).Copy
-            P.slides(i).Delete
-            P.slides.Paste Index
+        If (Index <> I) Then
+            P.Slides(I).Copy
+            P.Slides(I).Delete
+            P.Slides.Paste Index
         End If
     Next
 End Sub
