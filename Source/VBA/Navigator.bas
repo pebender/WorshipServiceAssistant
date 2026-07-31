@@ -25,6 +25,7 @@ Attribute VB_Name = "Navigator"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================

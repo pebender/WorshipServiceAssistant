@@ -47,6 +47,9 @@ Attribute VB_Name = "Menu"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.00.0002:
+'     (1) Added a check to make sure the menu was refreshed before processing
+'         menu controls.
 '   1.00.0001:
 '     (1) Reworked "Song Edit" menu's "Set Category" menu
 '         to make it more flexible.
@@ -369,6 +372,27 @@ Public Sub Menu_OnActionNavigator()
         Project_Load
         Exit Sub
     End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    If (ActiveWindowExists = False) Then
+        Exit Sub
+    End If
+    
+    Dim W As DocumentWindow
+    Set W = Application.ActiveWindow
+    
+    If (ActiveWindowSlideExists(W) = False) Then
+        Exit Sub
+    End If
     
     Navigator_Run
 End Sub
@@ -384,6 +408,16 @@ Public Sub Menu_OnActionLoad()
         Project_Load
         Exit Sub
     End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
+        Exit Sub
+    End If
     
     If (ActiveWindowExists = False) Then
         Exit Sub
@@ -391,6 +425,10 @@ Public Sub Menu_OnActionLoad()
     
     Dim W As DocumentWindow
     Set W = Application.ActiveWindow
+    
+    If (ActiveSlideExists(W) = False) Then
+        Exit Sub
+    End If
     
     If (ActiveSlideShowExists(W) = False) Then
         SlideShow_End
@@ -412,6 +450,16 @@ Public Sub Menu_OnActionHide()
     '
     If (Project_Loaded = False) Then
         Project_Load
+        Exit Sub
+    End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
         Exit Sub
     End If
     
@@ -440,6 +488,16 @@ Public Sub Menu_OnActionSongEdit()
     '
     If (Project_Loaded = False) Then
         Project_Load
+        Exit Sub
+    End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
         Exit Sub
     End If
 End Sub
@@ -551,6 +609,16 @@ Public Sub Menu_OnActionDebug()
         Project_Load
         Exit Sub
     End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
+        Exit Sub
+    End If
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -620,6 +688,16 @@ Public Sub Menu_OnActionHelp()
     '
     If (Project_Loaded = False) Then
         Project_Load
+        Exit Sub
+    End If
+    '
+    ' Update the menu bar.
+    '
+    Menu_Refresh
+    '
+    ' Exit if the control is not enabled.
+    '
+    If (CommandBars.ActionControl.Enabled = False) Then
         Exit Sub
     End If
 End Sub

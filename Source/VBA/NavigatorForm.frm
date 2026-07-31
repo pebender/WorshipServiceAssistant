@@ -58,6 +58,9 @@ Attribute VB_Exposed = False
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.00.0002:
+'     (1) Fixed a bug that would allow the UserForm_QueryClose processing
+'         even though the UserForm_Initialize processing failed.
 '   1.00.0001:
 '     (1) Changed CleanEverything routine to remove quotes and match
 '         commonly interchanged words.
@@ -98,6 +101,11 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
+'
+' Indicates that the Navigator Form has loaded successfully.
+'
+Private NavigatorFormLoaded As Boolean
+
 '
 ' Indicates whether or not the Navigator form's focus is locked to the empty
 ' frame.  Normally the focus is locked to the empty frame.  However, sometimes
@@ -741,10 +749,18 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub UserForm_Initialize()
+    NavigatorFormLoaded = False
+    
     If (ActiveWindowExists = False) Then
         Unload NavigatorForm
         Exit Sub
     End If
+    If (ActiveWindowSlideExists(Application.ActiveWindow) = False) Then
+        Unload NavigatorForm
+        Exit Sub
+    End If
+    
+    NavigatorFormLoaded = True
     
     NavigatorFormLocked = True
     
@@ -794,13 +810,20 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     Dim P As Presentation
     Dim Response As Long
     
+    '
+    ' Exit without unloading form, because the form was never loaded.
+    '
+    If (NavigatorFormLoaded = False) Then
+        Exit Sub
+    End If
+    
     Response = MsgBox( _
         buttons:= _
             vbYesNo + vbDefaultButton2 + vbExclamation, _
         Title:= _
             ProjectNamePretty, _
         Prompt:= _
-            "Are you sure you want to exit the Navigator?")
+            "Are you sure you want to exit the Navigator?" & CloseMode)
 
     If (Response = vbYes) Then
         Cancel = 0
@@ -897,6 +920,7 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub ControlGeneralExit_Click()
+    
     Unload NavigatorForm
 End Sub
 
