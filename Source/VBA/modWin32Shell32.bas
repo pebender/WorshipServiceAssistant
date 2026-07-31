@@ -1,7 +1,7 @@
-Attribute VB_Name = "Win32_Shell32"
+Attribute VB_Name = "modWin32Shell32"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Win32_Shell32
+'   WorshipServiceAssistant.modWin32Shell32
 '
 ' Description:
 '   Interfaces to the Windows 32-bit (Win32) Shell (Shell32) API.
@@ -132,14 +132,18 @@ Public Const SW_SHOWDEFAULT                As Long = 10
 ' Function declarations.
 '===============================================================================
 Public Declare Function SHGetSpecialFolderPath Lib "shell32.dll" Alias "SHGetSpecialFolderPathA" _
-    (ByVal hwndOwner As Long, _
-     ByVal lpszPath As String, _
-     ByVal nFolder As Long, _
-     ByVal fCreate As Boolean) As Boolean
+    ( _
+        ByVal hwndOwner As Long, _
+        ByVal lpszPath As String, _
+        ByVal nFolder As Long, _
+        ByVal fCreate As Boolean _
+    ) As Boolean
 Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" _
-    (ByVal hwnd As Long, _
-     ByVal lpVerb As String, _
-     ByVal lpFile As String, _
-     ByVal lpParameters As String, _
-     ByVal lpDirectory As String, _
-     ByVal nShowCmd As Integer) As Long
+    ( _
+        ByVal hwnd As Long, _
+        ByVal lpVerb As String, _
+        ByVal lpFile As String, _
+        ByVal lpParameters As String, _
+        ByVal lpDirectory As String, _
+        ByVal nShowCmd As Integer _
+    ) As Long

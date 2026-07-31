@@ -1,7 +1,7 @@
-Attribute VB_Name = "Active"
+Attribute VB_Name = "modActive"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Active
+'   WorshipServiceAssistant.modActive
 '
 ' Description:
 '
@@ -39,13 +39,16 @@ Attribute VB_Name = "Active"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.03.0001:
-'     (1) Fixed a bug that caused ActiveSlideExists and ActiveSlide to
+'     (1) Fixed a bug that caused gblnActiveSlideExists and ActiveSlide to
 '         incorrectly believe that a slide is active when no slide was selected
 '         in the slide window of the outline pane in the normal view.
 '         This bug resulted from the addition of the Thumbnails view
 '         to the the Normal view in PowerPoint 2002 and some bad programmg.
-'     (2) Modified ActiveWindowExists and ActiveSlideExists to work around
+'     (2) Modified gblnActiveWindowExists and gblnActiveSlideExists to work around
 '         the PowerPoint 2002 VBA API bug described in Microsoft knowledge base
 '         article Q285436.
 '   1.00.0000:
@@ -92,118 +95,135 @@ Option Base 0
 '   the active document window is one of the following types: normal, outline,
 '   notes, slide, or slide sorter.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveWindowExists() As Boolean
-    On Error GoTo ActiveWindowExists_False
+Public Function gblnActiveWindowExists _
+( _
+) As Boolean
+    Dim ppActiveWindowViewType As PowerPoint.PpViewType
     
-    Dim ActiveWindowViewType As PowerPoint.PpViewType
+    On Error GoTo gblnActiveWindowExists_False
     
     With Application.ActiveWindow
-        ActiveWindowViewType = .ViewType
+        ppActiveWindowViewType = .ViewType
         If (.ViewType = PowerPoint.ppViewNormal) Then
             Select Case .Panes(2).ViewType
                 Case PowerPoint.ppViewSlide
-                    ActiveWindowViewType = PowerPoint.ppViewNormal
+                    ppActiveWindowViewType = PowerPoint.ppViewNormal
                 Case PowerPoint.ppViewSlideMaster
-                    ActiveWindowViewType = PowerPoint.ppViewSlideMaster
+                    ppActiveWindowViewType = PowerPoint.ppViewSlideMaster
             End Select
         End If
     End With
     
-    ActiveWindowExists = True
+    gblnActiveWindowExists = True
     
-    If ((ActiveWindowViewType <> PowerPoint.ppViewSlide) And _
-        (ActiveWindowViewType <> PowerPoint.ppViewNormal) And _
-        (ActiveWindowViewType <> PowerPoint.ppViewSlideSorter)) Then
-        GoTo ActiveWindowExists_False
+    If ((ppActiveWindowViewType <> PowerPoint.ppViewSlide) And _
+        (ppActiveWindowViewType <> PowerPoint.ppViewNormal) And _
+        (ppActiveWindowViewType <> PowerPoint.ppViewSlideSorter)) Then
+        GoTo gblnActiveWindowExists_False
     End If
 Exit Function
 
-ActiveWindowExists_False:
-    ActiveWindowExists = False
+gblnActiveWindowExists_False:
+    gblnActiveWindowExists = False
     Exit Function
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'    This function returns TRUE if the presentation, P, has an associated
-'    active slide show window.  Otherwise, it returns FALSE.
+'    This function returns TRUE if the presentation, prePresentation, has an
+'    associated active slide show window.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlideShowExists(ByVal P As PowerPoint.Presentation) As Boolean
-    On Error GoTo ActiveSlideShowExists_False
+Public Function gblnActiveSlideShowExists _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+) As Boolean
+    On Error GoTo gblnActiveSlideShowExists_False
     
-    ActiveSlideShowExists = True
+    gblnActiveSlideShowExists = True
     
-    If (IsNull(P.SlideShowWindow) = True) Then
-        GoTo ActiveSlideShowExists_False
+    If (VBA.IsNull(prePresentation.SlideShowWindow) = True) Then
+        GoTo gblnActiveSlideShowExists_False
     End If
-    If (IsEmpty(P.SlideShowWindow) = True) Then
-        GoTo ActiveSlideShowExists_False
+    If (VBA.IsEmpty(prePresentation.SlideShowWindow) = True) Then
+        GoTo gblnActiveSlideShowExists_False
     End If
 Exit Function
 
-ActiveSlideShowExists_False:
-    ActiveSlideShowExists = False
+gblnActiveSlideShowExists_False:
+    gblnActiveSlideShowExists = False
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'   This function returns TRUE if the document window, W, has at least
-'   one slide.  Otherwise, it returns FALSE.
+'   This function returns TRUE if the document window, dwDocumentWindow, has at
+'   least one slide.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveWindowSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
-    ActiveWindowSlideExists = False
-    If (W.Presentation.Slides.Count = 0) Then
+Public Function gblnActiveWindowSlideExists _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+) As Boolean
+    gblnActiveWindowSlideExists = False
+    If (dwDocumentWindow.Presentation.Slides.Count = 0) Then
         Exit Function
     End If
-    ActiveWindowSlideExists = True
+    gblnActiveWindowSlideExists = True
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'    This function returns TRUE if the document window, W, has a selection.
-'    Otherwise, it returns FALSE.
+'    This function returns TRUE if the document window, dwDocumentWindow, has a
+'     selection.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSelectionExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
-    ActiveSelectionExists = False
-    If (W.Selection.Type = PowerPoint.ppSelectionNone) Then
+Public Function gblnActiveSelectionExists _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+) As Boolean
+    gblnActiveSelectionExists = False
+    If (dwDocumentWindow.Selection.Type = PowerPoint.ppSelectionNone) Then
         Exit Function
     End If
-    ActiveSelectionExists = True
+    gblnActiveSelectionExists = True
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'    This function returns TRUE if the document window, W, has an active
-'    slide.  Otherwise, it returns FALSE.
+'    This function returns TRUE if the document window, dwDocumentWindow, has an
+'    active slide.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
-    On Error GoTo ActiveSlideExists_Exit
+Public Function gblnActiveSlideExists _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+) As Boolean
+    On Error GoTo gblnActiveSlideExists_Exit
     
-    ActiveSlideExists = False
-    If (ActiveWindowExists = True) Then
-        If (ActiveSelectionExists(W) = True) Then
-            ActiveSlideExists = True
+    gblnActiveSlideExists = False
+    If (gblnActiveWindowExists = True) Then
+        If (modActive.gblnActiveSelectionExists(dwDocumentWindow) = True) Then
+            gblnActiveSlideExists = True
         End If
-        If (IsNull(W.View.Slide) = False) Then
-            ActiveSlideExists = True
+        If (VBA.IsNull(dwDocumentWindow.View.Slide) = False) Then
+            gblnActiveSlideExists = True
         End If
     End If
 
-ActiveSlideExists_Exit:
+gblnActiveSlideExists_Exit:
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   This function returns the active slide associated with the document
-'   window, W.  This function does not test whether or not the document
-'   window has an active slide.  If no active slide exists, then this
+'   window, dwDocumentWindow.  This function does not test whether or not the
+'   documentwindow has an active slide.  If no active slide exists, then this
 '   function will generate an error.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlide(ByVal W As PowerPoint.DocumentWindow) As PowerPoint.Slide
-    If (ActiveSelectionExists(W) = True) Then
-        Set ActiveSlide = W.Selection.SlideRange(1)
+Public Function gppActiveSlideGet _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+) As PowerPoint.Slide
+    If (modActive.gblnActiveSelectionExists(dwDocumentWindow) = True) Then
+        Set gppActiveSlideGet = dwDocumentWindow.Selection.SlideRange(1)
     Else
-        Set ActiveSlide = W.View.Slide
+        Set gppActiveSlideGet = dwDocumentWindow.View.Slide
     End If
 End Function
 

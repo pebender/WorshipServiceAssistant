@@ -1,7 +1,7 @@
-Attribute VB_Name = "Main"
+Attribute VB_Name = "modMain"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Main
+'   WorshipServiceAssistant.modMain
 '
 ' Description:
 '   This is a PowerPoint 10.0 (aka 2002) add-in.
@@ -89,7 +89,9 @@ Option Base 0
 ' Description:
 '   Automatically loads the project.
 '-------------------------------------------------------------------------------
-Public Sub Auto_Open()
+Public Sub Auto_Open _
+( _
+)
     '
     ' Validate operating system.
     '
@@ -104,15 +106,17 @@ Public Sub Auto_Open()
         Exit Sub
     End If
     
-    Project_Load
+    modProject.gLoad
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   Automatically unloads the project.
 '-------------------------------------------------------------------------------
-Public Sub Auto_Close()
-    Project_Unload
+Public Sub Auto_Close _
+( _
+)
+    modProject.gUnload
 End Sub
 
 
@@ -126,8 +130,13 @@ End Sub
 '   valid operating system.  If the add-in has not been tested on the operating
 '   system, then the user is prompted.
 '-------------------------------------------------------------------------------
-Private Function ValidOperatingSystem() As Boolean
-    Dim ApplicationOperatingSystem As String
+Private Function ValidOperatingSystem _
+( _
+) As Boolean
+    Dim strApplicationOperatingSystem As String
+    Dim strPrompt As String
+    Dim strTitle As String
+    Dim intResponse As VBA.VbMsgBoxResult
     
     '
     ' Assume that add-in has been loaded on an invalid operating system.
@@ -137,31 +146,28 @@ Private Function ValidOperatingSystem() As Boolean
     '
     ' Get operating system.
     '
-    ApplicationOperatingSystem = Application.OperatingSystem
+    strApplicationOperatingSystem = Application.OperatingSystem
     
     '
     ' Check operating system.  Only consider the operating system valid
     ' if the add-in has been tested on the operating system or the user
     ' indicates the operating system is valid.
     '
-    Select Case ApplicationOperatingSystem
+    Select Case strApplicationOperatingSystem
         Case "Windows (32-bit) 5.01"
             ValidOperatingSystem = True
         Case Else
-            Dim msgPrompt As String
-            Dim msgTitle As String
-            Dim msgResponse As VBA.VbMsgBoxResult
-            msgPrompt = _
+            strPrompt = _
                 "The 'Worship Service Assistant' add-in " & _
                 "has not been tested on " & _
-                "'" & ApplicationOperatingSystem & "'" & ".  " & _
-                Chr(13) & Chr(10) & _
+                "'" & strApplicationOperatingSystem & "'" & ".  " & _
+                VBA.vbCrLf & _
                 "Would you like to run it anyway?"
-            msgTitle = _
+            strTitle = _
                 "'Worship Service Assistant' warning"
-            msgResponse = _
-                MsgBox(msgPrompt, vbYesNo, msgTitle)
-            If (msgResponse = vbYes) Then
+            intResponse = _
+                VBA.MsgBox(strPrompt, VBA.vbYesNo, strTitle)
+            If (intResponse = VBA.vbYes) Then
                 ValidOperatingSystem = True
             Else
                 ValidOperatingSystem = False
@@ -175,9 +181,14 @@ End Function
 '   valid application.  If the add-in has not been tested on the application,
 '   then the user is prompted.
 '-------------------------------------------------------------------------------
-Private Function ValidApplication() As Boolean
-    Dim ApplicationName As String
-    Dim ApplicationVersion As String
+Private Function ValidApplication _
+( _
+) As Boolean
+    Dim strApplicationName As String
+    Dim strApplicationVersion As String
+    Dim strPrompt As String
+    Dim strTitle As String
+    Dim intResponse As VBA.VbMsgBoxResult
     
     '
     ' Assume that add-in has been loaded on an invalid application or
@@ -188,32 +199,29 @@ Private Function ValidApplication() As Boolean
     '
     ' Get operating system, application and application version.
     '
-    ApplicationName = Application.Name
-    ApplicationVersion = Application.Version
+    strApplicationName = Application.Name
+    strApplicationVersion = Application.VERSION
     
     '
     ' Check operating system, application and application version.
     ' Only allow the add-in to start if they are all valid.
     '
-    Select Case ApplicationName & " " & ApplicationVersion
+    Select Case strApplicationName & " " & strApplicationVersion
         Case "Microsoft PowerPoint 10.0"
             ValidApplication = True
         Case Else
-            Dim msgPrompt As String
-            Dim msgTitle As String
-            Dim msgResponse As VBA.VbMsgBoxResult
-            msgPrompt = _
+            strPrompt = _
                 "The 'Worship Service Assistant' add-in " & _
                 "has not been tested on " & _
-                "'" & ApplicationName & " " & _
-                ApplicationVersion & "'" & ".  " & _
-                Chr(13) & Chr(10) & _
+                "'" & strApplicationName & " " & _
+                strApplicationVersion & "'" & ".  " & _
+                VBA.vbCrLf & _
                 "Would you like to run it anyway?"
-            msgTitle = _
+            strTitle = _
                 "'Worship Service Assistant' warning"
-            msgResponse = _
-                MsgBox(msgPrompt, vbYesNo, msgTitle)
-            If (msgResponse = vbYes) Then
+            intResponse = _
+                VBA.MsgBox(strPrompt, VBA.vbYesNo, strTitle)
+            If (intResponse = VBA.vbYes) Then
                 ValidApplication = True
             Else
                 ValidApplication = False

@@ -47,6 +47,9 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -102,11 +105,11 @@ Attribute PPTApplication.VB_VarHelpID = -1
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub PPTApplication_NewPresentation _
+Private Sub PPApplication_NewPresentation _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -114,9 +117,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationClose _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -124,9 +127,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationNewSlide _
 ( _
-    ByVal S As PowerPoint.Slide _
+    ByVal sldSlide As PowerPoint.Slide _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -134,9 +137,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationOpen _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -144,9 +147,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationPrint _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -154,9 +157,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationSave _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -164,7 +167,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowBegin _
 ( _
-    ByVal SSW As PowerPoint.SlideShowWindow _
+    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -173,7 +176,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowEnd _
 ( _
-    ByVal P As PowerPoint.Presentation _
+    ByVal prePresentation As PowerPoint.Presentation _
 )
 End Sub
 
@@ -182,7 +185,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowNextBuild _
 ( _
-    ByVal SSW As PowerPoint.SlideShowWindow _
+    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -191,7 +194,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowNextSlide _
 ( _
-    ByVal SSW As PowerPoint.SlideShowWindow _
+    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -200,10 +203,10 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowActivate _
 ( _
-    ByVal P As PowerPoint.Presentation, _
-    ByVal W As PowerPoint.DocumentWindow _
+    ByVal prePresentation As PowerPoint.Presentation, _
+    ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -211,8 +214,8 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowBeforeDoubleClick _
 ( _
-    ByVal Sel As PowerPoint.Selection, _
-    Cancel As Boolean _
+    ByVal selSelection As PowerPoint.Selection, _
+    blnCancel As Boolean _
 )
 End Sub
 
@@ -221,8 +224,8 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowBeforeRightClick _
 ( _
-    ByVal Sel As PowerPoint.Selection, _
-    Cancel As Boolean _
+    ByVal selSelection As PowerPoint.Selection, _
+    blnCancel As Boolean _
 )
 End Sub
 
@@ -231,10 +234,10 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowDeactivate _
 ( _
-    ByVal P As PowerPoint.Presentation, _
-    ByVal W As PowerPoint.DocumentWindow _
+    ByVal prePresentation As PowerPoint.Presentation, _
+    ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
 )
-    Menu_Disable
+    modToolbar.gDisable
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -242,8 +245,8 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowSelectionChange _
 ( _
-    ByVal Sel As PowerPoint.Selection _
+    ByVal selSelection As PowerPoint.Selection _
 )
-    Menu_Refresh
+    modToolbar.gRefresh
 End Sub
 

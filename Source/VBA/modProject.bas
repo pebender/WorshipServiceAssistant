@@ -1,7 +1,7 @@
-Attribute VB_Name = "Presentation"
+Attribute VB_Name = "modProject"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Presentation
+'   WorshipServiceAssistant.modProject
 '
 ' Description:
 '
@@ -9,7 +9,7 @@ Attribute VB_Name = "Presentation"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -39,6 +39,9 @@ Attribute VB_Name = "Presentation"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -56,12 +59,28 @@ Option Base 0
 '===============================================================================
 ' Public Constants.
 '===============================================================================
+Public Const GstrName As String = "WorshipServiceAssistant"
+Public Const GstrNamePretty As String = "Worship Service Assistant"
+Public Const GstrVersion As String = "1.03.0002"
+Public Const GstrAuthor As String = "Paul Bender"
+Public Const GstrCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
+Public Const GstrHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
+Public Const GstrEmail As String = "mailto:pbender@alumni.ucsd.edu"
 
 
 '===============================================================================
 ' Public Variables.
 '===============================================================================
 
+'
+' This variable is true if the project is running.
+'
+Public gblnLoaded As Boolean
+
+'
+' This variable contains the list of categories in the 'Set Category' menu.
+'
+Public gastrCategories() As String
 
 '===============================================================================
 ' Private Constants.
@@ -71,6 +90,7 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
+Private udtAEH As New ApplicationEventHandler
 
 
 '===============================================================================
@@ -79,49 +99,28 @@ Option Base 0
 
 '-------------------------------------------------------------------------------
 ' Description:
+'   Load the project.
 '-------------------------------------------------------------------------------
-Public Function Exists() As Boolean
-    Dim P As PowerPoint.Presentation
+Public Sub gLoad _
+( _
+)
+    modProject.gblnLoaded = True
+    modToolbar.gLoad
+    modSlideShow.gInitialize
     
-    Exists = False
-    For Each P In Application.Presentations
-        If (Banner.IsBanner(P) = False) Then
-            If (P.Windows.Count > 0) Then
-                If (P.Slides.Count > 0) Then
-                    Exists = True
-                End If
-            End If
-        End If
-    Next
-End Function
+    Set udtAEH.PPTApplication = Application
+End Sub
 
-Public Function IsPresentation(ByVal P As PowerPoint.Presentation) As Boolean
-    IsPresentation = False
-    If (Banner.IsBanner(P) = False) Then
-        If (P.Windows.Count > 0) Then
-            If (P.Slides.Count > 0) Then
-                IsPresentation = True
-            End If
-        End If
-    End If
-End Function
-
-Public Function SlideShowExists(ByVal P As PowerPoint.Presentation) As Boolean
-    On Error GoTo SlideShowExists_False
-    
-    SlideShowExists = True
-    
-    If (IsNull(P.SlideShowWindow) = True) Then
-        GoTo SlideShowExists_False
-    End If
-    If (IsEmpty(P.SlideShowWindow) = True) Then
-        GoTo SlideShowExists_False
-    End If
-Exit Function
-
-SlideShowExists_False:
-    SlideShowExists = False
-End Function
+'-------------------------------------------------------------------------------
+' Description:
+'   Unload Project.
+'-------------------------------------------------------------------------------
+Public Sub gUnload _
+( _
+)
+    modToolbar.gUnload
+    modProject.gblnLoaded = False
+End Sub
 
 
 '===============================================================================

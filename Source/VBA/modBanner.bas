@@ -1,7 +1,7 @@
-Attribute VB_Name = "Banner"
+Attribute VB_Name = "modBanner"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Banner
+'   WorshipServiceAssistant.modBanner
 '
 ' Description:
 '
@@ -39,6 +39,9 @@ Attribute VB_Name = "Banner"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.1005:
 '     (1) Worked around problem under PowerPoint 2002 that would cause
 '         the banner to fail to display.
@@ -76,7 +79,7 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private Pres As PowerPoint.Presentation
+Private mpreBanner As PowerPoint.Presentation
 
 
 '===============================================================================
@@ -86,113 +89,124 @@ Private Pres As PowerPoint.Presentation
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function IsBanner(ByRef P As PowerPoint.Presentation) As Boolean
-    If (P.Tags("WorshipServiceAssistantType") = "Banner") Then
-        IsBanner = True
+Public Function gblnIsBanner _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+) As Boolean
+    If (prePresentation.Tags("WorshipServiceAssistantType") = "Banner") Then
+        gblnIsBanner = True
     Else
-        IsBanner = False
+        gblnIsBanner = False
     End If
 End Function
 
-Public Sub Apply(ByVal SSW As PowerPoint.SlideShowWindow)
-    If (Banner.Exists = False) Then
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Public Sub gApply _
+( _
+    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
+)
+    Dim lngHeight As Long
+    
+    If (modBanner.gblnExists = False) Then
         Exit Sub
     End If
-    If (Banner.IsBanner(SSW.Presentation) = True) Then
+    If (modBanner.gblnIsBanner(sswSlideShowWindow.Presentation) = True) Then
         Exit Sub
     End If
     
-    Dim Height As Integer
-    
-    SSW.Left = Pres.SlideShowWindow.Left
-    SSW.Width = Pres.SlideShowWindow.Width
-    If (Banner.Enabled = False) Then
-        Height = 0
-        SSW.Height = Pres.SlideShowWindow.Height - Height
-        SSW.Top = Pres.SlideShowWindow.Top + Height
+    sswSlideShowWindow.Left = mpreBanner.SlideShowWindow.Left
+    sswSlideShowWindow.Width = mpreBanner.SlideShowWindow.Width
+    If (modBanner.gblnEnabled = False) Then
+        lngHeight = 0
+        sswSlideShowWindow.Height = mpreBanner.SlideShowWindow.Height - lngHeight
+        sswSlideShowWindow.Top = mpreBanner.SlideShowWindow.Top + lngHeight
     Else
-        Height = (Pres.SlideMaster.Shapes.Title.Height * Pres.SlideShowWindow.Height) / Pres.PageSetup.SlideHeight
-        SSW.Top = Pres.SlideShowWindow.Top + Height
-        SSW.Height = Pres.SlideShowWindow.Height - Height
+        lngHeight = (mpreBanner.SlideMaster.Shapes.Title.Height * mpreBanner.SlideShowWindow.Height) / mpreBanner.PageSetup.SlideHeight
+        sswSlideShowWindow.Top = mpreBanner.SlideShowWindow.Top + lngHeight
+        sswSlideShowWindow.Height = mpreBanner.SlideShowWindow.Height - lngHeight
     End If
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Create()
-    Dim I As Integer
-    Dim S As PowerPoint.Shape
+Public Sub gCreate _
+( _
+)
+    Dim sswSlideShowWindow As PowerPoint.SlideShowWindow
+    Dim lngIndex As Long
     
-    Set Pres = Nothing
+    Set mpreBanner = Nothing
     
-    For I = 1 To Application.Presentations.Count Step 1
-        If (Banner.IsBanner(Application.Presentations(I)) = True) Then
+    For lngIndex = 1 To Application.Presentations.Count Step 1
+        If (modBanner.gblnIsBanner(Application.Presentations(lngIndex)) = True) Then
             Exit For
         End If
     Next
-    If (I <= Application.Presentations.Count) Then
-        Set Pres = Application.Presentations(I)
+    If (lngIndex <= Application.Presentations.Count) Then
+        Set mpreBanner = Application.Presentations(lngIndex)
     Else
-        Set Pres = Application.Presentations.Add(msoTrue)
-        Pres.Tags.Add "WorshipServiceAssistantType", "Banner"
-        Banner.Enabled = False
-        With Pres.PageSetup
-            .SlideSize = ppSlideSizeOnScreen
-            .SlideOrientation = msoOrientationHorizontal
+        Set mpreBanner = Application.Presentations.Add(Office.msoTrue)
+        mpreBanner.Tags.Add "WorshipServiceAssistantType", "Banner"
+        modBanner.gblnEnabled = False
+        With mpreBanner.PageSetup
+            .SlideSize = PowerPoint.ppSlideSizeOnScreen
+            .SlideOrientation = Office.msoOrientationHorizontal
         End With
-        For I = Pres.Slides.Count To 1 Step -1
-            Pres.Slides(I).Delete
+        For lngIndex = mpreBanner.Slides.Count To 1 Step -1
+            mpreBanner.Slides(lngIndex).Delete
         Next
-        With Pres.SlideMaster
+        With mpreBanner.SlideMaster
             With .Background
                 With .Fill
                     .Solid
-                    .BackColor.RGB = RGB(0, 0, 0)
-                    .ForeColor.RGB = RGB(0, 0, 0)
+                    .BackColor.RGB = VBA.RGB(0, 0, 0)
+                    .ForeColor.RGB = VBA.RGB(0, 0, 0)
                 End With
             End With
-            For I = .Shapes.Count To 1 Step -1
-                .Shapes(I).Delete
+            For lngIndex = .Shapes.Count To 1 Step -1
+                .Shapes(lngIndex).Delete
             Next
             .Shapes.AddTitle
             With .Shapes.Title
                 .Top = 0
                 .Left = 0
-                .Width = Pres.PageSetup.SlideWidth
+                .Width = mpreBanner.PageSetup.SlideWidth
                 .Height = 0.5 * 72
             End With
             With .Shapes.Title.TextFrame
-                .HorizontalAnchor = msoAnchorCenter
-                .VerticalAnchor = msoAnchorTop
-                .Orientation = msoTextOrientationHorizontal
-                .WordWrap = msoFalse
+                .HorizontalAnchor = Office.msoAnchorCenter
+                .VerticalAnchor = Office.msoAnchorTop
+                .Orientation = Office.msoTextOrientationHorizontal
+                .WordWrap = Office.msoFalse
                 .MarginTop = 4
                 .MarginRight = 4
                 .MarginBottom = 4
                 .MarginLeft = 4
                 With .TextRange
                     With .ParagraphFormat
-                        .Alignment = ppAlignCenter
-                        .Bullet = msoFalse
-                        .WordWrap = msoFalse
+                        .Alignment = PowerPoint.ppAlignCenter
+                        .Bullet = Office.msoFalse
+                        .WordWrap = Office.msoFalse
                     End With
                     With .Font
                         .NameAscii = "Arial"
                         .Size = 28
-                        .Bold = msoFalse
-                        .Italic = msoFalse
-                        .Underline = msoFalse
-                        .Subscript = msoFalse
-                        .Superscript = msoFalse
-                        .Emboss = msoFalse
-                        .Shadow = msoFalse
-                        .Color.RGB = RGB(0, 0, 0)
+                        .Bold = Office.msoFalse
+                        .Italic = Office.msoFalse
+                        .Underline = Office.msoFalse
+                        .Subscript = Office.msoFalse
+                        .Superscript = Office.msoFalse
+                        .Emboss = Office.msoFalse
+                        .Shadow = Office.msoFalse
+                        .Color.RGB = VBA.RGB(0, 0, 0)
                     End With
                 End With
             End With
         End With
-        Pres.Slides.Add 1, ppLayoutTitleOnly
+        mpreBanner.Slides.Add 1, PowerPoint.ppLayoutTitleOnly
         
         '
         ' There should be no need to fill in the title text.
@@ -200,147 +214,164 @@ Public Sub Create()
         ' if there is no title text when the slide show is started,
         ' then no title text can be added later.
         '
-        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
-        Pres.Slides(1).Shapes.Title.TextFrame.TextRange.Text = "Welcome"
-        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
+        mpreBanner.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = VBA.RGB(0, 0, 0)
+        mpreBanner.Slides(1).Shapes.Title.TextFrame.TextRange.Text = "Welcome"
+        mpreBanner.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = VBA.RGB(0, 0, 0)
         
-        SlideShow_Setup Pres
+        modSlideShow.gSetup mpreBanner
     End If
-    If (ActiveSlideShowExists(Pres) = True) Then
+    If (modActive.gblnActiveSlideShowExists(mpreBanner) = True) Then
     Else
-        Dim SSW As PowerPoint.SlideShowWindow
-        Dim SSWState As Integer
-        
-        Set SSW = Nothing
+        Set sswSlideShowWindow = Nothing
         '
         ' If there is just one slide show window,
         ' then will make sure that it is on top.
         ' Otherwise, we do not know which one is on top.
         '
         If (Application.SlideShowWindows.Count = 1) Then
-            Set SSW = Application.SlideShowWindows(1)
+            Set sswSlideShowWindow = Application.SlideShowWindows(1)
         End If
         
-        Pres.SlideShowSettings.Run
-        SlideShow_Scale Pres
-        If ((SSW Is Nothing) = False) Then
-            SSW.Activate
+        mpreBanner.SlideShowSettings.Run
+        modSlideShow.gSizeSet mpreBanner
+        If ((sswSlideShowWindow Is Nothing) = False) Then
+            sswSlideShowWindow.Activate
         End If
     End If
     
-    Pres.Saved = msoTrue
+    mpreBanner.Saved = Office.msoTrue
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Delete()
-    If (Banner.Exists = False) Then
+Public Sub gDelete _
+( _
+)
+    If (modBanner.gblnExists = False) Then
         Exit Sub
     End If
-    Pres.Saved = msoTrue
-    Pres.Close
+    mpreBanner.Saved = Office.msoTrue
+    mpreBanner.Close
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Load(ByVal BannerString As String, ByVal Red As Integer, ByVal Green As Integer, ByVal Blue As Integer)
-    If (Banner.Exists = False) Then
+Public Sub gLoad _
+( _
+    ByVal strBanner As String, _
+    ByVal intRed As Integer, _
+    ByVal intGreen As Integer, _
+    ByVal intBlue As Integer _
+)
+    If (modBanner.gblnExists = False) Then
         Exit Sub
     End If
-    If (Banner.Enabled = False) Then
+    If (modBanner.gblnEnabled = False) Then
         Exit Sub
     End If
     
-    Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
-    Pres.Slides(1).Shapes.Title.TextFrame.TextRange.Text = BannerString
-    Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(Red, Green, Blue)
-    Banner.Visible = True
-    Pres.Saved = msoTrue
+    mpreBanner.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = VBA.RGB(0, 0, 0)
+    mpreBanner.Slides(1).Shapes.Title.TextFrame.TextRange.Text = strBanner
+    mpreBanner.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = VBA.RGB(intRed, intGreen, intBlue)
+    modBanner.gblnVisible = True
+    mpreBanner.Saved = Office.msoTrue
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function Exists() As Boolean
-    Exists = False
-    If (Pres Is Nothing) Then
+Public Function gblnExists _
+( _
+) As Boolean
+    gblnExists = False
+    If (mpreBanner Is Nothing) Then
         Exit Function
     End If
-    If (ActiveSlideShowExists(Pres) = False) Then
+    If (modActive.gblnActiveSlideShowExists(mpreBanner) = False) Then
         Exit Function
     End If
-    Exists = True
+    gblnExists = True
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Property Get Visible() As Boolean
-    Visible = False
-    If (Banner.Exists = False) Then
+Public Property Get gblnVisible _
+( _
+) As Boolean
+    gblnVisible = False
+    If (modBanner.gblnExists = False) Then
         Exit Property
     End If
-    If (Banner.Enabled = False) Then
+    If (modBanner.gblnEnabled = False) Then
         Exit Property
     End If
-    If (Pres.SlideShowWindow.View.State <> ppSlideShowBlackScreen) Then
-        Visible = True
+    If (mpreBanner.SlideShowWindow.View.State <> PowerPoint.ppSlideShowBlackScreen) Then
+        gblnVisible = True
     End If
 End Property
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Property Let Visible(ByVal Value As Boolean)
-    If (Banner.Exists = False) Then
+Public Property Let gblnVisible _
+( _
+    ByVal blnValue As Boolean _
+)
+    If (modBanner.gblnExists = False) Then
         Exit Property
     End If
-    With Pres.SlideShowWindow.View
-        If (Value = True) Then
-            .State = ppSlideShowRunning
-            .State = ppSlideShowPaused
+    With mpreBanner.SlideShowWindow.View
+        If (blnValue = True) Then
+            .State = PowerPoint.ppSlideShowRunning
+            .State = PowerPoint.ppSlideShowPaused
         Else
-            .State = ppSlideShowBlackScreen
+            .State = PowerPoint.ppSlideShowBlackScreen
         End If
-        .PointerType = ppSlideShowPointerArrow
+        .PointerType = PowerPoint.ppSlideShowPointerArrow
     End With
 End Property
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Property Get Enabled() As Boolean
-    Enabled = False
-    If (Banner.Exists = False) Then
+Public Property Get gblnEnabled _
+( _
+) As Boolean
+    gblnEnabled = False
+    If (modBanner.gblnExists = False) Then
         Exit Property
     End If
-    If (Pres.Tags("WorshipServiceAssistantBannerEnabled") = "True") Then
-        Enabled = True
+    If (mpreBanner.Tags("WorshipServiceAssistantBannerEnabled") = "True") Then
+        gblnEnabled = True
     End If
 End Property
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Property Let Enabled(ByVal Value As Boolean)
-    If (Banner.Exists = False) Then
+Public Property Let gblnEnabled _
+( _
+    ByVal blnValue As Boolean _
+)
+    Dim sswSlideShowWindow As PowerPoint.SlideShowWindow
+    
+    If (modBanner.gblnExists = False) Then
         Exit Property
     End If
     
-    Dim SSW As PowerPoint.SlideShowWindow
-    
-    If (Value = True) Then
-        Pres.Tags.Add "WorshipServiceAssistantBannerEnabled", "True"
+    If (blnValue = True) Then
+        mpreBanner.Tags.Add "WorshipServiceAssistantBannerEnabled", "True"
     Else
-        Banner.Visible = False
-        Pres.Tags.Add "WorshipServiceAssistantBannerEnabled", "False"
+        modBanner.gblnVisible = False
+        mpreBanner.Tags.Add "WorshipServiceAssistantBannerEnabled", "False"
     End If
-    Pres.Saved = msoTrue
+    mpreBanner.Saved = Office.msoTrue
     
-    For Each SSW In Application.SlideShowWindows
-        Banner.Apply SSW
+    For Each sswSlideShowWindow In Application.SlideShowWindows
+        modBanner.gApply sswSlideShowWindow
     Next
 End Property
 

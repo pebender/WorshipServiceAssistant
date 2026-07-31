@@ -1,7 +1,7 @@
-Attribute VB_Name = "Win32_AdvAPI32"
+Attribute VB_Name = "modWin32AdvAPI32"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Win32_AdvAPI32
+'   WorshipServiceAssistant.modWin32AdvAPI32
 '
 ' Description:
 '   Interfaces to the Windows 32-bit (Win32) Advanced API (AdvAPI32) API.
@@ -130,34 +130,48 @@ Public Const REG_LEGAL_OPTION             As Long = (REG_OPTION_RESERVED Or _
 ' Function declarations.
 '===============================================================================
 Public Declare Function RegCloseKey Lib "advapi32.dll" _
-    (ByVal HKey As Long) As Long
+    ( _
+        ByVal HKey As Long _
+    ) As Long
 Public Declare Function RegCreateKey Lib "advapi32.dll" Alias "RegCreateKeyA" _
-    (ByVal HKey As Long, _
-     ByVal lpSubKey As String, _
-     ByRef phkResult As Long) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpSubKey As String, _
+        ByRef phkResult As Long _
+    ) As Long
 Public Declare Function RegDeleteKey Lib "advapi32.dll" Alias "RegDeleteKeyA" _
-    (ByVal HKey As Long, _
-     ByVal lpSubKey As String) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpSubKey As String _
+    ) As Long
 Public Declare Function RegDeleteValue Lib "advapi32.dll" Alias "RegDeleteValueA" _
-    (ByVal HKey As Long, _
-     ByVal lpValueName As String) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpValueName As String _
+    ) As Long
 Public Declare Function RegOpenKeyEx Lib "advapi32.dll" Alias "RegOpenKeyExA" _
-    (ByVal HKey As Long, _
-     ByVal lpSubKey As String, _
-     ByVal uloptions As Long, _
-     ByVal samdesired As Long, _
-     ByRef phkResult As Long) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpSubKey As String, _
+        ByVal uloptions As Long, _
+        ByVal samdesired As Long, _
+        ByRef phkResult As Long _
+    ) As Long
 Public Declare Function RegQueryValueEx Lib "advapi32.dll" Alias "RegQueryValueExA" _
-    (ByVal HKey As Long, _
-     ByVal lpValueName As String, _
-     ByVal lpReserved As Long, _
-     ByRef lpType As Long, _
-     ByRef lpData As Any, _
-     ByRef lpcbData As Long) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpValueName As String, _
+        ByVal lpReserved As Long, _
+        ByRef lpType As Long, _
+        ByRef lpData As Any, _
+        ByRef lpcbData As Long _
+    ) As Long
 Public Declare Function RegSetValueEx Lib "advapi32.dll" Alias "RegSetValueExA" _
-    (ByVal HKey As Long, _
-     ByVal lpValueName As String, _
-     ByVal Reserved As Long, _
-     ByVal dwType As Long, _
-     ByRef lpData As Any, _
-     ByVal cbData As Long) As Long
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpValueName As String, _
+        ByVal Reserved As Long, _
+        ByVal dwType As Long, _
+        ByRef lpData As Any, _
+        ByVal cbData As Long _
+    ) As Long

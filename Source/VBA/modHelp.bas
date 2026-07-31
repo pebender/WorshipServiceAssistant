@@ -1,7 +1,7 @@
-Attribute VB_Name = "Help"
+Attribute VB_Name = "modHelp"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Help
+'   WorshipServiceAssistant.modHelp
 '
 ' Description:
 '   This module contains constants associated with the help system.
@@ -40,6 +40,9 @@ Attribute VB_Name = "Help"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.01.0007:
 '     (1) Added KnownIssues help constants.
 '   1.01.0001:
@@ -80,21 +83,21 @@ Public Const HH_HELP_CONTEXT  As Long = &HF
 '-------------------------------------------------------------------------------
 ' Topic identifiers.
 '-------------------------------------------------------------------------------
-Public Const IDH_Topic_WSA                        As Long = 10000
-Public Const IDH_Topic_WSAHowTo                   As Long = 11000
-Public Const IDH_Topic_WSACommandBar              As Long = 12000
-Public Const IDH_Topic_WSACommandBarNavigator     As Long = 12100
-Public Const IDH_Topic_WSAKnownIssues             As Long = 10100
-Public Const IDH_Topic_WSACopyrightPermission     As Long = 10200
-Public Const IDH_Topic_WSAHistory                 As Long = 10300
+Public Const GlngIDH_Topic_WSA                        As Long = 10000
+Public Const GlngIDH_Topic_WSAHowTo                   As Long = 11000
+Public Const GlngIDH_Topic_WSACommandBar              As Long = 12000
+Public Const GlngIDH_Topic_WSACommandBarNavigator     As Long = 12100
+Public Const GlngIDH_Topic_WSAKnownIssues             As Long = 10100
+Public Const GlngIDH_Topic_WSACopyrightPermission     As Long = 10200
+Public Const GlngIDH_Topic_WSAHistory                 As Long = 10300
 
-Public Const IDH_TopicPath_WSA                    As String = "HTML/WSA.htm"
-Public Const IDH_TopicPath_WSAHowTo               As String = "HTML/WSA/HowTo.htm"
-Public Const IDH_TopicPath_WSACommandBar          As String = "HTML/WSA/CommandBar.htm"
-Public Const IDH_TopicPath_WSACommandBarNavigator As String = "HTML/WSA/CommandBar/Navigator.htm"
-Public Const IDH_TopicPath_WSAKnownIssues         As String = "HTML/WSA/KnownIssues.htm"
-Public Const IDH_TopicPath_WSACopyrightPermission As String = "HTML/WSA/CopyrightPermission.htm"
-Public Const IDH_TopicPath_WSAHistory             As String = "HTML/WSA/History.htm"
+Public Const GstrIDH_TopicPath_WSA                    As String = "HTML/WSA.htm"
+Public Const GstrIDH_TopicPath_WSAHowTo               As String = "HTML/WSA/HowTo.htm"
+Public Const GstrIDH_TopicPath_WSACommandBar          As String = "HTML/WSA/CommandBar.htm"
+Public Const GstrIDH_TopicPath_WSACommandBarNavigator As String = "HTML/WSA/CommandBar/Navigator.htm"
+Public Const GstrIDH_TopicPath_WSAKnownIssues         As String = "HTML/WSA/KnownIssues.htm"
+Public Const GstrIDH_TopicPath_WSACopyrightPermission As String = "HTML/WSA/CopyrightPermission.htm"
+Public Const GstrIDH_TopicPath_WSAHistory             As String = "HTML/WSA/History.htm"
 
 
 '===============================================================================
@@ -121,71 +124,76 @@ Public Const IDH_TopicPath_WSAHistory             As String = "HTML/WSA/History.
 '   HTML Help control API function declarations.
 '-------------------------------------------------------------------------------
 Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
-    (ByVal hwndCaller As Long, _
-     ByVal pszFile As String, _
-     ByVal uCommand As Long, _
-     ByVal dwData As Any) As Long
+    ( _
+        ByVal hwndCaller As Long, _
+        ByVal pszFile As String, _
+        ByVal uCommand As Long, _
+        ByVal dwData As Any _
+    ) As Long
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Function Help_GetHelpFileName(ByVal ShowNotFoundMessage As Boolean) As String
-    Dim HelpFileName As String
-    Dim HelpFileFound As Boolean
-    Dim FileSystem As Object
-    Dim Index As Long
+Function gstrFileNameGet _
+( _
+    ByRef blnNotFoundMessageShow As Boolean _
+) As String
+    Dim strHelpFileName As String
+    Dim blnHelpFileFound As Boolean
+    Dim objFileSystem As Object
+    Dim lngIndex As Long
     
-    Set FileSystem = CreateObject("Scripting.FileSystemObject")
+    Set objFileSystem = VBA.CreateObject("Scripting.FileSystemObject")
     
-    HelpFileFound = False
-    HelpFileName = ""
+    blnHelpFileFound = False
+    strHelpFileName = ""
     
-    If (HelpFileFound = False) Then
-        For Index = 1 To Application.AddIns.Count
-            If (Application.AddIns(Index).Name = ProjectName) Then
-                HelpFileFound = True
-                HelpFileName = Application.AddIns(Index).Path
-                HelpFileName = FileSystem.BuildPath(HelpFileName, ProjectName & ".chm")
-                Set FileSystem = CreateObject("Scripting.FileSystemObject")
-                If (FileSystem.FileExists(HelpFileName) = False) Then
-                    HelpFileFound = False
-                    HelpFileName = ""
+    If (blnHelpFileFound = False) Then
+        For lngIndex = 1 To Application.AddIns.Count
+            If (Application.AddIns(lngIndex).Name = modProject.GstrName) Then
+                blnHelpFileFound = True
+                strHelpFileName = Application.AddIns(lngIndex).Path
+                strHelpFileName = objFileSystem.BuildPath(strHelpFileName, modProject.GstrName & ".chm")
+                Set objFileSystem = VBA.CreateObject("Scripting.FileSystemObject")
+                If (objFileSystem.FileExists(strHelpFileName) = False) Then
+                    blnHelpFileFound = False
+                    strHelpFileName = ""
                  End If
             End If
         Next
     End If
     
-    If (HelpFileFound = False) Then
-        For Index = 1 To Application.Presentations.Count
-            If (LCase(Application.Presentations(Index).Name) = LCase(ProjectName & ".ppt")) Then
-                HelpFileFound = True
-                HelpFileName = Application.Presentations(Index).Path
-                HelpFileName = Left(HelpFileName, InStrRev(HelpFileName, "/"))
-                HelpFileName = FileSystem.BuildPath(HelpFileName, ProjectName & ".chm")
-                If (FileSystem.FileExists(HelpFileName) = False) Then
-                    HelpFileFound = False
-                    HelpFileName = ""
+    If (blnHelpFileFound = False) Then
+        For lngIndex = 1 To Application.Presentations.Count
+            If (VBA.LCase(Application.Presentations(lngIndex).Name) = VBA.LCase(modProject.GstrName & ".ppt")) Then
+                blnHelpFileFound = True
+                strHelpFileName = Application.Presentations(lngIndex).Path
+                strHelpFileName = VBA.Left(strHelpFileName, InStrRev(strHelpFileName, "/"))
+                strHelpFileName = objFileSystem.BuildPath(strHelpFileName, modProject.GstrName & ".chm")
+                If (objFileSystem.FileExists(strHelpFileName) = False) Then
+                    blnHelpFileFound = False
+                    strHelpFileName = ""
                  End If
             End If
         Next
     End If
     
-    If (HelpFileFound = False) Then
-        If (ShowNotFoundMessage = True) Then
-            MsgBox _
+    If (blnHelpFileFound = False) Then
+        If (blnNotFoundMessageShow = True) Then
+            VBA.MsgBox _
                 buttons:= _
-                    vbExclamation, _
+                    VBA.vbExclamation, _
                 Title:= _
-                    ProjectNamePretty, _
+                    modProject.GstrNamePretty, _
                 Prompt:= _
                     "The Worship Service Assistant help file could not be " & _
                     "found. Be sure that both the add-in and help files are " & _
                     "in the same folder and that both files have the name " & _
-                    "'" & ProjectName & "' (excluding the file extension)."
+                    "'" & modProject.GstrName & "' (excluding the file extension)."
         End If
      End If
     
-    Help_GetHelpFileName = HelpFileName
+    gstrFileNameGet = strHelpFileName
 End Function
 
 

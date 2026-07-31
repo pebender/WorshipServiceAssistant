@@ -1,7 +1,7 @@
-Attribute VB_Name = "Navigator"
+Attribute VB_Name = "modPresentation"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Navigator
+'   WorshipServiceAssistant.modPresentation
 '
 ' Description:
 '
@@ -39,7 +39,9 @@ Attribute VB_Name = "Navigator"
 '   of the copyright holder.
 '
 ' Change History:
-'
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -68,6 +70,7 @@ Option Base 0
 ' Private Constants.
 '===============================================================================
 
+
 '===============================================================================
 ' Private Variables.
 '===============================================================================
@@ -79,47 +82,62 @@ Option Base 0
 
 '-------------------------------------------------------------------------------
 ' Description:
-'   Launch the slide navigator.  In order to exit, the slide navigator must be
-'   unloaded.  If the slide navigator is only hidden, then this routine will
-'   automatically refresh it and re-show it.  This is a hack to work around
-'   some focus problems resulting from activating slide shows and activating
-'   new presentations.
 '-------------------------------------------------------------------------------
-Public Sub Navigator_Run()
-    '
-    ' Show the Navigator form until it is unloaded.
-    '
-    Do
-        If (Navigator_Loaded = True) Then
-            NavigatorForm.Refresh
+Public Function gblnExists _
+( _
+) As Boolean
+    Dim prePresentation As PowerPoint.Presentation
+    
+    gblnExists = False
+    For Each prePresentation In Application.Presentations
+        If (modBanner.gblnIsBanner(prePresentation) = False) Then
+            If (prePresentation.Windows.Count > 0) Then
+                If (prePresentation.Slides.Count > 0) Then
+                    gblnExists = True
+                End If
+            End If
         End If
-        NavigatorForm.Show
-    Loop Until (Navigator_Loaded = False)
-End Sub
+    Next
+End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function Navigator_Refresh() As Boolean
-    If (Navigator_Loaded = True) Then
-        NavigatorForm.Refresh
+Public Function gblnIsPresentation _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+) As Boolean
+    gblnIsPresentation = False
+    If (modBanner.gblnIsBanner(prePresentation) = False) Then
+        If (prePresentation.Windows.Count > 0) Then
+            If (prePresentation.Slides.Count > 0) Then
+                gblnIsPresentation = True
+            End If
+        End If
     End If
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'   Determine if the slide navigator is loaded.
 '-------------------------------------------------------------------------------
-Public Function Navigator_Loaded() As Boolean
-    Dim f As Object
+Public Function gblnSlideShowExists _
+( _
+    ByVal prePresentation As PowerPoint.Presentation _
+) As Boolean
+    On Error GoTo gblnSlideShowExists_False
     
-    Navigator_Loaded = False
-    For Each f In UserForms
-        If (f.Name = "NavigatorForm") Then
-            Navigator_Loaded = True
-            Exit For
-        End If
-    Next
+    gblnSlideShowExists = True
+    
+    If (VBA.IsNull(prePresentation.SlideShowWindow) = True) Then
+        GoTo gblnSlideShowExists_False
+    End If
+    If (VBA.IsEmpty(prePresentation.SlideShowWindow) = True) Then
+        GoTo gblnSlideShowExists_False
+    End If
+Exit Function
+
+gblnSlideShowExists_False:
+    gblnSlideShowExists = False
 End Function
 
 

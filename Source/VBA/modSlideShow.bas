@@ -1,7 +1,7 @@
-Attribute VB_Name = "SlideShow"
+Attribute VB_Name = "modSlideShow"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.SlideShow
+'   WorshipServiceAssistant.modSlideShow
 '
 ' Description:
 '
@@ -39,8 +39,11 @@ Attribute VB_Name = "SlideShow"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.01.0007:
-'     (1) Fixed bug that would cause SlideShow_IsSlideShow to crash
+'     (1) Fixed bug that would cause SlideShow_modSlideShow.gblnIsSlideShow to crash
 '         when the presentation has no document windows.
 '     (2) Made changes to the SlideShow_Prev and SlideShow_Next routines
 '         so that they would work under PowerPoint 2002.
@@ -80,8 +83,8 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private SlideShowWindowDisplay As Integer
-Private SlideShowWindowSize As Integer
+Private mlngSlideShowWindowDisplay As Long
+Private mlngSlideShowWindowSize As Long
 
 
 '===============================================================================
@@ -91,109 +94,125 @@ Private SlideShowWindowSize As Integer
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function SlideShow_IsSlideShow(ByVal P As PowerPoint.Presentation) As Boolean
-    Dim IsSlideShow As Boolean
+Public Function gblnIsSlideShow _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+) As Boolean
+    gblnIsSlideShow = True
+    If (gblnIsSlideShow) Then
+        If (prePresentation.Windows.Count = 0) Then
+            gblnIsSlideShow = False
+        End If
+    End If
+    If (gblnIsSlideShow) Then
+        If (modActive.gblnActiveWindowSlideExists(prePresentation.Windows(1)) = False) Then
+            gblnIsSlideShow = False
+        End If
+    End If
+    If (gblnIsSlideShow) Then
+        If (modBanner.gblnIsBanner(prePresentation) = True) Then
+            gblnIsSlideShow = False
+        End If
+    End If
     
-    IsSlideShow = True
-    If (IsSlideShow) Then
-        If (P.Windows.Count = 0) Then
-            IsSlideShow = False
-        End If
-    End If
-    If (IsSlideShow) Then
-        If (ActiveWindowSlideExists(P.Windows(1)) = False) Then
-            IsSlideShow = False
-        End If
-    End If
-    If (IsSlideShow) Then
-        If (Banner.IsBanner(P) = True) Then
-            IsSlideShow = False
-        End If
-    End If
-    
-    SlideShow_IsSlideShow = IsSlideShow
+    gblnIsSlideShow = gblnIsSlideShow
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Initialize()
-    SlideShowWindowDisplay = 0
-    SlideShowWindowSize = 0
+Public Sub gInitialize _
+( _
+)
+    mlngSlideShowWindowDisplay = 0
+    mlngSlideShowWindowSize = 0
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_SetWindowDisplay(ByVal WindowDisplay As Integer)
-    SlideShowWindowDisplay = WindowDisplay
+Public Sub gWindowDisplaySet _
+( _
+    ByRef lngWindowDisplay As Long _
+)
+    mlngSlideShowWindowDisplay = lngWindowDisplay
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_SetWindowSize(ByVal WindowSize As Integer)
-    SlideShowWindowSize = WindowSize
+Public Sub gWindowSizeSet _
+( _
+    ByRef lngWindowSize As Long _
+)
+    mlngSlideShowWindowSize = lngWindowSize
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function SlideShow_GetWindowDisplay() As Integer
-    SlideShow_GetWindowDisplay = SlideShowWindowDisplay
+Public Function glngWindowDisplayGet _
+( _
+) As Long
+    glngWindowDisplayGet = mlngSlideShowWindowDisplay
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function SlideShow_GetWindowSize() As Integer
-    SlideShow_GetWindowSize = SlideShowWindowSize
+Public Function glngWindowSizeGet _
+( _
+) As Long
+    glngWindowSizeGet = mlngSlideShowWindowSize
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Setup(ByVal P As PowerPoint.Presentation)
-    Dim PSaved As Boolean
-    Dim Index As Integer
+Public Sub gSetup _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+)
+    Dim blnPresentationSaved As Boolean
+    Dim lngIndex As Long
     
     '
     ' Cannot setup a slide show if the presentation has an active slide show.
     '
-    If (ActiveSlideShowExists(P) = True) Then
+    If (modActive.gblnActiveSlideShowExists(prePresentation) = True) Then
         Exit Sub
     End If
     '
     ' Cannot setup a slide show if the presentation has no slides.
     '
-'    If (ActiveWindowSlideExists(W) = False) Then
+'    If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = False) Then
 '        Exit Sub
 '    End If
     
-    PSaved = P.Saved
+    blnPresentationSaved = prePresentation.Saved
 
     '
     ' Configure slide show settings.  Unfortunately, the Slide Show
     ' display monitor is not part of the PowerPoint 9.0 object hierarchy.
     '
-    With P.SlideShowSettings
-        If (.ShowType <> ppShowTypeSpeaker) Then
-            .ShowType = ppShowTypeSpeaker
+    With prePresentation.SlideShowSettings
+        If (.ShowType <> PowerPoint.ppShowTypeSpeaker) Then
+            .ShowType = PowerPoint.ppShowTypeSpeaker
         End If
-        If (.RangeType <> ppShowAll) Then
-            .RangeType = ppShowAll
+        If (.RangeType <> PowerPoint.ppShowAll) Then
+            .RangeType = PowerPoint.ppShowAll
         End If
-        If (.AdvanceMode = ppSlideShowManualAdvance) Then
-            .AdvanceMode = ppSlideShowManualAdvance
+        If (.AdvanceMode = PowerPoint.ppSlideShowManualAdvance) Then
+            .AdvanceMode = PowerPoint.ppSlideShowManualAdvance
         End If
-        If (.LoopUntilStopped <> msoTrue) Then
-            .LoopUntilStopped = msoTrue
+        If (.LoopUntilStopped <> Office.msoTrue) Then
+            .LoopUntilStopped = Office.msoTrue
         End If
-        If (.ShowWithAnimation <> msoTrue) Then
-            .ShowWithAnimation = msoTrue
+        If (.ShowWithAnimation <> Office.msoTrue) Then
+            .ShowWithAnimation = Office.msoTrue
         End If
-        If (.ShowWithNarration <> msoTrue) Then
-            .ShowWithNarration = msoTrue
+        If (.ShowWithNarration <> Office.msoTrue) Then
+            .ShowWithNarration = Office.msoTrue
         End If
     End With
     
@@ -210,41 +229,43 @@ Public Sub SlideShow_Setup(ByVal P As PowerPoint.Presentation)
     ' Fifth, the "Set Up Show" dialog box is closed using
     '   the ENTER key.
     '
-    P.Windows(1).Activate
+    prePresentation.Windows(1).Activate
     Application.CommandBars.FindControl(Id:=2744).Execute
-    SendKeys "%o", True
-    If (SlideShowWindowDisplay > 0) Then
-        SendKeys "{PGUP}", True
-        For Index = 1 To SlideShowWindowDisplay Step 1
-            SendKeys "{DOWN}", True
+    VBA.SendKeys "%o", True
+    If (mlngSlideShowWindowDisplay > 0) Then
+        VBA.SendKeys "{PGUP}", True
+        For lngIndex = 1 To mlngSlideShowWindowDisplay Step 1
+            VBA.SendKeys "{DOWN}", True
         Next
-        SendKeys "{ENTER}", True
+        VBA.SendKeys "{ENTER}", True
     Else
-        SendKeys "{PGDN}", True
+        VBA.SendKeys "{PGDN}", True
     End If
-    SendKeys "{ENTER}", True
+    VBA.SendKeys "{ENTER}", True
     
-    P.Saved = PSaved
+    prePresentation.Saved = blnPresentationSaved
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_End()
-    Dim I As Long
+Public Sub gQuit _
+( _
+)
+    Dim lngIndex As Long
     
     '
     ' Exit all slide shows.  For the sake of appearance, all slide shows
     ' are blacked before any slide shows are exited.
     '
-    For I = Application.SlideShowWindows.Count To 1 Step -1
-        If (Presentation.IsPresentation(Application.SlideShowWindows(I).Presentation) = True) Then
-            Application.SlideShowWindows(I).View.State = ppSlideShowBlackScreen
+    For lngIndex = Application.SlideShowWindows.Count To 1 Step -1
+        If (modPresentation.gblnIsPresentation(Application.SlideShowWindows(lngIndex).Presentation) = True) Then
+            Application.SlideShowWindows(lngIndex).View.State = PowerPoint.ppSlideShowBlackScreen
         End If
     Next
-    For I = Application.SlideShowWindows.Count To 1 Step -1
-        If (Presentation.IsPresentation(Application.SlideShowWindows(I).Presentation) = True) Then
-            Application.SlideShowWindows(I).View.Exit
+    For lngIndex = Application.SlideShowWindows.Count To 1 Step -1
+        If (modPresentation.gblnIsPresentation(Application.SlideShowWindows(lngIndex).Presentation) = True) Then
+            Application.SlideShowWindows(lngIndex).View.Exit
         End If
     Next
 End Sub
@@ -252,61 +273,65 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Begin(ByVal W As PowerPoint.DocumentWindow)
-    Dim P As PowerPoint.Presentation
-    Dim PSaved As Boolean
+Public Sub gBegin _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    Dim prePresentation As PowerPoint.Presentation
+    Dim blnPresentationSaved As Boolean
     
-    Set P = W.Presentation
-    PSaved = P.Saved
+    Set prePresentation = dwDocumentWindow.Presentation
+    blnPresentationSaved = prePresentation.Saved
     
     '
     ' Unfortunately, there appears to be no way to start the slide show
     ' with a black screen.  However, the first slide will flash for a
     ' moment.
     '
-    If (ActiveSlideExists(W) = True) Then
-        P.SlideShowSettings.Run.View.GotoSlide ActiveSlide(W).SlideIndex, msoTrue
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = True) Then
+        prePresentation.SlideShowSettings.Run.View.GotoSlide modActive.gppActiveSlideGet(dwDocumentWindow).SlideIndex, Office.msoTrue
     Else
-        P.SlideShowSettings.Run
+        prePresentation.SlideShowSettings.Run
     End If
     
     '
     ' Set the slide show window size.
     '
-    SlideShow_Scale W.Presentation
+    modSlideShow.gSizeSet dwDocumentWindow.Presentation
         
-    P.Saved = PSaved
+    prePresentation.Saved = blnPresentationSaved
     
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    P.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+    dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowPaused
+    prePresentation.SlideShowWindow.View.PointerType = PowerPoint.ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Scale(ByVal P As PowerPoint.Presentation)
-    Dim PSaved As Boolean
-    Dim Top As Long
-    Dim Left As Long
-    Dim Height As Long
-    Dim Width As Long
-    Dim Index As Long
+Public Sub gSizeSet _
+( _
+    ByRef prePresentation As PowerPoint.Presentation _
+)
+    Dim blnPresentationSaved As Boolean
+    Dim lngHeight As Long
+    Dim lngWidth As Long
+    Dim lngIndex As Long
     
-    PSaved = P.Saved
+    blnPresentationSaved = prePresentation.Saved
     
     '
-    ' Scale the slide show size.
+    ' Set the slide show size.
     '
-    Height = P.SlideShowWindow.Height
-    Width = P.SlideShowWindow.Width
-    For Index = 1 To SlideShowWindowSize - 1 Step 1
-        Height = Height / 2
-        Width = Width / 2
+    lngHeight = prePresentation.SlideShowWindow.Height
+    lngWidth = prePresentation.SlideShowWindow.Width
+    For lngIndex = 1 To mlngSlideShowWindowSize - 1 Step 1
+        lngHeight = lngHeight / 2
+        lngWidth = lngWidth / 2
     Next
-    P.SlideShowWindow.Height = Height
-    P.SlideShowWindow.Width = Width
+    prePresentation.SlideShowWindow.Height = lngHeight
+    prePresentation.SlideShowWindow.Width = lngWidth
         
-    P.Saved = PSaved
+    prePresentation.Saved = blnPresentationSaved
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -314,51 +339,57 @@ End Sub
 '   Load the currently active slide in the presentation's window into the
 '   presentation's slide show window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Load(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gLoad _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    Dim lngIndex As Long
+    
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
     
-    Dim Index As Long
-    
-    Index = ActiveSlide(W).SlideIndex
-    W.Presentation.SlideShowWindow.View.GotoSlide Index, msoFalse
+    lngIndex = modActive.gppActiveSlideGet(dwDocumentWindow).SlideIndex
+    dwDocumentWindow.Presentation.SlideShowWindow.View.GotoSlide lngIndex, Office.msoFalse
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   Toggles the slide show display between hidden and shown.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Hide(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gHide _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
     
-    If (W.Presentation.SlideShowWindow.View.State = ppSlideShowBlackScreen) Then
-        W.Presentation.SlideShowWindow.View.State = ppSlideShowRunning
-        W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-        W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+    If (dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowBlackScreen) Then
+        dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowRunning
+        dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowPaused
+        dwDocumentWindow.Presentation.SlideShowWindow.View.PointerType = PowerPoint.ppSlideShowPointerArrow
     Else
-        W.Presentation.SlideShowWindow.View.State = ppSlideShowBlackScreen
-        W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+        dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowBlackScreen
+        dwDocumentWindow.Presentation.SlideShowWindow.View.PointerType = PowerPoint.ppSlideShowPointerArrow
     End If
 End Sub
 
@@ -366,122 +397,134 @@ End Sub
 ' Description:
 '   Run the slide show associated with the presentation window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Run(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gRun _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    Dim lngIndex As Long
+    
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
     
     '
     ' Abort if the slide show is already running.
     '
-    If (W.Presentation.SlideShowWindow.View.State = ppSlideShowRunning) Then
+    If (dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowRunning) Then
         Exit Sub
     End If
     
-    Dim Index As Long
-    
-    Index = W.Presentation.SlideShowWindow.View.Slide.SlideIndex
-    W.Presentation.SlideShowWindow.View.GotoSlide Index, msoFalse
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowRunning
-    W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+    lngIndex = dwDocumentWindow.Presentation.SlideShowWindow.View.Slide.SlideIndex
+    dwDocumentWindow.Presentation.SlideShowWindow.View.GotoSlide lngIndex, Office.msoFalse
+    dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowRunning
+    dwDocumentWindow.Presentation.SlideShowWindow.View.PointerType = PowerPoint.ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   Pause the slide show associated with the presentation window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Pause(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gPause _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
     
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowRunning
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+    dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowRunning
+    dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowPaused
+    dwDocumentWindow.Presentation.SlideShowWindow.View.PointerType = PowerPoint.ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   Move forward in the windows's slide show.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Next(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gEffectNext _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    Dim lngIndex As Long
+    
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
-    
-    Dim Index As Long
     
     '
     ' PowerPoint 2002 effects may not advance correctly
     ' if the slide show is not running.
     ' Therefore, start the slide show running if it is not running.
     '
-    If (W.Presentation.SlideShowWindow.View.State <> ppSlideShowRunning) Then
-        SlideShow_Run W
+    If (dwDocumentWindow.Presentation.SlideShowWindow.View.State <> PowerPoint.ppSlideShowRunning) Then
+        modSlideShow.gRun dwDocumentWindow
     End If
     
-    W.Presentation.SlideShowWindow.View.Next
-    W.View.Slide = W.Presentation.SlideShowWindow.View.Slide
+    dwDocumentWindow.Presentation.SlideShowWindow.View.Next
+    dwDocumentWindow.View.Slide = dwDocumentWindow.Presentation.SlideShowWindow.View.Slide
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '   Move backward in the window's slide show.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Prev(ByVal W As PowerPoint.DocumentWindow)
+Public Sub gEffectPrev _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    Dim lngIndex As Long
+    
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W.Presentation) = False) Then
+    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
         Exit Sub
     End If
     '
     ' Abort if no active slide exists.
     '
-    If (ActiveSlideExists(W) = False) Then
+    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
         Exit Sub
     End If
-    
-    Dim Index As Long
     
     '
     ' PowerPoint 2002 effects may not advance correctly
     ' if the slide show is not running.
     ' Therefore, start the slide show running if it is not running.
     '
-    If (W.Presentation.SlideShowWindow.View.State <> ppSlideShowRunning) Then
-        SlideShow_Run W
+    If (dwDocumentWindow.Presentation.SlideShowWindow.View.State <> PowerPoint.ppSlideShowRunning) Then
+        modSlideShow.gRun dwDocumentWindow
     End If
     
-    W.Presentation.SlideShowWindow.View.Previous
-    W.View.Slide = W.Presentation.SlideShowWindow.View.Slide
+    dwDocumentWindow.Presentation.SlideShowWindow.View.Previous
+    dwDocumentWindow.View.Slide = dwDocumentWindow.Presentation.SlideShowWindow.View.Slide
 End Sub
 
 '===============================================================================

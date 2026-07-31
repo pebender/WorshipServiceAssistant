@@ -1,7 +1,7 @@
-Attribute VB_Name = "Sort"
+Attribute VB_Name = "modSort"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Sort
+'   WorshipServiceAssistant.modSort
 '
 ' Description:
 '
@@ -39,6 +39,9 @@ Attribute VB_Name = "Sort"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.0001:
 '     (1) Modified the Sort_Run routine to collapse the pasted slides in the
 '         outline pane.
@@ -83,16 +86,19 @@ Option Base 0
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Sort_Run(ByVal W As PowerPoint.DocumentWindow)
-    SortSlidesByTitle _
-        P:=W.Presentation, _
-        LowerIndex:=1, _
-        UpperIndex:=W.Presentation.Slides.Count
+Public Sub gRun _
+( _
+    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+)
+    mSlidesSortByTitle _
+        prePresentation:=dwDocumentWindow.Presentation, _
+        lngLowerIndex:=1, _
+        lngUpperIndex:=dwDocumentWindow.Presentation.Slides.Count
         '
         ' Collapse the pasted slide by selecting the slides, and using the
         ' control identifier to find and execute the "Collapse" command.
         '
-        W.Presentation.Slides.Range.Select
+        dwDocumentWindow.Presentation.Slides.Range.Select
         Application.CommandBars.FindControl(Id:=138).Execute
 End Sub
 
@@ -104,88 +110,101 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub SortSlidesByTitle(ByVal P As PowerPoint.Presentation, ByVal LowerIndex As Long, ByVal UpperIndex As Long)
-    Dim JDelta As Long
-    Dim Index
-    Dim I As Long
+Private Sub mSlidesSortByTitle _
+( _
+    ByRef prePresentation As PowerPoint.Presentation, _
+    ByRef lngLowerIndex As Long, _
+    ByRef lngUpperIndex As Long _
+)
+    Dim lngJDelta As Long
+    Dim lngIndex As Long
+    Dim lngI As Long
     
-    If ((LowerIndex < 1) Or _
-        (UpperIndex > P.Slides.Count) Or _
-        (LowerIndex >= UpperIndex)) Then
+    If ((lngLowerIndex < 1) Or _
+        (lngUpperIndex > prePresentation.Slides.Count) Or _
+        (lngLowerIndex >= lngUpperIndex)) Then
         Exit Sub
     End If
     
-    For I = LowerIndex + 1 To UpperIndex Step 1
-        If (P.Slides(I).Shapes.HasTitle = msoTrue) Then
-            JDelta = 1
-            While (JDelta < (I - LowerIndex + 1))
-                JDelta = JDelta * 2
+    For lngI = lngLowerIndex + 1 To lngUpperIndex Step 1
+        If (prePresentation.Slides(lngI).Shapes.HasTitle = Office.msoTrue) Then
+            lngJDelta = 1
+            While (lngJDelta < (lngI - lngLowerIndex + 1))
+                lngJDelta = lngJDelta * 2
             Wend
-            Index = LowerIndex - 1 + JDelta / 2
-            While JDelta > 1
-                JDelta = JDelta / 2
-                If (Index - JDelta >= 1) Then
-                    If (P.Slides(Index - JDelta).Shapes.HasTitle = msoTrue) Then
-                        If (P.Slides(I).Shapes.Title.TextFrame.TextRange.Text < _
-                            P.Slides(Index - JDelta).Shapes.Title.TextFrame.TextRange.Text) Then
-                            Index = Index - JDelta
+            lngIndex = lngLowerIndex - 1 + lngJDelta / 2
+            While lngJDelta > 1
+                lngJDelta = lngJDelta / 2
+                If (lngIndex - lngJDelta >= 1) Then
+                    If (prePresentation.Slides(lngIndex - lngJDelta).Shapes.HasTitle = Office.msoTrue) Then
+                        If (prePresentation.Slides(lngI).Shapes.Title.TextFrame.TextRange.Text < _
+                            prePresentation.Slides(lngIndex - lngJDelta).Shapes.Title.TextFrame.TextRange.Text) Then
+                            lngIndex = lngIndex - lngJDelta
                         End If
                     End If
                 End If
-                If (Index + JDelta - 1 < I) Then
-                    If (P.Slides(Index + JDelta - 1).Shapes.HasTitle = msoTrue) Then
-                        If (P.Slides(I).Shapes.Title.TextFrame.TextRange.Text >= _
-                            P.Slides(Index + JDelta - 1).Shapes.Title.TextFrame.TextRange.Text) Then
-                            Index = Index + JDelta
+                If (lngIndex + lngJDelta - 1 < lngI) Then
+                    If (prePresentation.Slides(lngIndex + lngJDelta - 1).Shapes.HasTitle = Office.msoTrue) Then
+                        If (prePresentation.Slides(lngI).Shapes.Title.TextFrame.TextRange.Text >= _
+                            prePresentation.Slides(lngIndex + lngJDelta - 1).Shapes.Title.TextFrame.TextRange.Text) Then
+                            lngIndex = lngIndex + lngJDelta
                         End If
                     End If
                 End If
             Wend
-            If (Index <> I) Then
-                P.Slides(I).Copy
-                P.Slides(I).Delete
-                P.Slides.Paste Index
+            If (lngIndex <> lngI) Then
+                prePresentation.Slides(lngI).Copy
+                prePresentation.Slides(lngI).Delete
+                prePresentation.Slides.Paste lngIndex
             End If
         End If
     Next
 End Sub
 
-Private Sub SortSlidesByCategory(ByVal P As PowerPoint.Presentation, ByVal LowerIndex As Long, ByVal UpperIndex As Long)
-    Dim JDelta As Long
-    Dim Index
-    Dim I As Long
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub mSlidesSortByCategory _
+( _
+    ByRef prePresentation As PowerPoint.Presentation, _
+    ByRef lngLowerIndex As Long, _
+    ByRef lngUpperIndex As Long _
+)
+    Dim lngJDelta As Long
+    Dim lngIndex
+    Dim lngI As Long
     
-    If ((LowerIndex < 1) Or _
-        (UpperIndex > P.Slides.Count) Or _
-        (LowerIndex >= UpperIndex)) Then
+    If ((lngLowerIndex < 1) Or _
+        (lngUpperIndex > prePresentation.Slides.Count) Or _
+        (lngLowerIndex >= lngUpperIndex)) Then
         Exit Sub
     End If
     
-    For I = LowerIndex + 1 To UpperIndex Step 1
-        JDelta = 1
-        While (JDelta < (I - LowerIndex + 1))
-            JDelta = JDelta * 2
+    For lngI = lngLowerIndex + 1 To lngUpperIndex Step 1
+        lngJDelta = 1
+        While (lngJDelta < (lngI - lngLowerIndex + 1))
+            lngJDelta = lngJDelta * 2
         Wend
-        Index = LowerIndex - 1 + JDelta / 2
-        While JDelta > 1
-            JDelta = JDelta / 2
-            If (Index - JDelta >= 1) Then
-                If (P.Slides(I).Tags("CategoryIndex") < _
-                    P.Slides(Index - JDelta).Tags("CategoryIndex")) Then
-                    Index = Index - JDelta
+        lngIndex = lngLowerIndex - 1 + lngJDelta / 2
+        While lngJDelta > 1
+            lngJDelta = lngJDelta / 2
+            If (lngIndex - lngJDelta >= 1) Then
+                If (prePresentation.Slides(lngI).Tags("CategoryIndex") < _
+                    prePresentation.Slides(lngIndex - lngJDelta).Tags("CategoryIndex")) Then
+                    lngIndex = lngIndex - lngJDelta
                 End If
             End If
-            If (Index + JDelta - 1 < I) Then
-                If (P.Slides(I).Tags("CategoryIndex") >= _
-                    P.Slides(Index + JDelta - 1).Tags("CategoryIndex")) Then
-                    Index = Index + JDelta
+            If (lngIndex + lngJDelta - 1 < lngI) Then
+                If (prePresentation.Slides(lngI).Tags("CategoryIndex") >= _
+                    prePresentation.Slides(lngIndex + lngJDelta - 1).Tags("CategoryIndex")) Then
+                    lngIndex = lngIndex + lngJDelta
                 End If
             End If
         Wend
-        If (Index <> I) Then
-            P.Slides(I).Copy
-            P.Slides(I).Delete
-            P.Slides.Paste Index
+        If (lngIndex <> lngI) Then
+            prePresentation.Slides(lngI).Copy
+            prePresentation.Slides(lngI).Delete
+            prePresentation.Slides.Paste lngIndex
         End If
     Next
 End Sub

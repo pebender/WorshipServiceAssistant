@@ -1,7 +1,7 @@
-Attribute VB_Name = "Win32_User32"
+Attribute VB_Name = "modWin32User32"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Win32_User32
+'   WorshipServiceAssistant.modWin32User32
 '
 ' Description:
 '   Interfaces to the Windows 32-bit (Win32) User Interface (User32) API.
@@ -256,26 +256,43 @@ Public Const WS_EX_PALETTEWINDOW           As Long = WS_EX_WINDOWEDGE Or WS_EX_T
 ' Function declarations.
 '===============================================================================
 Public Declare Function FindWindow Lib "user32.dll" Alias "FindWindowA" _
-    (ByVal lpClassName As String, _
-     ByVal lpWindowName As String) As Long
+    ( _
+        ByVal lpClassName As String, _
+        ByVal lpWindowName As String _
+    ) As Long
 Public Declare Function GetSystemMetrics Lib "user32.dll" _
-    (ByVal nIndex As Integer) As Integer
+    ( _
+        ByVal nIndex As Integer _
+    ) As Integer
 Public Declare Function GetWindowLong Lib "user32.dll" Alias "GetWindowLongA" _
-    (ByVal hwnd As Long, _
-     ByVal nIndex As Long) As Long
+    ( _
+        ByVal hwnd As Long, _
+        ByVal nIndex As Long _
+    ) As Long
 Public Declare Function LockSetForegroundWindow Lib "user32.dll" _
-    (ByVal uLockCode As Long) As Boolean
+    ( _
+        ByVal uLockCode As Long _
+    ) As Boolean
 Public Declare Function LockWindowUpdate Lib "user32.dll" _
-    (ByVal hwnd As Long) As Boolean
+    ( _
+        ByVal hwnd As Long _
+    ) As Boolean
 Public Declare Function RedrawWindow Lib "user32.dll" _
-    (ByVal hwnd As Long, _
-     ByVal lprcUpdate As Long, _
-     ByVal hrgnUpdate As Long, _
-     ByVal flags As Long) As Boolean
+    ( _
+        ByVal hwnd As Long, _
+        ByVal lprcUpdate As Long, _
+        ByVal hrgnUpdate As Long, _
+        ByVal flags As Long _
+    ) As Boolean
 Public Declare Function SetWindowLong Lib "user32.dll" Alias "SetWindowLongA" _
-    (ByVal hwnd As Long, _
-     ByVal nIndex As Long, _
-     ByVal dwNewLong As Long) As Long
+    ( _
+        ByVal hwnd As Long, _
+        ByVal nIndex As Long, _
+        ByVal dwNewLong As Long _
+    ) As Long
 Public Declare Function ShowWindow Lib "user32.dll" _
-    (ByVal hwnd As Long, _
-     ByVal nCmdShow As Long) As Long
+    ( _
+        ByVal hwnd As Long, _
+        ByVal nCmdShow As Long _
+    ) As Long
+

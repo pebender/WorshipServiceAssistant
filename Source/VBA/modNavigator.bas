@@ -1,7 +1,7 @@
-Attribute VB_Name = "Project"
+Attribute VB_Name = "modNavigator"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.Project
+'   WorshipServiceAssistant.modNavigator
 '
 ' Description:
 '
@@ -9,7 +9,7 @@ Attribute VB_Name = "Project"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001,2002 Paul Bender
+'   Copyright (c) 2000,2001 Paul Bender
 '
 '   All rights reserved.
 '
@@ -39,6 +39,9 @@ Attribute VB_Name = "Project"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0002:
+'     (1) Made changes to the source code so that it follows Microsoft's
+'         Visual Basic coding conventions.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -56,38 +59,20 @@ Option Base 0
 '===============================================================================
 ' Public Constants.
 '===============================================================================
-Public Const ProjectName As String = "WorshipServiceAssistant"
-Public Const ProjectNamePretty As String = "Worship Service Assistant"
-Public Const ProjectVersion As String = "1.03.0001"
-Public Const ProjectAuthor As String = "Paul Bender"
-Public Const ProjectCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
-Public Const ProjectHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
-Public Const ProjectEmail As String = "mailto:pbender@alumni.ucsd.edu"
 
 
 '===============================================================================
 ' Public Variables.
 '===============================================================================
 
-'
-' This variable is true if the project is running.
-'
-Public Project_Loaded As Boolean
-
-'
-' This variable contains the list of categories in the 'Set Category' menu.
-'
-Public Project_Categories() As String
 
 '===============================================================================
 ' Private Constants.
 '===============================================================================
 
-
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private AEH As New ApplicationEventHandler
 
 
 '===============================================================================
@@ -96,26 +81,45 @@ Private AEH As New ApplicationEventHandler
 
 '-------------------------------------------------------------------------------
 ' Description:
-'   Load the project.
+'   Launch the slide navigator.  In order to exit, the slide navigator must be
+'   unloaded.  If the slide navigator is only hidden, then this routine will
+'   automatically refresh it and re-show it.  This is a hack to work around
+'   some focus problems resulting from activating slide shows and activating
+'   new presentations.
 '-------------------------------------------------------------------------------
-Public Sub Project_Load()
-    Project_Loaded = True
-    Menu_Load
-    SlideShow_Initialize
-    
-    Set AEH.PPTApplication = Application
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'   Unload Project.
-'-------------------------------------------------------------------------------
-Public Sub Project_Unload()
-    Menu_Unload
-    Project_Loaded = False
+Public Sub gRun _
+( _
+)
+    '
+    ' Show the Navigator form until it is unloaded.
+    '
+    Do
+        If (mblnLoaded = True) Then
+            frmNavigator.gRefresh
+        End If
+        frmNavigator.Show
+    Loop Until (mblnLoaded = False)
 End Sub
 
 
 '===============================================================================
 ' Private Subroutines and Functions.
 '===============================================================================
+
+'-------------------------------------------------------------------------------
+' Description:
+'   Determine if the slide navigator is loaded.
+'-------------------------------------------------------------------------------
+Private Function mblnLoaded _
+( _
+) As Boolean
+    Dim objForm As Object
+    
+    mblnLoaded = False
+    For Each objForm In VBA.UserForms
+        If (objForm.Name = "frmNavigator") Then
+            mblnLoaded = True
+            Exit For
+        End If
+    Next
+End Function
