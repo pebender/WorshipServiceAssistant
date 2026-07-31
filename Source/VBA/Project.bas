@@ -9,7 +9,7 @@ Attribute VB_Name = "Project"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -58,9 +58,9 @@ Option Base 0
 '===============================================================================
 Public Const ProjectName As String = "WorshipServiceAssistant"
 Public Const ProjectNamePretty As String = "Worship Service Assistant"
-Public Const ProjectVersion As String = "1.01.0003"
+Public Const ProjectVersion As String = "1.01.0004"
 Public Const ProjectAuthor As String = "Paul Bender"
-Public Const ProjectCopyright As String = "Copyright (c) 2000, 2001 Paul Bender"
+Public Const ProjectCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
 Public Const ProjectHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
 Public Const ProjectEmail As String = "mailto:pbender@alumni.ucsd.edu"
 

@@ -4,14 +4,14 @@ Attribute VB_Name = "Main"
 '   WorshipServiceAssistant.Main
 '
 ' Description:
-'   This is a PowerPoint 9.0 (aka 2000) add-in.  It is intended for use in
-'   dual monitor PowerPoint presentations.
+'   This is a PowerPoint 9.0 (aka 2000) and 10.0 (aka XP) add-in.
+'   It is intended for use in dual monitor PowerPoint presentations.
 '
 ' Author:
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -41,6 +41,8 @@ Attribute VB_Name = "Main"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0004:
+'     Added a check for Microsoft Office 10.0.
 '   1.01.0000:
 '     Added a text banner above the slide show.
 '   1.00.0000:
@@ -194,6 +196,8 @@ Private Function ValidApplication() As Boolean
     '
     Select Case ApplicationName & " " & ApplicationVersion
         Case "Microsoft PowerPoint 9.0"
+            ValidApplication = True
+        Case "Microsoft PowerPoint 10.0"
             ValidApplication = True
         Case Else
             Dim msgPrompt As String

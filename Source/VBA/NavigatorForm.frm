@@ -42,7 +42,7 @@ Attribute VB_Exposed = False
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -72,6 +72,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0004:
+'     (1) Fixed bug that caused the Slide Show Show/Hide button text to fail
+'         to update.
+'     (2) Fixed banner checking bug in SlideShowLoad.
 '   1.01.0003:
 '     (1) Fixed errors in control tip text.
 '     (2) Fixed errors in form re-sizing in UpdateFormSize.
@@ -257,6 +261,11 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     Me.ControlSlideSelectionTitle.Enabled = True
     Me.ControlSlideSelectionClear.Enabled = True
     Me.ControlSlideSelectionList.Enabled = True
+    
+    '
+    ' Set captions to their defaults.
+    '
+    Me.ControlSlideShowHide.Caption = "Hide"
     
     '
     ' Since there are no slides,
@@ -464,7 +473,7 @@ Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
         Dim SSW As PowerPoint.SlideShowWindow
         For Each SSW In Application.SlideShowWindows
             If ((Not (SSW Is W.Presentation.SlideShowWindow)) And _
-                (Not Banner.IsBanner(SSW))) Then
+                (Not Banner.IsBanner(SSW.Presentation))) Then
                 SSW.View.State = ppSlideShowBlackScreen
             End If
         Next
