@@ -39,6 +39,15 @@ Attribute VB_Name = "Active"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0001:
+'     (1) Fixed a bug that caused ActiveSlideExists and ActiveSlide to
+'         incorrectly believe that a slide is active when no slide was selected
+'         in the slide window of the outline pane in the normal view.
+'         This bug resulted from the addition of the Thumbnails view
+'         to the the Normal view in PowerPoint 2002 and some bad programmg.
+'     (2) Modified ActiveWindowExists and ActiveSlideExists to work around
+'         the PowerPoint 2002 VBA API bug described in Microsoft knowledge base
+'         article Q285436.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -86,19 +95,32 @@ Option Base 0
 Public Function ActiveWindowExists() As Boolean
     On Error GoTo ActiveWindowExists_False
     
+    Dim ActiveWindowViewType As PowerPoint.PpViewType
+    
+    With Application.ActiveWindow
+        ActiveWindowViewType = .ViewType
+        If (.ViewType = PowerPoint.ppViewNormal) Then
+            Select Case .Panes(2).ViewType
+                Case PowerPoint.ppViewSlide
+                    ActiveWindowViewType = PowerPoint.ppViewNormal
+                Case PowerPoint.ppViewSlideMaster
+                    ActiveWindowViewType = PowerPoint.ppViewSlideMaster
+            End Select
+        End If
+    End With
+    
     ActiveWindowExists = True
     
-    If ((Application.ActiveWindow.ViewType <> ppViewNormal) And _
-        (Application.ActiveWindow.ViewType <> ppViewNotesPage) And _
-        (Application.ActiveWindow.ViewType <> ppViewOutline) And _
-        (Application.ActiveWindow.ViewType <> ppViewSlide) And _
-        (Application.ActiveWindow.ViewType <> ppViewSlideSorter)) Then
+    If ((ActiveWindowViewType <> PowerPoint.ppViewSlide) And _
+        (ActiveWindowViewType <> PowerPoint.ppViewNormal) And _
+        (ActiveWindowViewType <> PowerPoint.ppViewSlideSorter)) Then
         GoTo ActiveWindowExists_False
     End If
 Exit Function
 
 ActiveWindowExists_False:
     ActiveWindowExists = False
+    Exit Function
 End Function
 
 '-------------------------------------------------------------------------------
@@ -143,7 +165,7 @@ End Function
 '-------------------------------------------------------------------------------
 Public Function ActiveSelectionExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
     ActiveSelectionExists = False
-    If (W.Selection.Type = ppSelectionNone) Then
+    If (W.Selection.Type = PowerPoint.ppSelectionNone) Then
         Exit Function
     End If
     ActiveSelectionExists = True
@@ -155,16 +177,19 @@ End Function
 '    slide.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
 Public Function ActiveSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
-    ActiveSlideExists = False
+    On Error GoTo ActiveSlideExists_Exit
     
-    If (ActiveWindowSlideExists(W) = False) Then
-        Exit Function
+    ActiveSlideExists = False
+    If (ActiveWindowExists = True) Then
+        If (ActiveSelectionExists(W) = True) Then
+            ActiveSlideExists = True
+        End If
+        If (IsNull(W.View.Slide) = False) Then
+            ActiveSlideExists = True
+        End If
     End If
-    If ((W.ViewType = ppViewSlideSorter) And _
-        (ActiveSelectionExists(W) = False)) Then
-        Exit Function
-    End If
-    ActiveSlideExists = True
+
+ActiveSlideExists_Exit:
 End Function
 
 '-------------------------------------------------------------------------------
@@ -175,7 +200,7 @@ End Function
 '   function will generate an error.
 '-------------------------------------------------------------------------------
 Public Function ActiveSlide(ByVal W As PowerPoint.DocumentWindow) As PowerPoint.Slide
-    If (W.ViewType = ppViewSlideSorter) Then
+    If (ActiveSelectionExists(W) = True) Then
         Set ActiveSlide = W.Selection.SlideRange(1)
     Else
         Set ActiveSlide = W.View.Slide

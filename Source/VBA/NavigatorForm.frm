@@ -72,6 +72,14 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0001:
+'     (1) Fixed a bug where the slide body match was done even though the
+'         the results were not be used.
+'     (2) Modified LoadPresentationView to work around the PowerPoint 2002
+'         VBA API bug described in Microsoft knowledge base article Q285436.
+'     (2) Changed LoadPresentationView to set the view to ppViewSlide rather
+'         than ppViewNormal, eliminating the need to save and restore the
+'         window's SplitHorizontal and SplitVertical properties.
 '   1.03.0000:
 '     (1) Added support for matching the filter to the slide body
 '         in the  Navigator Slide Selection frame.
@@ -1050,8 +1058,6 @@ End Sub
 Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim WindowState As PowerPoint.PpWindowState
     Dim ViewType As PowerPoint.PpViewType
-    Dim SplitHorizontal As Long
-    Dim SplitVertical As Long
     Dim View_DisplaySlideMiniature As Office.MsoTriState
     Dim View_ZoomToFit As Office.MsoTriState
     Dim W As PowerPoint.DocumentWindow
@@ -1066,8 +1072,12 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
         WindowState = W.WindowState
         ViewType = W.ViewType
         If (ViewType = PowerPoint.ppViewNormal) Then
-            SplitHorizontal = W.SplitHorizontal
-            SplitVertical = W.SplitVertical
+            Select Case W.Panes(2).ViewType
+                Case ppViewSlide
+                    ViewType = PowerPoint.ppViewNormal
+                Case ppViewSlideMaster
+                    ViewType = PowerPoint.ppViewSlideMaster
+            End Select
         End If
         View_DisplaySlideMiniature = W.View.DisplaySlideMiniature
         View_ZoomToFit = W.View.ZoomToFit
@@ -1075,8 +1085,6 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
         Saved = P.Saved
         P.Tags.Add "WorshipServiceAssistant_Window_WindowState", WindowState
         P.Tags.Add "WorshipServiceAssistant_Window_ViewType", ViewType
-        P.Tags.Add "WorshipServiceAssistant_Window_SplitHorizontal", SplitHorizontal
-        P.Tags.Add "WorshipServiceAssistant_Window_SplitVertical", SplitVertical
         P.Tags.Add "WorshipServiceAssistant_Window_View_DisplaySlideMiniature", View_DisplaySlideMiniature
         P.Tags.Add "WorshipServiceAssistant_Window_View_ZoomToFit", View_ZoomToFit
         P.Saved = Saved
@@ -1085,9 +1093,7 @@ Private Sub LoadPresentationView(ByVal P As PowerPoint.Presentation)
         ' Set view.
         '
         W.WindowState = ppWindowMaximized
-        W.ViewType = ppViewNormal
-        W.SplitHorizontal = 0
-        W.SplitVertical = 100
+        W.ViewType = PowerPoint.ppViewSlide
         W.View.DisplaySlideMiniature = Office.msoFalse
         W.View.ZoomToFit = Office.msoTrue
     End If
@@ -1099,8 +1105,6 @@ End Sub
 Private Sub UnloadPresentationView(ByVal P As PowerPoint.Presentation)
     Dim WindowState As PowerPoint.PpWindowState
     Dim ViewType As PowerPoint.PpViewType
-    Dim SplitHorizontal As Long
-    Dim SplitVertical As Long
     Dim View_DisplaySlideMiniature As Office.MsoTriState
     Dim View_ZoomToFit As Office.MsoTriState
     Dim W As PowerPoint.DocumentWindow
@@ -1113,17 +1117,11 @@ Private Sub UnloadPresentationView(ByVal P As PowerPoint.Presentation)
         '
         WindowState = P.Tags("WorshipServiceAssistant_Window_WindowState")
         ViewType = P.Tags("WorshipServiceAssistant_Window_ViewType")
-        SplitHorizontal = P.Tags("WorshipServiceAssistant_Window_SplitHorizontal")
-        SplitVertical = P.Tags("WorshipServiceAssistant_Window_SplitVertical")
         View_DisplaySlideMiniature = P.Tags("WorshipServiceAssistant_Window_View_DisplaySlideMiniature")
         View_ZoomToFit = P.Tags("WorshipServiceAssistant_Window_View_ZoomToFit")
         
         W.WindowState = WindowState
         W.ViewType = ViewType
-        If (W.ViewType = PowerPoint.ppViewNormal) Then
-            W.SplitHorizontal = SplitHorizontal
-            W.SplitVertical = SplitVertical
-        End If
         W.View.DisplaySlideMiniature = View_DisplaySlideMiniature
         W.View.ZoomToFit = View_ZoomToFit
     End If
@@ -1750,8 +1748,11 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     Dim FilterNumber As Long
     Dim SlideTitle As String
     Dim SelectedSlideIndex As Long
-    Dim ListIndex As Long
+    Dim Match() As Long
+    Dim MatchCount As Long
+    Dim List() As String
     Dim ListCount As Long
+    Dim ListIndex As Long
     
     Set P = W.Presentation
     
@@ -1788,10 +1789,13 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     End If
     FilterTextClean = CleanEverything(FilterTextDirty)
     FilterTextCleanLen = Len(FilterTextClean)
+    
+    ListCount = 0
     ListIndex = -1
+    
     '
-    ' Since there is no filter text, all slides are in the list.
-    ' As a result, the comparisons can be bypassed.
+    ' Since the filter text is empty, there is no filter.
+    ' Therefore, all slides are in the list.
     '
     If (FilterTextDirtyLen = 0) Then
         ListCount = P.Slides.Count
@@ -1806,65 +1810,81 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
                 End If
                 ListCount = ListCount + 1
             Next
-            Me.ControlSlideSelectionList.List() = List
         End If
     '
-    ' Since filter text is numeric,
-    ' assume that it is a slide number.
-    ' As a result, the looping and comparisons can be bypassed.
+    ' Since the filter text is a number, assume the filter text is a slide number.
+    ' Therefore, there is one slide in the list.
     '
     ElseIf (IsNumeric(FilterTextDirty)) Then
         If (FilterModeNumber) Then
             FilterNumber = FilterTextDirty
             If ((FilterNumber > 0) And (FilterNumber <= P.Slides.Count)) Then
                 ReDim List(0, 1) As String
+                ListCount = 0
                 Set S = P.Slides(FilterNumber)
-                List(0, 0) = S.SlideIndex
-                List(0, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
-                ListIndex = 0
-                Me.ControlSlideSelectionList.List() = List
+                List(ListCount, 0) = S.SlideIndex
+                List(ListCount, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
+                If (S.SlideIndex = SelectedSlideIndex) Then
+                    ListIndex = ListCount
+                End If
+                ListCount = ListCount + 1
             End If
         End If
     '
-    ' Since the filter text is non-zero and non-numeric,
-    ' assume that it is slide text.  As a result, all the
-    ' looping an comparisons must be done.
+    ' Since the filter text is non-empty and non-numeric, assume that it is slide text.
     '
     Else
         '
         ' Adding new elements to a ListBox list takes time.  As a result, it is
-        ' faster determine the number of elements, build an array with the elements,
-        ' as assign the array to the ListBox list.
+        ' faster to build an array with the elements, and assign the array to the
+        ' ListBox list.
         '
-        ListCount = 0
-        For Each S In P.Slides
-            If ((FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean)) Or _
-                (FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean)) Or _
-                (FilterModeBody And MatchBody(S, FilterTextDirty))) Then
-                ListCount = ListCount + 1
-            End If
-        Next
-        
-        If (ListCount > 0) Then
-            ReDim List(ListCount - 1, 1) As String
-            ListCount = 0
+        ReDim Match(P.Slides.Count) As Long
+        MatchCount = 0
+        If ((FilterModeTitle = False) And (FilterModeBody = False)) Then
+        ElseIf ((FilterModeTitle = True) And (FilterModeBody = False)) Then
             For Each S In P.Slides
-                If ((FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean)) Or _
-                    (FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean)) Or _
-                    (FilterModeBody And MatchBody(S, FilterTextDirty))) Then
-                    List(ListCount, 0) = S.SlideIndex
-                    List(ListCount, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
-                    If (S.SlideIndex = SelectedSlideIndex) Then
-                        ListIndex = ListCount
-                    End If
-                    ListCount = ListCount + 1
+                If ((Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean) Or _
+                    (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean)) Then
+                    Match(MatchCount) = S.SlideIndex
+                    MatchCount = MatchCount + 1
                 End If
             Next
-            
-            Me.ControlSlideSelectionList.List() = List
+        ElseIf ((FilterModeTitle = False) And (FilterModeBody = True)) Then
+            For Each S In P.Slides
+                If (MatchBody(S, FilterTextDirty)) Then
+                    Match(MatchCount) = S.SlideIndex
+                    MatchCount = MatchCount + 1
+                End If
+            Next
+        ElseIf ((FilterModeTitle = True) And (FilterModeBody = True)) Then
+            For Each S In P.Slides
+                If ((Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean) Or _
+                    (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean) Or _
+                    MatchBody(S, FilterTextDirty)) Then
+                    Match(MatchCount) = S.SlideIndex
+                    MatchCount = MatchCount + 1
+                End If
+            Next
+        End If
+        
+        If (MatchCount > 0) Then
+            ReDim List(MatchCount - 1, 1) As String
+            For ListCount = 0 To MatchCount - 1 Step 1
+                List(ListCount, 0) = Match(ListCount)
+                List(ListCount, 1) = P.Slides(ListCount + 1).Tags("WorshipServiceAssistant_TitleDisplay")
+                If (Match(ListCount) = SelectedSlideIndex) Then
+                    ListIndex = ListCount
+                End If
+            Next
+            ListCount = MatchCount
         End If
     End If
     
+    Me.ControlSlideSelectionList.Clear
+    If (ListCount > 0) Then
+        Me.ControlSlideSelectionList.List() = List
+    End If
     With Me.ControlSlideSelectionList
         If (.ListCount > 0) Then
             If (ListIndex >= 0) Then
