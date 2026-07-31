@@ -244,6 +244,10 @@
                <param name="Name" value="License">
                <param name="Local" value="HTML\WSA\License.htm">
              </OBJECT>
+         <LI><OBJECT type="text/sitemap">
+               <param name="Name" value="History">
+               <param name="Local" value="HTML\WSA\History.htm">
+             </OBJECT>
       </UL>
    </UL>
 </BODY>

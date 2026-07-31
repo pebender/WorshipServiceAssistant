@@ -58,6 +58,15 @@ Attribute VB_Exposed = False
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.00.0001:
+'     (1) Changed CleanEverything routine to remove quotes and match
+'         commonly interchanged words.
+'     (2) Changed SlideShowPrev and SlideShowNext to SlideShowPrevEffect and
+'         SlideShowNextEffect in order to make them more consistant with the
+'         button names.
+'     (3) Fixed a problem where the part of the presentation window would
+'         appear on the the slide show display when under certain conditions
+'         while the Navigator is launching.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -131,8 +140,8 @@ Private Sub UpdateEnabledControls(ByVal W As DocumentWindow)
     NavigatorForm.ControlSlideShowHide.Caption = "Hide"
     NavigatorForm.ControlSlideShowRun.Enabled = True
     NavigatorForm.ControlSlideShowPause.Enabled = True
-    NavigatorForm.ControlSlideShowPrev.Enabled = True
-    NavigatorForm.ControlSlideShowNext.Enabled = True
+    NavigatorForm.ControlSlideShowPrevEffect.Enabled = True
+    NavigatorForm.ControlSlideShowNextEffect.Enabled = True
     NavigatorForm.ControlGeneralExit.Enabled = True
     NavigatorForm.ControlGeneralHelp.Enabled = True
     NavigatorForm.ControlPresentationSelectionPrev.Enabled = True
@@ -149,8 +158,8 @@ Private Sub UpdateEnabledControls(ByVal W As DocumentWindow)
         NavigatorForm.ControlSlideShowHide.Enabled = False
         NavigatorForm.ControlSlideShowRun.Enabled = False
         NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrev.Enabled = False
-        NavigatorForm.ControlSlideShowNext.Enabled = False
+        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
+        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since there are no slides in the slide list,
@@ -161,8 +170,8 @@ Private Sub UpdateEnabledControls(ByVal W As DocumentWindow)
         NavigatorForm.ControlSlideShowHide.Enabled = False
         NavigatorForm.ControlSlideShowRun.Enabled = False
         NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrev.Enabled = False
-        NavigatorForm.ControlSlideShowNext.Enabled = False
+        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
+        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since there are no slides in the slide list,
@@ -172,8 +181,8 @@ Private Sub UpdateEnabledControls(ByVal W As DocumentWindow)
         NavigatorForm.ControlSlideShowHide.Enabled = False
         NavigatorForm.ControlSlideShowRun.Enabled = False
         NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrev.Enabled = False
-        NavigatorForm.ControlSlideShowNext.Enabled = False
+        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
+        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since the slide show is hidden,
@@ -293,7 +302,7 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub SlideShowPrev(ByVal W As DocumentWindow)
+Private Sub SlideShowPrevEffect(ByVal W As DocumentWindow)
     If (ActiveSlideShowExists(W) = False) Then
         Exit Sub
     End If
@@ -312,7 +321,7 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub SlideShowNext(ByVal W As DocumentWindow)
+Private Sub SlideShowNextEffect(ByVal W As DocumentWindow)
     If (ActiveSlideShowExists(W) = False) Then
         Exit Sub
     End If
@@ -548,6 +557,7 @@ Private Function CleanEverything(Title As String) As String
     
     T = Replace(T, "'s", "s")          ' ignore ' in 's
     T = Replace(T, "'t", "t")          ' ignore ' in 't
+    T = Replace(T, "'ve", "ve")        ' ignore ' in 've
     
     '
     ' Remove basic punctuation.
@@ -560,10 +570,27 @@ Private Function CleanEverything(Title As String) As String
     T = Replace(T, "!", " ")
     T = Replace(T, "?", " ")
     T = Replace(T, "/", " ")
+    T = Replace(T, Chr(39), " ")
+    T = Replace(T, Chr(34), " ")
     
     While (InStr(T, "  ") > 0)
         T = Replace(T, "  ", " ")
     Wend
+    
+    '
+    ' Replace commonly interchanged words.
+    '
+    T = " " & T & " "
+    T = Replace(T, " oh ", " o ")
+    T = Replace(T, " alleluia ", " hallelujah ")
+    T = Replace(T, " allelujah ", " hallelujah ")
+    T = Replace(T, " emanuel ", " immanuel ")
+    T = Replace(T, " emmanuel ", " immanuel ")
+    T = Replace(T, " imanuel ", " immanuel ")
+    If (Len(T) >= 2) Then
+        T = Left(T, Len(T) - 1)
+        T = Right(T, Len(T) - 1)
+    End If
     
     CleanEverything = T
 End Function
@@ -605,6 +632,8 @@ Private Sub UpdateApplicationView(ByVal Save As Boolean)
             Application.Windows(1).WindowState = ppWindowMaximized
         End If
         Application.WindowState = ppWindowNormal
+        Application.Height = 0
+        Application.Width = 0
         Application.Top = Top
         Application.Left = Left
         Application.Height = Height
@@ -628,6 +657,8 @@ Private Sub SetApplicationView()
     Height = Application.Height - 6
     Width = Application.Width - 6
     Application.WindowState = ppWindowNormal
+    Application.Height = 0
+    Application.Width = 0
     Application.Top = Top
     Application.Left = Left + NavigatorForm.Width
     Application.Height = Height
@@ -843,22 +874,22 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub ControlSlideShowPrev_Click()
+Private Sub ControlSlideShowPrevEffect_Click()
     If (NavigatorValid = False) Then
         Exit Sub
     End If
-    SlideShowPrev Application.ActiveWindow
+    SlideShowPrevEffect Application.ActiveWindow
     NavigatorValid
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub ControlSlideShowNext_Click()
+Private Sub ControlSlideShowNextEffect_Click()
     If (NavigatorValid = False) Then
         Exit Sub
     End If
-    SlideShowNext Application.ActiveWindow
+    SlideShowNextEffect Application.ActiveWindow
     NavigatorValid
 End Sub
 
@@ -1028,9 +1059,9 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
             Case 80:                    ' "P"
                 SlideShowPause W
             Case 38:                    ' UP_ARROW
-                SlideShowPrev W
+                SlideShowPrevEffect W
             Case 40:                    ' DOWN_ARROW
-                SlideShowNext W
+                SlideShowNextEffect W
         End Select
     End If
 

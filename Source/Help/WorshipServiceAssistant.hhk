@@ -140,6 +140,11 @@
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\SlideShow\Hide.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="History">
+            <param name="Name" value="History">
+            <param name="Local" value="HTML\WSA\History.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
             <param name="Name" value="How To ...">
             <param name="Name" value="How To ...">
             <param name="Local" value="HTML\WSA\HowTo.htm">

@@ -330,7 +330,7 @@ Private Function AddIndex() As Presentation
             .Levels(LevelIndex).Font.Italic = msoFalse
             .Levels(LevelIndex).Font.Name = "Arial"
             .Levels(LevelIndex).Font.Shadow = msoFalse
-            .Levels(LevelIndex).Font.size = 12
+            .Levels(LevelIndex).Font.Size = 12
             .Levels(LevelIndex).Font.Subscript = msoFalse
             .Levels(LevelIndex).Font.Superscript = msoFalse
             .Levels(LevelIndex).Font.Underline = msoFalse
@@ -359,7 +359,7 @@ Private Function AddIndex() As Presentation
             .Levels(LevelIndex).Font.Italic = msoFalse
             .Levels(LevelIndex).Font.Name = "Arial"
             .Levels(LevelIndex).Font.Shadow = msoFalse
-            .Levels(LevelIndex).Font.size = 12
+            .Levels(LevelIndex).Font.Size = 12
             .Levels(LevelIndex).Font.Subscript = msoFalse
             .Levels(LevelIndex).Font.Superscript = msoFalse
             .Levels(LevelIndex).Font.Underline = msoTrue
@@ -396,7 +396,7 @@ Private Function AddIndex() As Presentation
             .Levels(LevelIndex).Font.Italic = msoFalse
             .Levels(LevelIndex).Font.Name = "Arial"
             .Levels(LevelIndex).Font.Shadow = msoFalse
-            .Levels(LevelIndex).Font.size = 12
+            .Levels(LevelIndex).Font.Size = 12
             .Levels(LevelIndex).Font.Subscript = msoFalse
             .Levels(LevelIndex).Font.Superscript = msoFalse
             .Levels(LevelIndex).Font.Underline = msoTrue
@@ -480,7 +480,7 @@ Private Function AddIndexCategory _
         
     With B
         .TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-        .TextFrame.TextRange.Font.size = .TextFrame.TextRange.Font.size + 2
+        .TextFrame.TextRange.Font.Size = .TextFrame.TextRange.Font.Size + 2
         .TextFrame.TextRange.Text = Category
     End With
     

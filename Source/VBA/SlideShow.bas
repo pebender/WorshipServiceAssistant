@@ -25,6 +25,11 @@ Attribute VB_Name = "SlideShow"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.00.0001:
+'     (1) Changed SlideShow_Setup routine so that the "Set Up Show" dialog
+'         is activated by using the control ID rather than the command bar
+'         and control names.
+'     (2) Eliminated SlideShow_WindowDisplay and SlideShow_WindowSize constants.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -40,25 +45,6 @@ Option Base 0
 
 
 '===============================================================================
-' Public Constants.
-'===============================================================================
-Enum SlideShow_WindowDisplay
-    Last = 0
-    First = 1
-    Display01 = 2
-    Display02 = 3
-    Display03 = 4
-    Display04 = 5
-End Enum
-
-Enum SlideShow_WindowSize
-    Full = 0
-    Half = 1
-    Quarter = 2
-End Enum
-
-
-'===============================================================================
 ' Public Variables.
 '===============================================================================
 
@@ -71,8 +57,8 @@ End Enum
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private SlideShowWindowDisplay As SlideShow_WindowDisplay
-Private SlideShowWindowSize As SlideShow_WindowSize
+Private SlideShowWindowDisplay As Integer
+Private SlideShowWindowSize As Integer
 
 
 '===============================================================================
@@ -83,35 +69,35 @@ Private SlideShowWindowSize As SlideShow_WindowSize
 ' Description:
 '-------------------------------------------------------------------------------
 Public Sub SlideShow_Initialize()
-    SlideShowWindowDisplay = SlideShow_WindowDisplay.Last
-    SlideShowWindowSize = SlideShow_WindowSize.Full
+    SlideShowWindowDisplay = 0
+    SlideShowWindowSize = 0
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_SetWindowDisplay(ByVal WindowDisplay As SlideShow_WindowDisplay)
+Public Sub SlideShow_SetWindowDisplay(ByVal WindowDisplay As Integer)
     SlideShowWindowDisplay = WindowDisplay
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_SetWindowSize(ByVal WindowSize As SlideShow_WindowSize)
+Public Sub SlideShow_SetWindowSize(ByVal WindowSize As Integer)
     SlideShowWindowSize = WindowSize
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function SlideShow_GetWindowDisplay() As SlideShow_WindowDisplay
+Public Function SlideShow_GetWindowDisplay() As Integer
     SlideShow_GetWindowDisplay = SlideShowWindowDisplay
 End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Function SlideShow_GetWindowSize() As SlideShow_WindowSize
+Public Function SlideShow_GetWindowSize() As Integer
     SlideShow_GetWindowSize = SlideShowWindowSize
 End Function
 
@@ -120,6 +106,7 @@ End Function
 '-------------------------------------------------------------------------------
 Public Sub SlideShow_Setup(ByVal P As Presentation)
     Dim PSaved As Boolean
+    Dim Index As Integer
     
     '
     ' Cannot setup a slide show if the presentation has an active slide show.
@@ -163,31 +150,30 @@ Public Sub SlideShow_Setup(ByVal P As Presentation)
     
     '
     ' Hack to workaround the fact that Slide Show display monitor is
-    ' not part of the PowerPoint 9.0 object hierarchy.  This hack starts
-    ' the slide show on the last monitor in the "Show On" list.
+    ' not part of the PowerPoint 9.0 object hierarchy.
+    ' First, the presentation is activiated.
+    ' Second, the "Set Up Show" dialog box is activated using
+    '   its command bar control identifier.
+    ' Third, the "Show On" dropdown is selected using
+    '   its keyboard shortcut.
+    ' Fourth, the desired monitor is selected using keyboard
+    '   shortcuts.
+    ' Fifth, the "Set Up Show" dialog box is closed using
+    '   the ENTER key.
     '
-    
     P.Windows(1).Activate
-    '
-    ' Set the slide show window display.  By default, the slide show uses
-    ' the last display.
-    '
-    Select Case SlideShowWindowDisplay
-        Case SlideShow_WindowDisplay.Last:
-            SendKeys "%dS%o{PGDN}{ENTER}", True
-        Case SlideShow_WindowDisplay.First:
-            SendKeys "%dS%o{PGUP}{ENTER}", True
-        Case SlideShow_WindowDisplay.Display01:
-            SendKeys "%dS%o{PGUP}{ENTER}", True
-        Case SlideShow_WindowDisplay.Display02:
-            SendKeys "%dS%o{PGUP}{DOWN}{DOWN}{ENTER}{ENTER}", True
-        Case SlideShow_WindowDisplay.Display03:
-            SendKeys "%dS%o{PGUP}{DOWN}{DOWN}{DOWN}{ENTER}{ENTER}", True
-        Case SlideShow_WindowDisplay.Display04:
-            SendKeys "%dS%o{PGUP}{DOWN}{DOWN}{DOWN}{DOWN}{ENTER}{ENTER}", True
-        Case Else:
-            SendKeys "%dS%o{PGDN}{ENTER}", True
-    End Select
+    Application.CommandBars.FindControl(Id:=2744).Execute
+    SendKeys "%o", True
+    If (SlideShowWindowDisplay > 0) Then
+        SendKeys "{PGUP}", True
+        For Index = 1 To SlideShowWindowDisplay Step 1
+            SendKeys "{DOWN}", True
+        Next
+        SendKeys "{ENTER}", True
+    Else
+        SendKeys "{PGDN}", True
+    End If
+    SendKeys "{ENTER}", True
     
     P.Saved = PSaved
 End Sub
@@ -216,6 +202,9 @@ End Sub
 Public Sub SlideShow_Begin(ByVal W As DocumentWindow)
     Dim P As Presentation
     Dim PSaved As Boolean
+    Dim Height As Long
+    Dim Width As Long
+    Dim Index As Long
     
     Set P = W.Presentation
     PSaved = P.Saved
@@ -228,19 +217,16 @@ Public Sub SlideShow_Begin(ByVal W As DocumentWindow)
     P.SlideShowSettings.Run
 
     '
-    ' Set the slide show window size.  By default, the slide show uses
-    ' a full size window.
+    ' Set the slide show window size.
     '
-    Select Case SlideShowWindowSize
-        Case SlideShow_WindowSize.Full:
-        Case SlideShow_WindowSize.Half:
-            P.SlideShowWindow.Height = P.SlideShowWindow.Height / 2
-            P.SlideShowWindow.Width = P.SlideShowWindow.Width / 2
-        Case SlideShow_WindowSize.Quarter:
-            P.SlideShowWindow.Height = P.SlideShowWindow.Height / 4
-            P.SlideShowWindow.Width = P.SlideShowWindow.Width / 4
-        Case Else:
-    End Select
+    Height = P.SlideShowWindow.Height
+    Width = P.SlideShowWindow.Width
+    For Index = 1 To SlideShowWindowSize - 1 Step 1
+        Height = Height / 2
+        Width = Width / 2
+    Next
+    P.SlideShowWindow.Height = Height
+    P.SlideShowWindow.Width = Width
         
     P.Saved = PSaved
     

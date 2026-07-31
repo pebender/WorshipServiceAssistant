@@ -1,5 +1,0 @@
-.TOPIC IDH_CSHelp_WSACommandBarNavigator
-Clicking this button will launch the Navigator. Because you cannot open or close presentations while the Navigator is running, you should open all the presentations you will be controlling with the Navigator before you launch the Navigator.
-
-.TOPIC IDH_CSHelp_WSACommandBarNavigatorSlideShowLoad
-This button is only available when a slide is active (selected). Clicking this button will load the active slide into the slide show. You can also use the ENTER key to achieve the same result.

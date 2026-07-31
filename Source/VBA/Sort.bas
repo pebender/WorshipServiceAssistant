@@ -25,6 +25,9 @@ Attribute VB_Name = "Sort"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.00.0001:
+'     (1) Modified the Sort_Run routine to collapse the pasted slides in the
+'         outline pane.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -71,6 +74,12 @@ Public Sub Sort_Run(ByVal W As DocumentWindow)
         P:=W.Presentation, _
         LowerIndex:=1, _
         UpperIndex:=W.Presentation.slides.Count
+        '
+        ' Collapse the pasted slide by selecting the slides, and using the
+        ' control identifier to find and execute the "Collapse" command.
+        '
+        W.Presentation.slides.Range.Select
+        Application.CommandBars.FindControl(Id:=138).Execute
 End Sub
 
 
