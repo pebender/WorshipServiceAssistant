@@ -39,6 +39,9 @@ Attribute VB_Name = "Banner"
 '   of the copyright holder.
 '
 ' Change History:
+'
+'   1.00.0002:
+'     Added support for abitrary banner color.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -175,7 +178,7 @@ Public Sub Create()
                     With .Font
                         .NameAscii = "Arial"
                         .Size = 28
-                        .Color.RGB = RGB(255, 0, 0)
+                        .Color.RGB = RGB(0, 0, 0)
                         .Bold = msoFalse
                         .Italic = msoFalse
                         .Underline = msoFalse
@@ -192,7 +195,7 @@ Public Sub Create()
         ' should have been set above.  However, there appears to be
         ' a bug in setting the font color and this works around it.
         '
-        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(255, 0, 0)
+        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
         Pres.slides.Add 1, ppLayoutTitleOnly
         SlideShow_Setup Pres
     End If
@@ -234,7 +237,7 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Load(ByVal BannerString As String)
+Public Sub Load(ByVal BannerString As String, ByVal Red As Integer, ByVal Green As Integer, ByVal Blue As Integer)
     If (Banner.Exists = False) Then
         Exit Sub
     End If
@@ -242,7 +245,9 @@ Public Sub Load(ByVal BannerString As String)
         Exit Sub
     End If
     
+    Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
     Pres.slides(1).Shapes.Title.TextFrame.TextRange.Text = BannerString
+    Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(Red, Green, Blue)
     Banner.Visible = True
     Pres.Saved = msoTrue
 End Sub

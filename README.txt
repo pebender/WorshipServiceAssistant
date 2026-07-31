@@ -23,8 +23,8 @@ copyright and license found in the Worship Service Assistant HTML help
 file (WorshipServiceAssistant.chm).
 
 Worship Service Assistant has been tested using Microsoft PowerPoint 2000
-running on Microsoft Windows 98 and Microsoft Windows 2000.  If you are
-using a different version of PowerPoint, then it is likely that Worship
+running on Microsoft Windows 2000 and Microsoft Windows XP. If you are using
+a different version of PowerPoint, then it is likely that Worship
 Service Assistant will not work correctly.  If you are using an older
 version of Windows, then it is likely that Worship Service Assistant will
 not run correctly.  If you are using a newer version of Windows, then it

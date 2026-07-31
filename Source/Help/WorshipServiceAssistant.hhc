@@ -178,6 +178,24 @@
                          </OBJECT>
                   </UL>
                   <LI><OBJECT type="text/sitemap">
+                        <param name="Name" value="Banner Color frame">
+                        <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor.htm">
+                      </OBJECT>
+                  <UL>
+                     <LI><OBJECT type="text/sitemap">
+                           <param name="Name" value="Name display">
+                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Name.htm">
+                         </OBJECT>
+                     <LI><OBJECT type="text/sitemap">
+                           <param name="Name" value="Prev button">
+                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Prev.htm">
+                         </OBJECT>
+                     <LI><OBJECT type="text/sitemap">
+                           <param name="Name" value="Next button">
+                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Next.htm">
+                         </OBJECT>
+                  </UL>
+                  <LI><OBJECT type="text/sitemap">
                         <param name="Name" value="Banner Selection frame">
                         <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerSelection.htm">
                       </OBJECT>

@@ -140,8 +140,6 @@ Private Function ValidOperatingSystem() As Boolean
     ' indicates the operating system is valid.
     '
     Select Case ApplicationOperatingSystem
-        Case "Windows (32-bit) 4.10"
-            ValidOperatingSystem = True
         Case "Windows (32-bit) 5.00"
             ValidOperatingSystem = True
         Case "Windows (32-bit) 5.01"

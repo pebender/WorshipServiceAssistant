@@ -72,6 +72,9 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.01.0002:
+'     (1) Added banner color support.
+'     (2) Replaced NavigatorForm with Me.
 '   1.01.0000:
 '     (1) Added controls for displaying a text banner.
 '     (2) Changed so that the title will match the title displayed in the
@@ -162,29 +165,29 @@ Private Sub UpdateControls(ByVal W As DocumentWindow)
     '
     ' Mave general frame visible and enabled by default.
     '
-    NavigatorForm.FrameGeneral.Visible = True
-    NavigatorForm.ControlGeneralNextPage.Visible = True
-    NavigatorForm.ControlGeneralHelp.Visible = True
-    NavigatorForm.ControlGeneralExit.Visible = True
-    NavigatorForm.Pages.Visible = True
-    NavigatorForm.Pages("PagePresentation").Visible = True
-    NavigatorForm.Pages("PageBanner").Visible = True
-    NavigatorForm.FrameGeneral.Enabled = True
-    NavigatorForm.ControlGeneralNextPage.Enabled = True
-    NavigatorForm.ControlGeneralHelp.Enabled = True
-    NavigatorForm.ControlGeneralExit.Enabled = True
-    NavigatorForm.Pages.Enabled = True
-    NavigatorForm.Pages("PagePresentation").Enabled = True
-    NavigatorForm.Pages("PageBanner").Enabled = True
+    Me.FrameGeneral.Visible = True
+    Me.ControlGeneralNextPage.Visible = True
+    Me.ControlGeneralHelp.Visible = True
+    Me.ControlGeneralExit.Visible = True
+    Me.Pages.Visible = True
+    Me.Pages("PagePresentation").Visible = True
+    Me.Pages("PageBanner").Visible = True
+    Me.FrameGeneral.Enabled = True
+    Me.ControlGeneralNextPage.Enabled = True
+    Me.ControlGeneralHelp.Enabled = True
+    Me.ControlGeneralExit.Enabled = True
+    Me.Pages.Enabled = True
+    Me.Pages("PagePresentation").Enabled = True
+    Me.Pages("PageBanner").Enabled = True
     '
     ' Disable control associated with active control.
     '
-    If (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PagePresentation") Then
+    If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
         UpdatePresentationControls W
-        NavigatorForm.Caption = "Navigator - Presentation"
-    ElseIf (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PageBanner") Then
+        Me.Caption = "Navigator - Presentation"
+    ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
         UpdateBannerControls W
-        NavigatorForm.Caption = "Navigator - Banner"
+        Me.Caption = "Navigator - Banner"
     End If
     
     '
@@ -192,92 +195,92 @@ Private Sub UpdateControls(ByVal W As DocumentWindow)
     ' active window. Changing the focus seems to accomplish it.
     '
     NavigatorFormLocked = False
-    NavigatorForm.FrameGeneral.SetFocus
-    NavigatorForm.FrameEmpty.SetFocus
+    Me.FrameGeneral.SetFocus
+    Me.FrameEmpty.SetFocus
     NavigatorFormLocked = True
     
     '
     ' Set pointer.
     '
-    NavigatorForm.MousePointer = fmMousePointerArrow
-    NavigatorForm.Repaint
+    Me.MousePointer = fmMousePointerArrow
+    Me.Repaint
 End Sub
 
 Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Make everything visible by default.
     '
-    NavigatorForm.FrameSlideShow.Visible = True
-    NavigatorForm.ControlSlideShowLoad.Visible = True
-    NavigatorForm.ControlSlideShowHide.Visible = True
-    NavigatorForm.ControlSlideShowRun.Visible = True
-    NavigatorForm.ControlSlideShowPause.Visible = True
-    NavigatorForm.ControlSlideShowPrevEffect.Visible = True
-    NavigatorForm.ControlSlideShowNextEffect.Visible = True
-    NavigatorForm.FramePresentationSelection.Visible = True
-    NavigatorForm.ControlPresentationSelectionName.Visible = True
-    NavigatorForm.ControlPresentationSelectionPrev.Visible = True
-    NavigatorForm.ControlPresentationSelectionNext.Visible = True
-    NavigatorForm.FrameSlideSelection.Visible = True
-    NavigatorForm.ControlSlideSelectionNumber.Visible = True
-    NavigatorForm.ControlSlideSelectionTitle.Visible = True
-    NavigatorForm.ControlSlideSelectionClear.Visible = True
-    NavigatorForm.ControlSlideSelectionList.Visible = True
+    Me.FrameSlideShow.Visible = True
+    Me.ControlSlideShowLoad.Visible = True
+    Me.ControlSlideShowHide.Visible = True
+    Me.ControlSlideShowRun.Visible = True
+    Me.ControlSlideShowPause.Visible = True
+    Me.ControlSlideShowPrevEffect.Visible = True
+    Me.ControlSlideShowNextEffect.Visible = True
+    Me.FramePresentationSelection.Visible = True
+    Me.ControlPresentationSelectionName.Visible = True
+    Me.ControlPresentationSelectionPrev.Visible = True
+    Me.ControlPresentationSelectionNext.Visible = True
+    Me.FrameSlideSelection.Visible = True
+    Me.ControlSlideSelectionNumber.Visible = True
+    Me.ControlSlideSelectionTitle.Visible = True
+    Me.ControlSlideSelectionClear.Visible = True
+    Me.ControlSlideSelectionList.Visible = True
     
     '
     ' Make everything enabled by default.
     '
-    NavigatorForm.FrameSlideShow.Enabled = True
-    NavigatorForm.ControlSlideShowLoad.Enabled = True
-    NavigatorForm.ControlSlideShowHide.Enabled = True
-    NavigatorForm.ControlSlideShowRun.Enabled = True
-    NavigatorForm.ControlSlideShowPause.Enabled = True
-    NavigatorForm.ControlSlideShowPrevEffect.Enabled = True
-    NavigatorForm.ControlSlideShowNextEffect.Enabled = True
-    NavigatorForm.FramePresentationSelection.Enabled = True
-    NavigatorForm.ControlPresentationSelectionName.Enabled = True
-    NavigatorForm.ControlPresentationSelectionPrev.Enabled = True
-    NavigatorForm.ControlPresentationSelectionNext.Enabled = True
-    NavigatorForm.FrameSlideSelection.Enabled = True
-    NavigatorForm.ControlSlideSelectionNumber.Enabled = True
-    NavigatorForm.ControlSlideSelectionTitle.Enabled = True
-    NavigatorForm.ControlSlideSelectionClear.Enabled = True
-    NavigatorForm.ControlSlideSelectionList.Enabled = True
+    Me.FrameSlideShow.Enabled = True
+    Me.ControlSlideShowLoad.Enabled = True
+    Me.ControlSlideShowHide.Enabled = True
+    Me.ControlSlideShowRun.Enabled = True
+    Me.ControlSlideShowPause.Enabled = True
+    Me.ControlSlideShowPrevEffect.Enabled = True
+    Me.ControlSlideShowNextEffect.Enabled = True
+    Me.FramePresentationSelection.Enabled = True
+    Me.ControlPresentationSelectionName.Enabled = True
+    Me.ControlPresentationSelectionPrev.Enabled = True
+    Me.ControlPresentationSelectionNext.Enabled = True
+    Me.FrameSlideSelection.Enabled = True
+    Me.ControlSlideSelectionNumber.Enabled = True
+    Me.ControlSlideSelectionTitle.Enabled = True
+    Me.ControlSlideSelectionClear.Enabled = True
+    Me.ControlSlideSelectionList.Enabled = True
     
     '
     ' Since there are no slides,
     ' disable slide controls.
     '
     If (ActiveWindowSlideExists(W) = False) Then
-        NavigatorForm.ControlSlideShowLoad.Enabled = False
-        NavigatorForm.ControlSlideShowHide.Enabled = False
-        NavigatorForm.ControlSlideShowRun.Enabled = False
-        NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
-        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
+        Me.ControlSlideShowLoad.Enabled = False
+        Me.ControlSlideShowHide.Enabled = False
+        Me.ControlSlideShowRun.Enabled = False
+        Me.ControlSlideShowPause.Enabled = False
+        Me.ControlSlideShowPrevEffect.Enabled = False
+        Me.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since there are no slides in the slide list,
     ' disable slide show controls.
     '
-    If (NavigatorForm.ControlSlideSelectionList.ListCount = 0) Then
-        NavigatorForm.ControlSlideShowLoad.Enabled = False
-        NavigatorForm.ControlSlideShowHide.Enabled = False
-        NavigatorForm.ControlSlideShowRun.Enabled = False
-        NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
-        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
+    If (Me.ControlSlideSelectionList.ListCount = 0) Then
+        Me.ControlSlideShowLoad.Enabled = False
+        Me.ControlSlideShowHide.Enabled = False
+        Me.ControlSlideShowRun.Enabled = False
+        Me.ControlSlideShowPause.Enabled = False
+        Me.ControlSlideShowPrevEffect.Enabled = False
+        Me.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since there are no slides in the slide list,
     ' disable slide load control.
     '
     If (ActiveSlideShowExists(W.Presentation) = False) Then
-        NavigatorForm.ControlSlideShowHide.Enabled = False
-        NavigatorForm.ControlSlideShowRun.Enabled = False
-        NavigatorForm.ControlSlideShowPause.Enabled = False
-        NavigatorForm.ControlSlideShowPrevEffect.Enabled = False
-        NavigatorForm.ControlSlideShowNextEffect.Enabled = False
+        Me.ControlSlideShowHide.Enabled = False
+        Me.ControlSlideShowRun.Enabled = False
+        Me.ControlSlideShowPause.Enabled = False
+        Me.ControlSlideShowPrevEffect.Enabled = False
+        Me.ControlSlideShowNextEffect.Enabled = False
     End If
     '
     ' Since the slide show is hidden,
@@ -285,7 +288,7 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     '
     If (ActiveSlideShowExists(W.Presentation) = True) Then
         If (W.Presentation.SlideShowWindow.View.State = ppSlideShowBlackScreen) Then
-            NavigatorForm.ControlSlideShowHide.Caption = "Show"
+            Me.ControlSlideShowHide.Caption = "Show"
         End If
     End If
     '
@@ -294,7 +297,7 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     '
     If (ActiveSlideShowExists(W.Presentation) = True) Then
         If (W.Presentation.SlideShowWindow.View.State = ppSlideShowRunning) Then
-            NavigatorForm.ControlSlideShowRun.Enabled = False
+            Me.ControlSlideShowRun.Enabled = False
         End If
     End If
     '
@@ -303,16 +306,16 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     '
     If (ActiveSlideShowExists(W.Presentation) = True) Then
         If (W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused) Then
-            NavigatorForm.ControlSlideShowPause.Enabled = False
+            Me.ControlSlideShowPause.Enabled = False
         End If
     End If
     '
     ' Since the slide filter is clear,
     ' disable the slide filter clear control.
     '
-    If ((NavigatorForm.ControlSlideSelectionNumber.Caption = "") And _
-        (NavigatorForm.ControlSlideSelectionTitle.Caption = "")) Then
-        NavigatorForm.ControlSlideSelectionClear.Enabled = False
+    If ((Me.ControlSlideSelectionNumber.Caption = "") And _
+        (Me.ControlSlideSelectionTitle.Caption = "")) Then
+        Me.ControlSlideSelectionClear.Enabled = False
     End If
 End Sub
 
@@ -323,53 +326,64 @@ Private Sub UpdateBannerControls(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Make everything visible by default.
     '
-    NavigatorForm.FrameBannerConfiguration.Visible = True
-    NavigatorForm.ControlBannerConfigurationBannerDisable.Visible = True
-    NavigatorForm.FrameBannerShow.Visible = True
-    NavigatorForm.ControlBannerShowLoad.Visible = True
-    NavigatorForm.ControlBannerShowHide.Visible = True
-    NavigatorForm.FrameBannerSelection.Visible = True
-    NavigatorForm.ControlBannerSelectionText.Visible = True
-    NavigatorForm.ControlBannerSelectionClear.Visible = True
+    Me.FrameBannerConfiguration.Visible = True
+    Me.ControlBannerConfigurationBannerDisable.Visible = True
+    Me.FrameBannerShow.Visible = True
+    Me.ControlBannerShowLoad.Visible = True
+    Me.ControlBannerShowHide.Visible = True
+    Me.FrameBannerColor.Visible = True
+    Me.ControlBannerColorName.Visible = True
+    Me.ControlBannerColorPrev.Visible = True
+    Me.ControlBannerColorNext.Visible = True
+    Me.FrameBannerSelection.Visible = True
+    Me.ControlBannerSelectionText.Visible = True
+    Me.ControlBannerSelectionClear.Visible = True
     
     '
     ' Make everything enabled by default.
     '
-    NavigatorForm.FrameBannerConfiguration.Enabled = True
-    NavigatorForm.ControlBannerConfigurationBannerDisable.Enabled = True
-    NavigatorForm.FrameBannerShow.Enabled = True
-    NavigatorForm.ControlBannerShowLoad.Enabled = True
-    NavigatorForm.ControlBannerShowHide.Enabled = True
-    NavigatorForm.FrameBannerSelection.Enabled = True
-    NavigatorForm.ControlBannerSelectionText.Enabled = True
-    NavigatorForm.ControlBannerSelectionClear.Enabled = True
+    Me.FrameBannerConfiguration.Enabled = True
+    Me.ControlBannerConfigurationBannerDisable.Enabled = True
+    Me.FrameBannerShow.Enabled = True
+    Me.ControlBannerShowLoad.Enabled = True
+    Me.ControlBannerShowHide.Enabled = True
+    Me.FrameBannerColor.Enabled = True
+    Me.ControlBannerColorName.Enabled = True
+    Me.ControlBannerColorPrev.Enabled = True
+    Me.ControlBannerColorNext.Enabled = True
+    Me.FrameBannerSelection.Enabled = True
+    Me.ControlBannerSelectionText.Enabled = True
+    Me.ControlBannerSelectionClear.Enabled = True
     
     '
     ' Set Disable/Enable button caption.
     '
     If (Banner.Enabled = True) Then
-        NavigatorForm.ControlBannerConfigurationBannerDisable.Caption = "Banner Disable"
+        Me.ControlBannerConfigurationBannerDisable.Caption = "Banner Disable"
     Else
-        NavigatorForm.ControlBannerConfigurationBannerDisable.Caption = "Banner Enable"
+        Me.ControlBannerConfigurationBannerDisable.Caption = "Banner Enable"
     End If
     
     '
     ' Set Hide/Show button caption.
     '
     If (Banner.Visible = True) Then
-        NavigatorForm.ControlBannerShowHide.Caption = "Hide"
+        Me.ControlBannerShowHide.Caption = "Hide"
     Else
-        NavigatorForm.ControlBannerShowHide.Caption = "Show"
+        Me.ControlBannerShowHide.Caption = "Show"
     End If
     
     If (Banner.Enabled = False) Then
-        NavigatorForm.ControlBannerShowLoad.Enabled = False
-        NavigatorForm.ControlBannerShowHide.Enabled = False
-        NavigatorForm.FrameBannerShow.Enabled = False
-        NavigatorForm.ControlBannerSelectionText = ""
-        NavigatorForm.ControlBannerSelectionText.Enabled = False
-        NavigatorForm.ControlBannerSelectionClear.Enabled = False
-        NavigatorForm.FrameBannerSelection.Enabled = False
+        Me.ControlBannerShowLoad.Enabled = False
+        Me.ControlBannerShowHide.Enabled = False
+        Me.FrameBannerShow.Enabled = False
+        Me.ControlBannerColorName.Enabled = False
+        Me.ControlBannerColorPrev.Enabled = False
+        Me.ControlBannerColorNext.Enabled = False
+        Me.ControlBannerSelectionText = ""
+        Me.ControlBannerSelectionText.Enabled = False
+        Me.ControlBannerSelectionClear.Enabled = False
+        Me.FrameBannerSelection.Enabled = False
     End If
 End Sub
 
@@ -378,13 +392,13 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub GeneralNextPage(ByVal W As PowerPoint.DocumentWindow)
     Dim Page As Integer
-    Page = NavigatorForm.Pages.Value
+    Page = Me.Pages.Value
     Page = Page + 1
-    If (Page >= NavigatorForm.Pages.Count) Then
+    If (Page >= Me.Pages.Count) Then
         Page = 0
     End If
     NavigatorFormLocked = False
-    NavigatorForm.Pages.Value = Page
+    Me.Pages.Value = Page
     NavigatorFormLocked = True
     
     UpdateControls W
@@ -395,20 +409,20 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
-    If ((NavigatorForm.ControlSlideSelectionNumber.Caption <> "") Or _
-        (NavigatorForm.ControlSlideSelectionTitle.Caption <> "")) Then
-        NavigatorForm.ControlSlideSelectionNumber.Caption = ""
-        NavigatorForm.ControlSlideSelectionTitle.Caption = ""
+    If ((Me.ControlSlideSelectionNumber.Caption <> "") Or _
+        (Me.ControlSlideSelectionTitle.Caption <> "")) Then
+        Me.ControlSlideSelectionNumber.Caption = ""
+        Me.ControlSlideSelectionTitle.Caption = ""
         UpdateSlideList W
     End If
     
     If (ActiveSlideShowExists(W.Presentation) = False) Then
-        NavigatorForm.Hide
+        Me.Hide
         SlideShow_End
         SlideShow_Begin W
         Banner.Apply W.Presentation.SlideShowWindow
     Else
-        NavigatorForm.Hide
+        Me.Hide
         W.Presentation.SlideShowWindow.Activate
     End If
     
@@ -471,7 +485,7 @@ Private Sub SlideShowPrevEffect(ByVal W As PowerPoint.DocumentWindow)
     ControlSlideSelectionClear_Click
     
     If (ActiveSlideExists(W) = True) Then
-        NavigatorForm.ControlSlideSelectionList.ListIndex = ActiveSlide(W).SlideIndex - 1
+        Me.ControlSlideSelectionList.ListIndex = ActiveSlide(W).SlideIndex - 1
     End If
     
     UpdateControls W
@@ -490,7 +504,7 @@ Private Sub SlideShowNextEffect(ByVal W As PowerPoint.DocumentWindow)
     ControlSlideSelectionClear_Click
     
     If (ActiveSlideExists(W) = True) Then
-        NavigatorForm.ControlSlideSelectionList.ListIndex = ActiveSlide(W).SlideIndex - 1
+        Me.ControlSlideSelectionList.ListIndex = ActiveSlide(W).SlideIndex - 1
     End If
     
     UpdateControls W
@@ -568,10 +582,10 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub SlideSelectionClear(ByVal W As PowerPoint.DocumentWindow)
-    If ((NavigatorForm.ControlSlideSelectionNumber.Caption <> "") Or _
-        (NavigatorForm.ControlSlideSelectionTitle.Caption <> "")) Then
-        NavigatorForm.ControlSlideSelectionNumber.Caption = ""
-        NavigatorForm.ControlSlideSelectionTitle.Caption = ""
+    If ((Me.ControlSlideSelectionNumber.Caption <> "") Or _
+        (Me.ControlSlideSelectionTitle.Caption <> "")) Then
+        Me.ControlSlideSelectionNumber.Caption = ""
+        Me.ControlSlideSelectionTitle.Caption = ""
         UpdateSlideList W
     End If
     UpdateControls W
@@ -586,7 +600,7 @@ Private Sub SlideSelectionUpdate(ByVal W As PowerPoint.DocumentWindow)
     ' Set slide selected in the presentation to match the
     ' slide selected in the slide list control
     '
-    With NavigatorForm.ControlSlideSelectionList
+    With Me.ControlSlideSelectionList
         If (.ListIndex >= 0) Then
             sIndex = .List(.ListIndex, 0)
             W.View.Slide = W.Presentation.slides(sIndex)
@@ -599,7 +613,7 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub SlideSelectionPrev(ByVal W As PowerPoint.DocumentWindow)
-    With NavigatorForm.ControlSlideSelectionList
+    With Me.ControlSlideSelectionList
         If (.ListCount <= 1) Then
             Exit Sub
         End If
@@ -615,7 +629,7 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Private Sub SlideSelectionNext(ByVal W As PowerPoint.DocumentWindow)
-    With NavigatorForm.ControlSlideSelectionList
+    With Me.ControlSlideSelectionList
         If (.ListCount <= 1) Then
             Exit Sub
         End If
@@ -642,7 +656,21 @@ Private Sub BannerShowLoad(ByVal W As PowerPoint.DocumentWindow)
     If (Banner.Enabled = False) Then
         Exit Sub
     End If
-    Banner.Load NavigatorForm.ControlBannerSelectionText.Caption
+    Dim Red As Integer
+    Dim Green As Integer
+    Dim Blue As Integer
+    With Me.ControlBannerColorName
+        If (.ListIndex >= 0) Then
+            Red = .List(.ListIndex, 1)
+            Green = .List(.ListIndex, 2)
+            Blue = .List(.ListIndex, 3)
+        Else
+            Red = 0
+            Green = 0
+            Blue = 0
+        End If
+    End With
+    Banner.Load Me.ControlBannerSelectionText.Caption, Red, Green, Blue
     BannerSelectionClear W
     UpdateControls W
 End Sub
@@ -658,6 +686,65 @@ Private Sub BannerShowHide(ByVal W As PowerPoint.DocumentWindow)
     UpdateControls W
 End Sub
 
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub BannerConfigurationBannerColorInitialize()
+    Dim Color(6, 3) As Variant
+    
+    Color(0, 0) = "Red":     Color(0, 1) = 255: Color(0, 2) = 0:   Color(0, 3) = 0
+    Color(1, 0) = "Green":   Color(1, 1) = 0:   Color(1, 2) = 255: Color(1, 3) = 0
+    Color(2, 0) = "Blue":    Color(2, 1) = 0:   Color(2, 2) = 0:   Color(2, 3) = 255
+    Color(3, 0) = "Yellow":  Color(3, 1) = 255: Color(3, 2) = 255: Color(3, 3) = 0
+    Color(4, 0) = "Magenta": Color(4, 1) = 255: Color(4, 2) = 0:   Color(4, 3) = 255
+    Color(5, 0) = "Cyan":    Color(5, 1) = 0:   Color(5, 2) = 255: Color(5, 3) = 255
+    Color(6, 0) = "White":   Color(6, 1) = 255: Color(6, 2) = 255: Color(6, 3) = 255
+    
+    With Me.ControlBannerColorName
+        .List = Color
+        .ListIndex = 1
+        .BackColor = RGB(0, 0, 0)
+        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub BannerColorPrev(ByVal W As PowerPoint.DocumentWindow)
+    With Me.ControlBannerColorName
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex > 0) Then
+            .ListIndex = .ListIndex - 1
+        Else
+            .ListIndex = .ListCount - 1
+        End If
+        .BackColor = RGB(0, 0, 0)
+        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub BannerColorNext(ByVal W As PowerPoint.DocumentWindow)
+    With Me.ControlBannerColorName
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex < .ListCount - 1) Then
+            .ListIndex = .ListIndex + 1
+        Else
+            .ListIndex = 0
+        End If
+        .BackColor = RGB(0, 0, 0)
+        .ForeColor = RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
+    End With
+End Sub
+
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
@@ -665,7 +752,7 @@ Private Sub BannerSelectionClear(ByVal W As PowerPoint.DocumentWindow)
     If (Banner.Enabled = False) Then
         Exit Sub
     End If
-    NavigatorForm.ControlBannerSelectionText.Caption = ""
+    Me.ControlBannerSelectionText.Caption = ""
     UpdateControls W
 End Sub
 
@@ -675,7 +762,7 @@ End Sub
 Private Function NavigatorValid() As Boolean
     NavigatorValid = False
     If (ActiveWindowExists = False) Then
-        NavigatorForm.Hide
+        Me.Hide
         Exit Function
     End If
     NavigatorValid = True
@@ -860,9 +947,9 @@ Private Sub SetApplicationView()
     Application.Height = 0
     Application.Width = 0
     Application.Top = Top
-    Application.Left = Left + NavigatorForm.Width
+    Application.Left = Left + Me.Width
     Application.Height = Height
-    Application.Width = Width - NavigatorForm.Width
+    Application.Width = Width - Me.Width
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -994,19 +1081,20 @@ Private Sub UserForm_Initialize()
     
     SetApplicationView
     
-    NavigatorForm.Pages.Value = NavigatorForm.Pages("PagePresentation").Index
+    Me.Pages.Value = Me.Pages("PagePresentation").Index
     
-    NavigatorForm.ControlSlideSelectionNumber.Caption = ""
-    NavigatorForm.ControlSlideSelectionTitle.Caption = ""
-    NavigatorForm.ControlBannerSelectionText.Caption = ""
+    Me.ControlSlideSelectionNumber.Caption = ""
+    Me.ControlSlideSelectionTitle.Caption = ""
+    Me.ControlBannerSelectionText.Caption = ""
     
-    NavigatorForm.StartUpPosition = 0
-    NavigatorForm.Left = Application.Left - NavigatorForm.Width
-    NavigatorForm.Top = Application.Top
+    Me.StartUpPosition = 0
+    Me.Left = Application.Left - Me.Width
+    Me.Top = Application.Top
     
     UpdateFormSize
+    BannerConfigurationBannerColorInitialize
     
-    NavigatorForm.Refresh
+    Me.Refresh
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -1035,7 +1123,7 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If (Response = vbYes) Then
         Cancel = 0
         
-        NavigatorForm.Hide
+        Me.Hide
         
         Set W = Application.ActiveWindow
         For Each P In Application.Presentations
@@ -1238,6 +1326,28 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
+Private Sub ControlBannerColorPrev_Click()
+    If (NavigatorValid = False) Then
+        Exit Sub
+    End If
+    BannerColorPrev Application.ActiveWindow
+    NavigatorValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub ControlBannerColorNext_Click()
+    If (NavigatorValid = False) Then
+        Exit Sub
+    End If
+    BannerColorNext Application.ActiveWindow
+    NavigatorValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
 Private Sub ControlBannerSelectionClear_Click()
     If (NavigatorValid = False) Then
         Exit Sub
@@ -1268,13 +1378,13 @@ Private Sub FrameEmpty_KeyPress(ByVal KeyASCII As MSForms.ReturnInteger)
     Dim W As PowerPoint.DocumentWindow
     Set W = Application.ActiveWindow
         
-    If (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PagePresentation") Then
+    If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
         Dim FilterText As String
         
-        If (NavigatorForm.ControlSlideSelectionNumber <> "") Then
-            FilterText = NavigatorForm.ControlSlideSelectionNumber.Caption
+        If (Me.ControlSlideSelectionNumber <> "") Then
+            FilterText = Me.ControlSlideSelectionNumber.Caption
         Else
-            FilterText = NavigatorForm.ControlSlideSelectionTitle.Caption
+            FilterText = Me.ControlSlideSelectionTitle.Caption
         End If
         
         Select Case KeyASCII
@@ -1288,19 +1398,19 @@ Private Sub FrameEmpty_KeyPress(ByVal KeyASCII As MSForms.ReturnInteger)
         End Select
                 
         If (IsNumeric(FilterText) = True) Then
-            NavigatorForm.ControlSlideSelectionNumber.Caption = FilterText
-            NavigatorForm.ControlSlideSelectionTitle.Caption = ""
+            Me.ControlSlideSelectionNumber.Caption = FilterText
+            Me.ControlSlideSelectionTitle.Caption = ""
         Else
-            NavigatorForm.ControlSlideSelectionNumber.Caption = ""
-            NavigatorForm.ControlSlideSelectionTitle.Caption = FilterText
+            Me.ControlSlideSelectionNumber.Caption = ""
+            Me.ControlSlideSelectionTitle.Caption = FilterText
         End If
         
         UpdateSlideList W
-    ElseIf (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PageBanner") Then
+    ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
         Dim BannerText As String
         
         If (Banner.Enabled = True) Then
-            BannerText = NavigatorForm.ControlBannerSelectionText.Caption
+            BannerText = Me.ControlBannerSelectionText.Caption
             Select Case KeyASCII
                 Case 8:                   ' <backspace>
                     If (Len(BannerText) > 0) Then
@@ -1310,7 +1420,7 @@ Private Sub FrameEmpty_KeyPress(ByVal KeyASCII As MSForms.ReturnInteger)
                     BannerText = BannerText & Chr(KeyASCII)
                 Case Else:
             End Select
-            NavigatorForm.ControlBannerSelectionText.Caption = BannerText
+            Me.ControlBannerSelectionText.Caption = BannerText
         End If
     End If
     
@@ -1337,7 +1447,7 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
     CONTROL = KeyModifier And 2
     ALTERNATE = KeyModifier And 4
     
-    If (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PagePresentation") Then
+    If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
         If ((SHIFT = False) And (CONTROL = False) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 13:                    ' RETURN
@@ -1367,13 +1477,17 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
                     SlideShowNextEffect W
             End Select
         End If
-    ElseIf (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PageBanner") Then
+    ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
         If ((SHIFT = False) And (CONTROL = False) And (ALTERNATE = False)) Then
             Select Case KeyCode
                 Case 13:                    ' RETURN
                     BannerShowLoad W
                 Case 46:                    ' DELETE
                     BannerSelectionClear W
+                Case 37:                    ' LEFT_ARROW
+                    BannerColorPrev W
+                Case 39:                    ' RIGHT_ARROW
+                    BannerColorNext W
             End Select
         ElseIf ((SHIFT = False) And (CONTROL = True) And (ALTERNATE = False)) Then
             Select Case KeyCode
@@ -1404,29 +1518,29 @@ Private Sub UpdateFormSize()
     Const FormOverhead As Integer = 22
     Const PageOverhead As Integer = 0
     Const FrameOverhead As Integer = 14
-    If (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PagePresentation") Then
-        NavigatorForm.Height = Application.Height
-        NavigatorForm.Pages.Height = _
-            NavigatorForm.Height - _
-            NavigatorForm.Pages.Top - _
+    If (Me.Pages(Me.Pages.Value).Name = "PagePresentation") Then
+        Me.Height = Application.Height
+        Me.Pages.Height = _
+            Me.Height - _
+            Me.Pages.Top - _
             FormOverhead
-        NavigatorForm.FrameSlideSelection.Height = _
-            NavigatorForm.Pages.Height - _
+        Me.FrameSlideSelection.Height = _
+            Me.Pages.Height - _
             PageOverhead - _
-            NavigatorForm.FrameSlideSelection.Top
-        NavigatorForm.ControlSlideSelectionList.Height = _
-            NavigatorForm.FrameSlideSelection.Height - _
+            Me.FrameSlideSelection.Top
+        Me.ControlSlideSelectionList.Height = _
+            Me.FrameSlideSelection.Height - _
             FrameOverhead - _
-            NavigatorForm.ControlSlideSelectionList.Top
-    ElseIf (NavigatorForm.Pages(NavigatorForm.Pages.Value).Name = "PageBanner") Then
-        NavigatorForm.Height = _
+            Me.ControlSlideSelectionList.Top
+    ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
+        Me.Height = _
             FormOverhead + _
             PageOverhead + _
-            NavigatorForm.Pages.Top + _
-            NavigatorForm.FrameBannerSelection.Top + _
-            NavigatorForm.FrameBannerSelection.Height
-        NavigatorForm.Pages.Height = _
-            NavigatorForm.Height - _
+            Me.Pages.Top + _
+            Me.FrameBannerSelection.Top + _
+            Me.FrameBannerSelection.Height
+        Me.Pages.Height = _
+            Me.Height - _
             FormOverhead
     Else
     End If
@@ -1447,7 +1561,7 @@ Private Sub UpdatePresentationName(ByVal W As PowerPoint.DocumentWindow)
             Name = Left(Name, Len(Name) - 4)
         End If
     End If
-    NavigatorForm.ControlPresentationSelectionName.Caption = Name
+    Me.ControlPresentationSelectionName.Caption = Name
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -1465,7 +1579,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     
     Set P = W.Presentation
     
-    NavigatorForm.ControlSlideSelectionList.Clear
+    Me.ControlSlideSelectionList.Clear
     
     If (ActiveWindowSlideExists(W) = False) Then
         Exit Sub
@@ -1475,10 +1589,10 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
         W.View.Slide = P.slides(1)
     End If
     SelectedSlideIndex = ActiveSlide(W).SlideIndex
-    If (NavigatorForm.ControlSlideSelectionNumber <> "") Then
-        FilterText = NavigatorForm.ControlSlideSelectionNumber.Caption
+    If (Me.ControlSlideSelectionNumber <> "") Then
+        FilterText = Me.ControlSlideSelectionNumber.Caption
     Else
-        FilterText = NavigatorForm.ControlSlideSelectionTitle.Caption
+        FilterText = Me.ControlSlideSelectionTitle.Caption
     End If
     FilterText = CleanEverything(FilterText)
     FilterTextLen = Len(FilterText)
@@ -1497,7 +1611,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
                 List(ListCount, 0) = SlideIndex
                 List(ListCount, 1) = P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
             Next
-            NavigatorForm.ControlSlideSelectionList.List() = List
+            Me.ControlSlideSelectionList.List() = List
         End If
     '
     ' Since the filter text is numeric, assume that it is a slide number.
@@ -1516,7 +1630,7 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
             ListCount = ListCount - 1
             List(ListCount, 0) = SlideIndex
             List(ListCount, 1) = P.slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
-            NavigatorForm.ControlSlideSelectionList.List() = List
+            Me.ControlSlideSelectionList.List() = List
         End If
     '
     ' Since the filter text is non-zero and non-numeric, assume that it is a
@@ -1548,11 +1662,11 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
                     End If
                 End If
             Next
-            NavigatorForm.ControlSlideSelectionList.List() = List
+            Me.ControlSlideSelectionList.List() = List
         End If
     End If
     
-    With NavigatorForm.ControlSlideSelectionList
+    With Me.ControlSlideSelectionList
         If (.ListCount > 0) Then
             If (ListIndex >= 0) Then
                 .ListIndex = ListIndex

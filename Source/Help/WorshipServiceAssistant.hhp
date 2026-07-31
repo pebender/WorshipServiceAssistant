@@ -42,11 +42,15 @@ HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Pause.htm
 HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\PrevEffect.htm
 HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Run.htm
 HTML\WSA\CommandBar\Navigator\Banner.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerConfiguration.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerConfiguration\BannerDisable.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerColor.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Name.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Prev.htm
+HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Next.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerSelection.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerSelection\Clear.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerSelection\Text.htm
-HTML\WSA\CommandBar\Navigator\Banner\BannerConfiguration.htm
-HTML\WSA\CommandBar\Navigator\Banner\BannerConfiguration\BannerDisable.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerShow.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Load.htm
 HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Hide.htm

@@ -15,6 +15,11 @@
             <param name="Local" value="HTML\WSA\CommandBar\Help\About.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Banner Color frame">
+            <param name="Name" value="Banner Color frame">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Banner Configuration frame">
             <param name="Name" value="Banner Configuration frame">
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerConfiguration.htm">
@@ -52,12 +57,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Clear button">
             <param name="Name" value="Clear button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Clear.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerSelection\Clear.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Clear button">
             <param name="Name" value="Clear button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerSelection\Clear.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Clear.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="command bar">
@@ -65,8 +70,8 @@
             <param name="Local" value="HTML\WSA\CommandBar.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Copyright & Permission">
-            <param name="Name" value="Copyright & Permission">
+            <param name="Name" value="Copyright and Permission">
+            <param name="Name" value="Copyright and Permission">
             <param name="Local" value="HTML\WSA\CopyrightPermission.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
@@ -150,8 +155,8 @@
             <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCommandBar.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Help on Copyright & Permission menu item">
-            <param name="Name" value="Help on Copyright & Permission menu item">
+            <param name="Name" value="Help on Copyright and Permission menu item">
+            <param name="Name" value="Help on Copyright and Permission menu item">
             <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyrightPermission.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
@@ -195,6 +200,11 @@
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Load.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Name display">
+            <param name="Name" value="Name display">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Name.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Navigator button">
             <param name="Name" value="Navigator button">
             <param name="Local" value="HTML\WSA\CommandBar\Navigator.htm">
@@ -203,6 +213,11 @@
             <param name="Name" value="Next button">
             <param name="Name" value="Next button">
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection\Next.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Next button">
+            <param name="Name" value="Next button">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Next.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Next Effect button">
@@ -233,6 +248,11 @@
             <param name="Name" value="Presentation Selection frame">
             <param name="Name" value="Presentation Selection frame">
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Prev button">
+            <param name="Name" value="Prev button">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Prev.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Prev button">
@@ -302,12 +322,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Title display">
             <param name="Name" value="Title display">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection\Title.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Title.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Title display">
             <param name="Name" value="Title display">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Title.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection\Title.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Visit the Homepage menu item">
