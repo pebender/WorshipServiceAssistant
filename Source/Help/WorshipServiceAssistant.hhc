@@ -115,12 +115,16 @@
                       </OBJECT>
                   <UL>
                      <LI><OBJECT type="text/sitemap">
+                           <param name="Name" value="Mode button">
+                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Mode.htm">
+                         </OBJECT>
+                     <LI><OBJECT type="text/sitemap">
                            <param name="Name" value="Number display">
                            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Number.htm">
                          </OBJECT>
                      <LI><OBJECT type="text/sitemap">
-                           <param name="Name" value="Title display">
-                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Title.htm">
+                           <param name="Name" value="Text display">
+                           <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Text.htm">
                          </OBJECT>
                      <LI><OBJECT type="text/sitemap">
                            <param name="Name" value="Clear button">

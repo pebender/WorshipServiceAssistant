@@ -17,26 +17,29 @@ The 'Slide Selection' frame on the
 of the
 <a href="/HTML/WSA/CommandBar/Navigator.htm"
    title="Get help on the Navigator">Navigator</a>
-allows you to quickly find and select a slide by filtering out unwanted slides. Slides can be filtered by either slide number or slide title.
+allows you to quickly find and select a slide by filtering out unwanted slides. Slides are filtered, depending on the selection slide selection filter mode. There are two slide selection filter modes: "Filter matching Number and Title" and "Filter matching Number and Title and Body".
 </p>
 
 <p>
-If the filter text is numeric, then the Navigator assumes that the filter is a slide number. When the Navigator is assuming that the filter is a slide number, the Navigator places the filter text in the 'Slide Selection'
+If the filter criteria is numeric, then the Navigator assumes that the filter is a slide number. When the Navigator is assuming that the filter is a slide number, the Navigator places the filter text in the 'Slide Selection'
 <a href="SlideSelection/number.htm"
    title="Get help on the Number display">'Number' display</a>.
-Only the slide with the corresponding slide number will appear in the
+When filtering on number, only the slide with the corresponding slide number will appear in the
 <a href="SlideSelection/List.htm"
    title="Get help on the List display">'List' display</a>.
 </p>
 
 <p>
-If the filter text is not numeric, then the Navigator assumes that the filter is the beginning of a slide title. When the Navigator is assuming that the filter is a slide title, then Navigator places the filter text in the 'Slide Selection'
-<a href="SlideSelection/title.htm"
-   title="Get help on the Title display">'Title' display</a>.
-Only slides that have titles beginning with the filter text will appear in the 'Slide Selection'
+If the filter criteria is not numeric, then the Navigator assumes that the filter is slide text. When the Navigator is assuming that the filter is slide text, then Navigator places the filter text in the 'Slide Selection'
+<a href="SlideSelection/text.htm"
+   title="Get help on the Text display">'Text' display</a>.
+When filtering on the title, only slides that have titles beginning with the filter text will appear in the 'Slide Selection'
 <a href="SlideSelection/List.htm"
    title="Get help on the List display">'List' display</a>.
-When filtering by title, the Navigator window attempts to be somewhat forgiving.  Capitalization, punctuation and white space are not considered when filtering.  For example, the filter <em>"lord i lift"</em> will match titles beginning with <em>"Lord, I lift"</em>.
+When filtering on the title, the Navigator window attempts to be somewhat forgiving.  Capitalization, punctuation and white space are not considered when filtering.  For example, the filter <em>"lord i lift"</em> will match titles beginning with <em>"Lord, I lift"</em>.
+When filtering on body, any slides with body text that matches the filter text will appera in the 'Slide Selection'
+<a href="SlideSelection/List.htm"
+   title="Get help on the List display">'List' display</a>.
 </p>
 
 </body>

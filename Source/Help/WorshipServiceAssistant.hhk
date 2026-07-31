@@ -167,12 +167,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Hide/Show button">
             <param name="Name" value="Hide/Show button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Hide.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Hide.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Hide/Show button">
             <param name="Name" value="Hide/Show button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Hide.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Hide.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="History">
@@ -197,12 +197,17 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Load button">
             <param name="Name" value="Load button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Load.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Load.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Load button">
             <param name="Name" value="Load button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideShow\Load.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerShow\Load.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Mode button">
+            <param name="Name" value="Mode button">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Mode.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Name display">
@@ -257,12 +262,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Prev button">
             <param name="Name" value="Prev button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection\Prev.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Prev.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Prev button">
             <param name="Name" value="Prev button">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerColor\Prev.htm">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\PresentationSelection\Prev.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Prev Effect button">
@@ -325,9 +330,9 @@
             <param name="Local" value="HTML\WSA\CommandBar\Navigator\Banner\BannerSelection\Text.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Title display">
-            <param name="Name" value="Title display">
-            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Title.htm">
+            <param name="Name" value="Text display">
+            <param name="Name" value="Text display">
+            <param name="Local" value="HTML\WSA\CommandBar\Navigator\Presentation\SlideSelection\Text.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Title display">

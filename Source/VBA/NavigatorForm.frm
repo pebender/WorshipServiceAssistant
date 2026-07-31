@@ -72,6 +72,14 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.03.0000:
+'     (1) Added support for matching the filter to the slide body
+'         in the  Navigator Slide Selection frame.
+'     (2) Added the "Mode" button and "Mode Name" display
+'         to the Navigatory Slide Selection frame in order to allow the
+'         operator to select the filter mode.
+'     (3) Renamed Navigator Slide Selection Title to Navigator Slide
+'         Selection Text.
 '   1.02.0000:
 '     (1) Added code that configures PowerPoint options to the most
 '         appropiate values for running the Navigator.
@@ -253,8 +261,9 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     Me.ControlPresentationSelectionNext.Visible = True
     Me.FrameSlideSelection.Visible = True
     Me.ControlSlideSelectionNumber.Visible = True
-    Me.ControlSlideSelectionTitle.Visible = True
+    Me.ControlSlideSelectionText.Visible = True
     Me.ControlSlideSelectionClear.Visible = True
+    Me.ControlSlideSelectionMode.Visible = True
     Me.ControlSlideSelectionList.Visible = True
     
     '
@@ -273,14 +282,15 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     Me.ControlPresentationSelectionNext.Enabled = True
     Me.FrameSlideSelection.Enabled = True
     Me.ControlSlideSelectionNumber.Enabled = True
-    Me.ControlSlideSelectionTitle.Enabled = True
+    Me.ControlSlideSelectionText.Enabled = True
     Me.ControlSlideSelectionClear.Enabled = True
+    Me.ControlSlideSelectionMode.Enabled = True
     Me.ControlSlideSelectionList.Enabled = True
     
     '
     ' Set default button.
     '
-    Me.ControlSlideShowLoad.default = True
+    Me.ControlSlideShowLoad.Default = True
     
     '
     ' Set default button captions.
@@ -350,11 +360,22 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
         End If
     End If
     '
+    ' Update selection mode text.
+    '
+    Select Case Me.ControlSlideSelectionMode.Tag
+        Case "0"
+            Me.ControlSlideSelectionModeName.Caption = "Filter matching Number and Title"
+        Case "1"
+            Me.ControlSlideSelectionModeName.Caption = "Filter matching Number and Title and Body"
+        Case Else
+            Me.ControlSlideSelectionModeName.Caption = ""
+    End Select
+    '
     ' Since the slide filter is clear,
     ' disable the slide filter clear control.
     '
     If ((Me.ControlSlideSelectionNumber.Caption = "") And _
-        (Me.ControlSlideSelectionTitle.Caption = "")) Then
+        (Me.ControlSlideSelectionText.Caption = "")) Then
         Me.ControlSlideSelectionClear.Enabled = False
     End If
 End Sub
@@ -398,7 +419,7 @@ Private Sub UpdateBannerControls(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Set default button.
     '
-    Me.ControlBannerShowLoad.default = True
+    Me.ControlBannerShowLoad.Default = True
     
     '
     ' Set button captions.
@@ -469,9 +490,9 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub SlideShowLoad(ByVal W As PowerPoint.DocumentWindow)
     If ((Me.ControlSlideSelectionNumber.Caption <> "") Or _
-        (Me.ControlSlideSelectionTitle.Caption <> "")) Then
+        (Me.ControlSlideSelectionText.Caption <> "")) Then
         Me.ControlSlideSelectionNumber.Caption = ""
-        Me.ControlSlideSelectionTitle.Caption = ""
+        Me.ControlSlideSelectionText.Caption = ""
         UpdateSlideList W
     End If
     
@@ -659,11 +680,28 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
+Private Sub SlideSelectionMode(ByVal W As PowerPoint.DocumentWindow)
+    Select Case Me.ControlSlideSelectionMode.Tag
+        Case "0"                        ' Title
+            Me.ControlSlideSelectionMode.Tag = "1"
+        Case "1"                        ' Title and Body
+            Me.ControlSlideSelectionMode.Tag = "0"
+        Case Else
+            Me.ControlSlideSelectionMode.Tag = "0"
+    End Select
+    
+    UpdateSlideList W
+    UpdateControls W
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
 Private Sub SlideSelectionClear(ByVal W As PowerPoint.DocumentWindow)
     If ((Me.ControlSlideSelectionNumber.Caption <> "") Or _
-        (Me.ControlSlideSelectionTitle.Caption <> "")) Then
+        (Me.ControlSlideSelectionText.Caption <> "")) Then
         Me.ControlSlideSelectionNumber.Caption = ""
-        Me.ControlSlideSelectionTitle.Caption = ""
+        Me.ControlSlideSelectionText.Caption = ""
         UpdateSlideList W
     End If
     UpdateControls W
@@ -1175,8 +1213,9 @@ Private Sub UserForm_Initialize()
     
     Me.Pages.Value = Me.Pages("PagePresentation").Index
     
+    Me.ControlSlideSelectionMode.Tag = "0"
     Me.ControlSlideSelectionNumber.Caption = ""
-    Me.ControlSlideSelectionTitle.Caption = ""
+    Me.ControlSlideSelectionText.Caption = ""
     Me.ControlBannerSelectionText.Caption = ""
     
     Me.StartUpPosition = 0
@@ -1381,6 +1420,17 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
+Private Sub ControlSlideSelectionMode_Click()
+    If (NavigatorValid = False) Then
+        Exit Sub
+    End If
+    SlideSelectionMode Application.ActiveWindow
+    NavigatorValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
 Private Sub ControlSlideSelectionClear_Click()
     If (NavigatorValid = False) Then
         Exit Sub
@@ -1494,7 +1544,7 @@ Private Sub FrameEmpty_KeyPress(ByVal KeyASCII As MSForms.ReturnInteger)
         If (Me.ControlSlideSelectionNumber <> "") Then
             FilterText = Me.ControlSlideSelectionNumber.Caption
         Else
-            FilterText = Me.ControlSlideSelectionTitle.Caption
+            FilterText = Me.ControlSlideSelectionText.Caption
         End If
         
         Select Case KeyASCII
@@ -1509,10 +1559,10 @@ Private Sub FrameEmpty_KeyPress(ByVal KeyASCII As MSForms.ReturnInteger)
                 
         If (IsNumeric(FilterText) = True) Then
             Me.ControlSlideSelectionNumber.Caption = FilterText
-            Me.ControlSlideSelectionTitle.Caption = ""
+            Me.ControlSlideSelectionText.Caption = ""
         Else
             Me.ControlSlideSelectionNumber.Caption = ""
-            Me.ControlSlideSelectionTitle.Caption = FilterText
+            Me.ControlSlideSelectionText.Caption = FilterText
         End If
         
         UpdateSlideList W
@@ -1585,6 +1635,8 @@ Private Sub FrameEmpty_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Key
                     SlideShowPrevEffect W
                 Case 40:                    ' DOWN_ARROW
                     SlideShowNextEffect W
+                Case 77:                    ' "M"
+                    SlideSelectionMode W
             End Select
         End If
     ElseIf (Me.Pages(Me.Pages.Value).Name = "PageBanner") Then
@@ -1687,9 +1739,15 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
     Dim P As PowerPoint.Presentation
-    Dim FilterText As String
-    Dim FilterTextLen As Long
-    Dim SlideIndex As Long
+    Dim S As PowerPoint.Slide
+    Dim FilterModeNumber As Boolean
+    Dim FilterModeTitle As Boolean
+    Dim FilterModeBody As Boolean
+    Dim FilterTextDirty As String
+    Dim FilterTextDirtyLen As Long
+    Dim FilterTextClean As String
+    Dim FilterTextCleanLen As Long
+    Dim FilterNumber As Long
     Dim SlideTitle As String
     Dim SelectedSlideIndex As Long
     Dim ListIndex As Long
@@ -1707,52 +1765,70 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
         W.View.Slide = P.Slides(1)
     End If
     SelectedSlideIndex = ActiveSlide(W).SlideIndex
+    
+    FilterModeNumber = False
+    FilterModeTitle = False
+    FilterModeBody = False
+    Select Case Me.ControlSlideSelectionMode.Tag
+        Case "0"
+            FilterModeNumber = True
+            FilterModeTitle = True
+        Case "1"
+            FilterModeNumber = True
+            FilterModeTitle = True
+            FilterModeBody = True
+    End Select
+    
     If (Me.ControlSlideSelectionNumber <> "") Then
-        FilterText = Me.ControlSlideSelectionNumber.Caption
+        FilterTextDirty = Me.ControlSlideSelectionNumber.Caption
+        FilterTextDirtyLen = Len(FilterTextDirty)
     Else
-        FilterText = Me.ControlSlideSelectionTitle.Caption
+        FilterTextDirty = Me.ControlSlideSelectionText.Caption
+        FilterTextDirtyLen = Len(FilterTextDirty)
     End If
-    FilterText = CleanEverything(FilterText)
-    FilterTextLen = Len(FilterText)
+    FilterTextClean = CleanEverything(FilterTextDirty)
+    FilterTextCleanLen = Len(FilterTextClean)
     ListIndex = -1
     '
     ' Since there is no filter text, all slides are in the list.
     ' As a result, the comparisons can be bypassed.
     '
-    If (FilterTextLen = 0) Then
+    If (FilterTextDirtyLen = 0) Then
         ListCount = P.Slides.Count
-        ListIndex = SelectedSlideIndex - 1
         If (ListCount > 0) Then
             ReDim List(ListCount - 1, 1) As String
-            For SlideIndex = P.Slides.Count To 1 Step -1
-                ListCount = ListCount - 1
-                List(ListCount, 0) = SlideIndex
-                List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
+            ListCount = 0
+            For Each S In P.Slides
+                List(ListCount, 0) = S.SlideIndex
+                List(ListCount, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
+                If (S.SlideIndex = SelectedSlideIndex) Then
+                    ListIndex = ListCount
+                End If
+                ListCount = ListCount + 1
             Next
             Me.ControlSlideSelectionList.List() = List
         End If
     '
-    ' Since the filter text is numeric, assume that it is a slide number.
+    ' Since filter text is numeric,
+    ' assume that it is a slide number.
     ' As a result, the looping and comparisons can be bypassed.
     '
-    ElseIf (IsNumeric(FilterText)) Then
-        If ((FilterText > 0) And (FilterText <= P.Slides.Count)) Then
-            ListCount = 1
-        Else
-            ListCount = 0
-        End If
-        ListIndex = 0
-        If (ListCount > 0) Then
-            ReDim List(0, 1) As String
-            SlideIndex = FilterText
-            ListCount = ListCount - 1
-            List(ListCount, 0) = SlideIndex
-            List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
-            Me.ControlSlideSelectionList.List() = List
+    ElseIf (IsNumeric(FilterTextDirty)) Then
+        If (FilterModeNumber) Then
+            FilterNumber = FilterTextDirty
+            If ((FilterNumber > 0) And (FilterNumber <= P.Slides.Count)) Then
+                ReDim List(0, 1) As String
+                Set S = P.Slides(FilterNumber)
+                List(0, 0) = S.SlideIndex
+                List(0, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
+                ListIndex = 0
+                Me.ControlSlideSelectionList.List() = List
+            End If
         End If
     '
-    ' Since the filter text is non-zero and non-numeric, assume that it is a
-    ' slide title.  As a result, all the looping an comparisons must be done.
+    ' Since the filter text is non-zero and non-numeric,
+    ' assume that it is slide text.  As a result, all the
+    ' looping an comparisons must be done.
     '
     Else
         '
@@ -1761,25 +1837,30 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
         ' as assign the array to the ListBox list.
         '
         ListCount = 0
-        For SlideIndex = 1 To P.Slides.Count Step 1
-            If ((Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
-                (Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
+        For Each S In P.Slides
+            If ((FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean)) Or _
+                (FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean)) Or _
+                (FilterModeBody And MatchBody(S, FilterTextDirty))) Then
                 ListCount = ListCount + 1
             End If
         Next
+        
         If (ListCount > 0) Then
             ReDim List(ListCount - 1, 1) As String
-            For SlideIndex = P.Slides.Count To 1 Step -1
-                If ((Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleMatch"), FilterTextLen) = FilterText) Or _
-                    (Left(P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextLen) = FilterText)) Then
-                    ListCount = ListCount - 1
-                    List(ListCount, 0) = SlideIndex
-                    List(ListCount, 1) = P.Slides(SlideIndex).Tags("WorshipServiceAssistant_TitleDisplay")
-                    If (SlideIndex = SelectedSlideIndex) Then
+            ListCount = 0
+            For Each S In P.Slides
+                If ((FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleMatch"), FilterTextCleanLen) = FilterTextClean)) Or _
+                    (FilterModeTitle And (Left(S.Tags("WorshipServiceAssistant_TitleDisplay"), FilterTextCleanLen) = FilterTextClean)) Or _
+                    (FilterModeBody And MatchBody(S, FilterTextDirty))) Then
+                    List(ListCount, 0) = S.SlideIndex
+                    List(ListCount, 1) = S.Tags("WorshipServiceAssistant_TitleDisplay")
+                    If (S.SlideIndex = SelectedSlideIndex) Then
                         ListIndex = ListCount
                     End If
+                    ListCount = ListCount + 1
                 End If
             Next
+            
             Me.ControlSlideSelectionList.List() = List
         End If
     End If
@@ -1798,6 +1879,25 @@ Private Sub UpdateSlideList(ByVal W As PowerPoint.DocumentWindow)
         End If
     End With
 End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Function MatchBody(ByRef CurrentSlide As PowerPoint.Slide, ByRef CurrentText As String) As Boolean
+    Dim TempShape As PowerPoint.Shape
+    Dim TempRange As PowerPoint.TextRange
+    
+    MatchBody = False
+    For Each TempShape In CurrentSlide.Shapes
+        If (TempShape.HasTextFrame) Then
+            Set TempRange = TempShape.TextFrame.TextRange.Find(CurrentText, 0, msoFalse, msoFalse)
+            If (Not (TempRange Is Nothing)) Then
+                MatchBody = True
+                Exit For
+            End If
+        End If
+    Next
+End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
