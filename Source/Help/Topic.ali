@@ -2,6 +2,5 @@ IDH_Topic_WSA                    =HTML\WSA.htm
 IDH_Topic_WSAHowTo               =HTML\WSA\HowTo.htm
 IDH_Topic_WSACommandBar          =HTML\WSA\CommandBar.htm
 IDH_Topic_WSACommandBarNavigator =HTML\WSA\CommandBar\Navigator.htm
-IDH_Topic_WSACopyright           =HTML\WSA\Copyright.htm
-IDH_Topic_WSALicense             =HTML\WSA\License.htm
+IDH_Topic_WSACopyrightPermission =HTML\WSA\CopyrightPermission.htm
 IDH_Topic_WSAHistory             =HTML\WSA\History.htm

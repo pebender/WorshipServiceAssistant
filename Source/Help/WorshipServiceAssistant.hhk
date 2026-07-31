@@ -65,9 +65,9 @@
             <param name="Local" value="HTML\WSA\CommandBar.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Copyright">
-            <param name="Name" value="Copyright">
-            <param name="Local" value="HTML\WSA\Copyright.htm">
+            <param name="Name" value="Copyright & Permission">
+            <param name="Name" value="Copyright & Permission">
+            <param name="Local" value="HTML\WSA\CopyrightPermission.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Create a Song File">
@@ -150,19 +150,14 @@
             <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCommandBar.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Help on Copyright menu item">
-            <param name="Name" value="Help on Copyright menu item">
-            <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyright.htm">
+            <param name="Name" value="Help on Copyright & Permission menu item">
+            <param name="Name" value="Help on Copyright & Permission menu item">
+            <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyrightPermission.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Help on How To ... menu item">
             <param name="Name" value="Help on How To ... menu item">
             <param name="Local" value="HTML\WSA\CommandBar\Help\HelpHowTo.htm">
-         </OBJECT>
-    <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="Help on License menu item">
-            <param name="Name" value="Help on License menu item">
-            <param name="Local" value="HTML\WSA\CommandBar\Help\HelpLicense.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Hide/Show button">
@@ -183,11 +178,6 @@
             <param name="Name" value="How To ...">
             <param name="Name" value="How To ...">
             <param name="Local" value="HTML\WSA\HowTo.htm">
-         </OBJECT>
-    <LI><OBJECT type="text/sitemap">
-            <param name="Name" value="License">
-            <param name="Name" value="License">
-            <param name="Local" value="HTML\WSA\License.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="List display">

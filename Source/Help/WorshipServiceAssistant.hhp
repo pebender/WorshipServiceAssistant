@@ -3,10 +3,9 @@
 CSS\MicrosoftOfficeHelp.css
 HTML\WSA.htm
 HTML\WSA\CommandBar.htm
-HTML\WSA\Copyright.htm
+HTML\WSA\CopyrightPermission.htm
 HTML\WSA\History.htm
 HTML\WSA\HowTo.htm
-HTML\WSA\License.htm
 HTML\WSA\CommandBar\Debug.htm
 HTML\WSA\CommandBar\Help.htm
 HTML\WSA\CommandBar\Navigator.htm
@@ -18,9 +17,8 @@ HTML\WSA\CommandBar\Help\Debug.htm
 HTML\WSA\CommandBar\Help\EmailAuthor.htm
 HTML\WSA\CommandBar\Help\Help.htm
 HTML\WSA\CommandBar\Help\HelpCommandBar.htm
-HTML\WSA\CommandBar\Help\HelpCopyright.htm
+HTML\WSA\CommandBar\Help\HelpCopyrightPermission.htm
 HTML\WSA\CommandBar\Help\HelpHowTo.htm
-HTML\WSA\CommandBar\Help\HelpLicense.htm
 HTML\WSA\CommandBar\Help\VisitHomepage.htm
 HTML\WSA\CommandBar\Navigator\General.htm
 HTML\WSA\CommandBar\Navigator\General\NextPage.htm

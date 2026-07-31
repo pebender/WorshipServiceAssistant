@@ -261,12 +261,8 @@
                      <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCommandBar.htm">
                    </OBJECT>
                <LI><OBJECT type="text/sitemap">
-                     <param name="Name" value="Help on Copyright menu item">
-                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyright.htm">
-                   </OBJECT>
-               <LI><OBJECT type="text/sitemap">
-                     <param name="Name" value="Help on License menu item">
-                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpLicense.htm">
+                     <param name="Name" value="Help on Copyright and Permission menu item">
+                     <param name="Local" value="HTML\WSA\CommandBar\Help\HelpCopyrightPermission.htm">
                    </OBJECT>
                <LI><OBJECT type="text/sitemap">
                      <param name="Name" value="Debug menu item">
@@ -287,12 +283,8 @@
             </UL>
          </UL>
          <LI><OBJECT type="text/sitemap">
-               <param name="Name" value="Copyright">
-               <param name="Local" value="HTML\WSA\Copyright.htm">
-             </OBJECT>
-         <LI><OBJECT type="text/sitemap">
-               <param name="Name" value="License">
-               <param name="Local" value="HTML\WSA\License.htm">
+               <param name="Name" value="Copyright and Permission">
+               <param name="Local" value="HTML\WSA\CopyrightPermission.htm">
              </OBJECT>
          <LI><OBJECT type="text/sitemap">
                <param name="Name" value="History">
