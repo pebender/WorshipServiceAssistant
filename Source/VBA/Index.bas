@@ -66,9 +66,9 @@ Option Base 0
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub Index_Run(ByVal W As DocumentWindow)
-    Dim P As Presentation
-    Dim I As Presentation
+Public Sub Index_Run(ByVal W As PowerPoint.DocumentWindow)
+    Dim P As PowerPoint.Presentation
+    Dim i As PowerPoint.Presentation
     Dim CategoryIndex As Long
     Dim IndexTitle As String
     Dim SlideTitle, SlideTitleLast As String
@@ -80,8 +80,8 @@ Public Sub Index_Run(ByVal W As DocumentWindow)
     Dim ColCount, RowCount As Long
     Dim ColorState As Boolean
     Dim Index As Long
-    Dim S As Slide
-    Dim Block As Shape
+    Dim S As PowerPoint.Slide
+    Dim Block As PowerPoint.Shape
     Dim BlockText As String
     Dim BlockLineChop As Boolean
     Dim BlockLineCount As Long
@@ -128,17 +128,17 @@ Public Sub Index_Run(ByVal W As DocumentWindow)
         
         ReDim Preserve CategoryList(UBound(CategoryList) - 1)
         
-        Set I = AddIndex()
+        Set i = AddIndex()
             
-        With I.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
+        With i.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
             RowHeight = .SpaceBefore + .SpaceWithin + .SpaceAfter
         End With
         ColWidth = 72 * 2.5
-        ColMax = I.PageSetup.SlideWidth
+        ColMax = i.PageSetup.SlideWidth
         ColMax = Int(ColMax / ColWidth)
-        RowMax = I.PageSetup.SlideHeight
-        If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
-            RowMax = RowMax - I.SlideMaster.Shapes.Title.Height
+        RowMax = i.PageSetup.SlideHeight
+        If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
+            RowMax = RowMax - i.SlideMaster.Shapes.Title.Height
         End If
         RowMax = Int(RowMax / RowHeight)
         
@@ -158,8 +158,8 @@ Public Sub Index_Run(ByVal W As DocumentWindow)
             SlideTitleLast = ""
             SlideTitleRemaining = 0
             BlockTitleRemaining = 0
-            If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
-                BlockBottomLast = I.SlideMaster.Shapes.Title.Height
+            If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
+                BlockBottomLast = i.SlideMaster.Shapes.Title.Height
             Else
                 BlockBottomLast = 0
             End If
@@ -199,7 +199,7 @@ Public Sub Index_Run(ByVal W As DocumentWindow)
                             If (ColIndex > ColMax) Then
                                 RowIndex = 1
                                 ColIndex = 1
-                                Set S = AddIndexSlide(I)
+                                Set S = AddIndexSlide(i)
                                 AddIndexTitle S, IndexTitle
                             End If
                             Set Block = AddIndexCategory(S, ColIndex, RowIndex, 2, Category)
@@ -207,10 +207,10 @@ Public Sub Index_Run(ByVal W As DocumentWindow)
                             Block.Fill.ForeColor.RGB = RGB(255, 255, 255)
                             RowIndex = RowIndex + 2
                             BlockTitleRemaining = 0
-                            If (I.SlideMaster.Shapes.HasTitle = msoTrue) Then
+                            If (i.SlideMaster.Shapes.HasTitle = msoTrue) Then
                                 BlockBottomLast = _
-                                    I.SlideMaster.Shapes.Title.Top + _
-                                    I.SlideMaster.Shapes.Title.Height
+                                    i.SlideMaster.Shapes.Title.Top + _
+                                    i.SlideMaster.Shapes.Title.Height
                             Else
                                 BlockBottomLast = 0
                             End If
@@ -276,8 +276,8 @@ End Sub
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Function AddIndex() As Presentation
-    Dim P As Presentation
+Private Function AddIndex() As PowerPoint.Presentation
+    Dim P As PowerPoint.Presentation
     Dim ShapeIndex As Long
     Dim StyleIndex As Long
     Dim LevelIndex As Long
@@ -421,10 +421,10 @@ End Function
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Function AddIndexSlide(ByVal P As Presentation) As Slide
-    Dim S As Slide
+Private Function AddIndexSlide(ByVal P As PowerPoint.Presentation) As PowerPoint.Slide
+    Dim S As PowerPoint.Slide
     Dim Index As Long
-    Dim TitleShape As Shape
+    Dim TitleShape As PowerPoint.Shape
     
     Set S = P.slides.Add(P.slides.Count + 1, ppLayoutText)
     
@@ -443,9 +443,9 @@ End Function
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Function AddIndexTitle(ByVal S As Slide, ByVal Title As String) As Shape
-    Dim T As Shape
-    Dim P As Presentation
+Private Function AddIndexTitle(ByVal S As PowerPoint.Slide, ByVal Title As String) As PowerPoint.Shape
+    Dim T As PowerPoint.Shape
+    Dim P As PowerPoint.Presentation
     
     Set P = S.Parent
     
@@ -466,14 +466,14 @@ End Function
 '-------------------------------------------------------------------------------
 Private Function AddIndexCategory _
 ( _
-    ByVal S As Slide, _
+    ByVal S As PowerPoint.Slide, _
     ByVal ColStart As Long, _
     ByVal RowStart As Long, _
     ByVal RowCount As Long, _
     ByVal Category As String _
 ) As Shape
-    Dim B As Shape
-    Dim P As Presentation
+    Dim B As PowerPoint.Shape
+    Dim P As PowerPoint.Presentation
     Dim CategoryEnabled As Boolean
     
     Set B = AddIndexBlock(S, ColStart, RowStart, RowCount)
@@ -492,15 +492,15 @@ End Function
 '-------------------------------------------------------------------------------
 Private Function AddIndexBlock _
 ( _
-    ByVal S As Slide, _
+    ByVal S As PowerPoint.Slide, _
     ByVal ColStart As Long, _
     ByVal RowStart As Long, _
     ByVal RowCount As Long _
 ) As Shape
-    Dim B As Shape
+    Dim B As PowerPoint.Shape
     Dim Left, Top, Width, Height As Long
-    Dim TabStopIndex
-    Dim RulerIndex
+    Dim TabStopIndex As Long
+    Dim RulerIndex As Long
     
     Left = (ColStart - 1) * 72 * 2.5
     Top = (RowStart - 1) * 14
@@ -621,7 +621,7 @@ End Function
 '-------------------------------------------------------------------------------
 Private Function DetermineIndexGroup _
 ( _
-    ByVal P As Presentation, _
+    ByVal P As PowerPoint.Presentation, _
     ByVal Start As Long _
 ) As Long
 Dim Category As String

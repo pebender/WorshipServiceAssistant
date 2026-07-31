@@ -8,14 +8,6 @@ Attribute VB_Name = "Menu"
 '   the following controls:
 '     'Navigator':
 '       Clicking this control causes the Navigator to be displayed.
-'     'Load':
-'       Clicking this control causes the slide selected in the normal view
-'       (on the primary monitor) to be loaded into the slide view (on the
-'       secondary monitor).  If there is no slide show associated with the
-'       presentation, then a slide show is started on the secondary monitor.
-'     'Hide':
-'       Clicking this control causes the slide show to toggle between
-'       hidden and shown.
 '     'Song Edit':
 '       Clicking this control causes the 'Song Edit' menu to be displayed.
 '       The special menu has functions for categorizing, sorting and indexing
@@ -47,6 +39,10 @@ Attribute VB_Name = "Menu"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.01.0000:
+'     (1) Added support for banner display.
+'     (2) Added "Children" and "Liturgy" categories.
+'     (3) Removed "Load" and "Hide" controls.
 '   1.00.0002:
 '     (1) Added a check to make sure the menu was refreshed before processing
 '         menu controls.
@@ -96,20 +92,18 @@ Private Const MenuName As String = "Worship Service Assistant"
 '-------------------------------------------------------------------------------
 ' These variables are direct pointers to the menu and the menu controls.
 '-------------------------------------------------------------------------------
-Private MenuCommandBar              As CommandBar
-Private NavigatorControl            As CommandBarButton
-Private LoadControl                 As CommandBarButton
-Private HideControl                 As CommandBarButton
-Private SongEditControl             As CommandBarPopup
-Private SongEditSetCategoryControl  As CommandBarPopup
-Private SongEditSortControl         As CommandBarButton
-Private SongEditCreateIndexControl  As CommandBarButton
-Private CategoryControl             As CommandBarComboBox
-Private DebugControl                As CommandBarPopup
-Private DebugSSWDisplayControl      As CommandBarPopup
-Private DebugSSWSizeControl         As CommandBarPopup
-Private HelpControl                 As CommandBarPopup
-Private HelpDebugControl            As CommandBarButton
+Private MenuCommandBar              As Office.CommandBar
+Private NavigatorControl            As Office.CommandBarButton
+Private SongEditControl             As Office.CommandBarPopup
+Private SongEditSetCategoryControl  As Office.CommandBarPopup
+Private SongEditSortControl         As Office.CommandBarButton
+Private SongEditCreateIndexControl  As Office.CommandBarButton
+Private CategoryControl             As Office.CommandBarComboBox
+Private DebugControl                As Office.CommandBarPopup
+Private DebugSSWDisplayControl      As Office.CommandBarPopup
+Private DebugSSWSizeControl         As Office.CommandBarPopup
+Private HelpControl                 As Office.CommandBarPopup
+Private HelpDebugControl            As Office.CommandBarButton
 
 
 '===============================================================================
@@ -121,8 +115,8 @@ Private HelpDebugControl            As CommandBarButton
 '   Uninstalls the command bar.
 '-------------------------------------------------------------------------------
 Public Sub Menu_Unload()
-    Dim Bar As CommandBar
-    Dim Control As CommandBarControl
+    Dim Bar As Office.CommandBar
+    Dim CONTROL As Office.CommandBarControl
     
     '
     ' Uninstall any "Worship Service Assistant" command bars.
@@ -136,10 +130,10 @@ Public Sub Menu_Unload()
     Next
     For Each Bar In Application.CommandBars
         If (Bar.BuiltIn = False) Then
-            For Each Control In Bar.controls
-                If (Control.BuiltIn = False) Then
-                    If (Left(Control.Tag, Len(MenuName)) = MenuName) Then
-                        Control.Delete
+            For Each CONTROL In Bar.controls
+                If (CONTROL.BuiltIn = False) Then
+                    If (Left(CONTROL.Tag, Len(MenuName)) = MenuName) Then
+                        CONTROL.Delete
                     End If
                 End If
             Next
@@ -152,7 +146,7 @@ End Sub
 '   Installs the command bar.
 '-------------------------------------------------------------------------------
 Public Sub Menu_Load()
-    Dim Bar As CommandBar
+    Dim Bar As Office.CommandBar
     Dim BarRowIndex As Long
     
     '
@@ -198,8 +192,6 @@ Public Sub Menu_Load()
     ' Install the 'Worship Service Assistant' command bar items.
     '
     AddNavigatorControl
-    AddLoadControl
-    AddHideControl
     AddSongEditControl
     AddCategoryControl
     AddDebugControl
@@ -229,8 +221,6 @@ Public Sub Menu_Disable()
     ' Disable all controls.
     '
     NavigatorControl.Enabled = False
-    LoadControl.Enabled = False
-    HideControl.Enabled = False
     SongEditControl.Enabled = False
     SongEditSetCategoryControl.Enabled = False
     SongEditSortControl.Enabled = True
@@ -258,6 +248,8 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Public Sub Menu_Refresh()
+    Dim W As PowerPoint.DocumentWindow
+    
     '
     ' Load the project if the project is not loaded
     '
@@ -266,82 +258,57 @@ Public Sub Menu_Refresh()
         Exit Sub
     End If
     
-    Dim Slide As Slide
-    
     Menu_Disable
     
+    '
+    ' By default, enable all visible controls (except Category).
+    '
     MenuCommandBar.Enabled = True
+    NavigatorControl.Enabled = True
+    SongEditControl.Enabled = True
+    SongEditSetCategoryControl.Enabled = True
+    SongEditSortControl.Enabled = True
+    SongEditCreateIndexControl.Enabled = True
+    CategoryControl.Enabled = False
     If (DebugControl.Visible = True) Then
         DebugControl.Enabled = True
         DebugSSWDisplayControl.Enabled = True
         DebugSSWSizeControl.Enabled = True
     End If
     HelpControl.Enabled = True
-    
-    If (ActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Dim W As DocumentWindow
-    Set W = Application.ActiveWindow
-    
-    '
-    ' Set the category value based on the selected slides.
-    '
-    CategoryControl.Enabled = True
-    If (ActiveWindowSlideExists(W) = False) Then
-        CategoryControl.Text = ""
-    ElseIf (ActiveSelectionExists(W) = False) Then
-        If (ActiveSlideExists(W) = True) Then
-            CategoryControl.Text = ActiveSlide(W).Tags("Category")
-        Else
-            CategoryControl.Text = ""
-        End If
-    ElseIf (W.Selection.SlideRange.Count = 0) Then
-        If (ActiveSlideExists(W) = True) Then
-            CategoryControl.Text = ActiveSlide(W).Tags("Category")
-        Else
-            CategoryControl.Text = ""
-        End If
-    Else
-        CategoryControl.Text = W.Selection.SlideRange(1).Tags("Category")
-        For Each Slide In W.Selection.SlideRange
-            If (Slide.Tags("Category") <> CategoryControl.Text) Then
-                    CategoryControl.Text = ""
-                Exit For
-            End If
-        Next
-    End If
-    CategoryControl.Enabled = False
-    
-    '
-    ' By default, enable all controls (except Category).
-    '
-    MenuCommandBar.Enabled = True
-    NavigatorControl.Enabled = True
-    LoadControl.Enabled = True
-    HideControl.Enabled = True
-    SongEditControl.Enabled = True
-    SongEditSetCategoryControl.Enabled = True
-    SongEditSortControl.Enabled = True
-    SongEditCreateIndexControl.Enabled = True
-    HelpControl.Enabled = True
     HelpDebugControl.Enabled = True
     
-    If (ActiveWindowSlideExists(W) = False) Then
+    If (Presentation.Exists = False) Then
         NavigatorControl.Enabled = False
-        LoadControl.Enabled = False
-        HideControl.Enabled = False
+    End If
+    
+    If (ActiveWindowExists = False) Then
         SongEditControl.Enabled = False
         SongEditSetCategoryControl.Enabled = False
         SongEditSortControl.Enabled = False
         SongEditCreateIndexControl.Enabled = False
-    End If
-    If (ActiveSlideExists(W) = False) Then
-        LoadControl.Enabled = False
-        HideControl.Enabled = False
-        SongEditSetCategoryControl.Enabled = False
-        SongEditSortControl.Enabled = False
+        
+        CategoryControl.Enabled = True
+        CategoryControl.Text = ""
+        CategoryControl.Enabled = False
+    Else
+        Set W = Application.ActiveWindow
+        
+        If (ActiveWindowSlideExists(W) = False) Then
+            SongEditControl.Enabled = False
+            SongEditSetCategoryControl.Enabled = False
+            SongEditSortControl.Enabled = False
+            SongEditCreateIndexControl.Enabled = False
+        End If
+        
+        If (ActiveSlideExists(W) = False) Then
+            SongEditSetCategoryControl.Enabled = False
+            SongEditSortControl.Enabled = False
+        End If
+        
+        CategoryControl.Enabled = True
+        CategoryControl.Text = GetCategory(W)
+        CategoryControl.Enabled = False
     End If
     
     If (DebugControl.Visible = True) Then
@@ -383,100 +350,7 @@ Public Sub Menu_OnActionNavigator()
         Exit Sub
     End If
     
-    If (ActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Dim W As DocumentWindow
-    Set W = Application.ActiveWindow
-    
-    If (ActiveWindowSlideExists(W) = False) Then
-        Exit Sub
-    End If
-    
     Navigator_Run
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Public Sub Menu_OnActionLoad()
-    '
-    ' Load the project if the project is not loaded
-    '
-    If (Project_Loaded = False) Then
-        Project_Load
-        Exit Sub
-    End If
-    '
-    ' Update the menu bar.
-    '
-    Menu_Refresh
-    '
-    ' Exit if the control is not enabled.
-    '
-    If (CommandBars.ActionControl.Enabled = False) Then
-        Exit Sub
-    End If
-    
-    If (ActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Dim W As DocumentWindow
-    Set W = Application.ActiveWindow
-    
-    If (ActiveSlideExists(W) = False) Then
-        Exit Sub
-    End If
-    
-    If (ActiveSlideShowExists(W) = False) Then
-        SlideShow_End
-        SlideShow_Setup W.Presentation
-        SlideShow_Begin W
-    End If
-    
-    SlideShow_Load W
-    W.Activate
-    W.Presentation.SlideShowWindow.Activate
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Public Sub Menu_OnActionHide()
-    '
-    ' Load the project if the project is not loaded
-    '
-    If (Project_Loaded = False) Then
-        Project_Load
-        Exit Sub
-    End If
-    '
-    ' Update the menu bar.
-    '
-    Menu_Refresh
-    '
-    ' Exit if the control is not enabled.
-    '
-    If (CommandBars.ActionControl.Enabled = False) Then
-        Exit Sub
-    End If
-    
-    If (ActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Dim W As DocumentWindow
-    Set W = Application.ActiveWindow
-    
-    If (ActiveSlideShowExists(W) = False) Then
-        Exit Sub
-    End If
-    
-    SlideShow_Hide W
-    W.Activate
-    W.Presentation.SlideShowWindow.Activate
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -531,7 +405,7 @@ Public Sub Menu_OnActionSongEditSetCategoryButton()
         Exit Sub
     End If
     
-    Dim W As DocumentWindow
+    Dim W As PowerPoint.DocumentWindow
     Set W = Application.ActiveWindow
     
     SetCategory W, CommandBars.ActionControl.Caption
@@ -554,7 +428,7 @@ Public Sub Menu_OnActionSongEditSort()
         Exit Sub
     End If
     
-    Dim W As DocumentWindow
+    Dim W As PowerPoint.DocumentWindow
     Set W = Application.ActiveWindow
     
     Sort_Run W
@@ -584,7 +458,7 @@ Public Sub Menu_OnActionSongEditIndex()
         Exit Sub
     End If
     
-    Dim W As DocumentWindow
+    Dim W As PowerPoint.DocumentWindow
     Set W = Application.ActiveWindow
     
     Index_Run W
@@ -986,63 +860,11 @@ End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
-'   Installs the 'Load' control on the command bar specified by the
-'   variable MenuCommandBar.
-'-------------------------------------------------------------------------------
-Private Sub AddLoadControl()
-    '
-    ' Install the 'Load' control.
-    '
-    Set LoadControl = MenuCommandBar.controls.Add( _
-        Type:=msoControlButton, _
-        Temporary:=True)
-    
-    '
-    ' Configure the 'Load' control.
-    '
-    With LoadControl
-        .Style = msoButtonCaption
-        .Caption = "Load"
-        .TooltipText = "Load the selected slide into the slide show"
-        .OnAction = "Menu_OnActionLoad"
-        .BeginGroup = True
-        .Width = 72
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'   Installs the 'Hide' control on the command bar specified by the
-'   variable MenuCommandBar.
-'-------------------------------------------------------------------------------
-Private Sub AddHideControl()
-    '
-    ' Install the 'Hide' control.
-    '
-    Set HideControl = MenuCommandBar.controls.Add( _
-        Type:=msoControlButton, _
-        Temporary:=True)
-    
-    '
-    ' Configure the 'Hide' control.
-    '
-    With HideControl
-        .Style = msoButtonCaption
-        .Caption = "Hide"
-        .TooltipText = "Toggle the slide show between hidden and shown"
-        .OnAction = "Menu_OnActionHide"
-        .BeginGroup = True
-        .Width = 72
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
 '   Installs the 'SongEdit' control on the command bar specified by the
 '   variable MenuCommandBar.
 '-------------------------------------------------------------------------------
 Private Sub AddSongEditControl()
-    Dim Button As CommandBarButton
+    Dim Button As Office.CommandBarButton
     Dim Category As Integer
     
     '
@@ -1086,11 +908,13 @@ Private Sub AddSongEditControl()
         SongEditCreateIndexControl.BeginGroup = False
     End With
     
-    ReDim Project_Categories(3)
+    ReDim Project_Categories(5)
     Project_Categories(0) = "Worship"
     Project_Categories(1) = "Choir"
     Project_Categories(2) = "Hymn"
     Project_Categories(3) = "Carol"
+    Project_Categories(4) = "Children"
+    Project_Categories(5) = "Liturgy"
     With SongEditSetCategoryControl
         Set Button = .controls.Add(Type:=msoControlButton, Temporary:=True)
         Button.Caption = "<none>"
@@ -1144,7 +968,7 @@ End Sub
 Private Sub AddDebugControl()
     Dim Display As Long
     Dim Size As Long
-    Dim Button As CommandBarButton
+    Dim Button As Office.CommandBarButton
     
     '
     ' Install the 'Debug' control.
@@ -1228,7 +1052,7 @@ End Sub
 '   variable MenuCommandBar.
 '-------------------------------------------------------------------------------
 Private Function AddHelpControl() As Boolean
-    Dim MenuItem As CommandBarButton
+    Dim MenuItem As Office.CommandBarButton
     
     '
     ' Install the 'Help' control.
@@ -1309,8 +1133,8 @@ End Function
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Private Sub SetCategory(ByVal W As DocumentWindow, ByVal Category As String)
-    Dim S As Slide
+Private Sub SetCategory(ByVal W As PowerPoint.DocumentWindow, ByVal Category As String)
+    Dim S As PowerPoint.Slide
     
     If ((ActiveSelectionExists(W) = False) And _
         (ActiveSlideExists(W) = True)) Then
@@ -1335,4 +1159,31 @@ Private Sub SetCategory(ByVal W As DocumentWindow, ByVal Category As String)
     End If
 End Sub
 
-
+Private Function GetCategory(ByVal W As PowerPoint.DocumentWindow) As String
+    Dim Slide As PowerPoint.Slide
+    GetCategory = ""
+    
+    If (ActiveWindowSlideExists(W) = False) Then
+        GetCategory = ""
+    ElseIf (ActiveSelectionExists(W) = False) Then
+        If (ActiveSlideExists(W) = True) Then
+            GetCategory = ActiveSlide(W).Tags("Category")
+        Else
+            GetCategory = ""
+        End If
+    ElseIf (W.Selection.SlideRange.Count = 0) Then
+        If (ActiveSlideExists(W) = True) Then
+            GetCategory = ActiveSlide(W).Tags("Category")
+        Else
+            GetCategory = ""
+        End If
+    Else
+        GetCategory = W.Selection.SlideRange(1).Tags("Category")
+        For Each Slide In W.Selection.SlideRange
+            If (Slide.Tags("Category") <> GetCategory) Then
+                    GetCategory = ""
+                Exit For
+            End If
+        Next
+    End If
+End Function

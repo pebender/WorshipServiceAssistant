@@ -25,6 +25,10 @@ Attribute VB_Name = "SlideShow"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.01.0000:
+'     (1) Made room for the text banner above the slide show.
+'     (2) Moved slide show scaling into a separate routine so that it could
+'         be used by the Banner as well.
 '   1.00.0001:
 '     (1) Changed SlideShow_Setup routine so that the "Set Up Show" dialog
 '         is activated by using the control ID rather than the command bar
@@ -68,6 +72,15 @@ Private SlideShowWindowSize As Integer
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
+Public Function SlideShow_IsSlideShow(ByVal P As PowerPoint.Presentation) As Boolean
+    SlideShow_IsSlideShow = _
+        (ActiveWindowSlideExists(P.Windows(1)) = True) And _
+        (Banner.IsBanner(P) = False)
+End Function
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
 Public Sub SlideShow_Initialize()
     SlideShowWindowDisplay = 0
     SlideShowWindowSize = 0
@@ -104,22 +117,22 @@ End Function
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Setup(ByVal P As Presentation)
+Public Sub SlideShow_Setup(ByVal P As PowerPoint.Presentation)
     Dim PSaved As Boolean
     Dim Index As Integer
     
     '
     ' Cannot setup a slide show if the presentation has an active slide show.
     '
-    If (ActiveSlideShowExists(P.Windows(1)) = True) Then
+    If (ActiveSlideShowExists(P) = True) Then
         Exit Sub
     End If
     '
     ' Cannot setup a slide show if the presentation has no slides.
     '
-    If (ActiveWindowSlideExists(P.Windows(1)) = False) Then
-        Exit Sub
-    End If
+'    If (ActiveWindowSlideExists(W) = False) Then
+'        Exit Sub
+'    End If
     
     PSaved = P.Saved
 
@@ -182,29 +195,30 @@ End Sub
 ' Description:
 '-------------------------------------------------------------------------------
 Public Sub SlideShow_End()
-    Dim I As Long
+    Dim i As Long
     
     '
     ' Exit all slide shows.  For the sake of appearance, all slide shows
     ' are blacked before any slide shows are exited.
     '
-    For I = Application.SlideShowWindows.Count To 1 Step -1
-        Application.SlideShowWindows(I).View.State = ppSlideShowBlackScreen
+    For i = Application.SlideShowWindows.Count To 1 Step -1
+        If (Presentation.IsPresentation(Application.SlideShowWindows(i).Presentation) = True) Then
+            Application.SlideShowWindows(i).View.State = ppSlideShowBlackScreen
+        End If
     Next
-    For I = Application.SlideShowWindows.Count To 1 Step -1
-        Application.SlideShowWindows(I).View.Exit
+    For i = Application.SlideShowWindows.Count To 1 Step -1
+        If (Presentation.IsPresentation(Application.SlideShowWindows(i).Presentation) = True) Then
+            Application.SlideShowWindows(i).View.Exit
+        End If
     Next
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Description:
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Begin(ByVal W As DocumentWindow)
-    Dim P As Presentation
+Public Sub SlideShow_Begin(ByVal W As PowerPoint.DocumentWindow)
+    Dim P As PowerPoint.Presentation
     Dim PSaved As Boolean
-    Dim Height As Long
-    Dim Width As Long
-    Dim Index As Long
     
     Set P = W.Presentation
     PSaved = P.Saved
@@ -219,6 +233,30 @@ Public Sub SlideShow_Begin(ByVal W As DocumentWindow)
     '
     ' Set the slide show window size.
     '
+    SlideShow_Scale W.Presentation
+        
+    P.Saved = PSaved
+    
+    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
+    P.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Public Sub SlideShow_Scale(ByVal P As PowerPoint.Presentation)
+    Dim PSaved As Boolean
+    Dim Top As Long
+    Dim Left As Long
+    Dim Height As Long
+    Dim Width As Long
+    Dim Index As Long
+    
+    PSaved = P.Saved
+    
+    '
+    ' Scale the slide show size.
+    '
     Height = P.SlideShowWindow.Height
     Width = P.SlideShowWindow.Width
     For Index = 1 To SlideShowWindowSize - 1 Step 1
@@ -229,9 +267,6 @@ Public Sub SlideShow_Begin(ByVal W As DocumentWindow)
     P.SlideShowWindow.Width = Width
         
     P.Saved = PSaved
-    
-    W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
-    P.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -239,11 +274,11 @@ End Sub
 '   Load the currently active slide in the presentation's window into the
 '   presentation's slide show window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Load(ByVal W As DocumentWindow)
+Public Sub SlideShow_Load(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -265,11 +300,11 @@ End Sub
 ' Description:
 '   Toggles the slide show display between hidden and shown.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Hide(ByVal W As DocumentWindow)
+Public Sub SlideShow_Hide(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -293,11 +328,11 @@ End Sub
 ' Description:
 '   Run the slide show associated with the presentation window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Run(ByVal W As DocumentWindow)
+Public Sub SlideShow_Run(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -326,11 +361,11 @@ End Sub
 ' Description:
 '   Pause the slide show associated with the presentation window.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Pause(ByVal W As DocumentWindow)
+Public Sub SlideShow_Pause(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -349,11 +384,11 @@ End Sub
 ' Description:
 '   Move forward in the windows's slide show.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Next(ByVal W As DocumentWindow)
+Public Sub SlideShow_Next(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -373,11 +408,11 @@ End Sub
 ' Description:
 '   Move backward in the window's slide show.
 '-------------------------------------------------------------------------------
-Public Sub SlideShow_Prev(ByVal W As DocumentWindow)
+Public Sub SlideShow_Prev(ByVal W As PowerPoint.DocumentWindow)
     '
     ' Abort if no active slide show exists.
     '
-    If (ActiveSlideShowExists(W) = False) Then
+    If (ActiveSlideShowExists(W.Presentation) = False) Then
         Exit Sub
     End If
     '
@@ -392,7 +427,6 @@ Public Sub SlideShow_Prev(ByVal W As DocumentWindow)
     W.Presentation.SlideShowWindow.View.State = ppSlideShowPaused
     W.Presentation.SlideShowWindow.View.PointerType = ppSlideShowPointerArrow
 End Sub
-
 
 '===============================================================================
 ' Private Subroutines and Functions.

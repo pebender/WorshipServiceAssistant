@@ -89,18 +89,18 @@ End Function
 
 '-------------------------------------------------------------------------------
 ' Description:
-'    This function returns TRUE if the document window, W, has an associated
+'    This function returns TRUE if the presentation, P, has an associated
 '    active slide show window.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlideShowExists(ByVal W As DocumentWindow) As Boolean
+Public Function ActiveSlideShowExists(ByVal P As PowerPoint.Presentation) As Boolean
     On Error GoTo ActiveSlideShowExists_False
     
     ActiveSlideShowExists = True
     
-    If (IsNull(W.Presentation.SlideShowWindow) = True) Then
+    If (IsNull(P.SlideShowWindow) = True) Then
         GoTo ActiveSlideShowExists_False
     End If
-    If (IsEmpty(W.Presentation.SlideShowWindow) = True) Then
+    If (IsEmpty(P.SlideShowWindow) = True) Then
         GoTo ActiveSlideShowExists_False
     End If
 Exit Function
@@ -114,7 +114,7 @@ End Function
 '   This function returns TRUE if the document window, W, has at least
 '   one slide.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveWindowSlideExists(ByVal W As DocumentWindow) As Boolean
+Public Function ActiveWindowSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
     ActiveWindowSlideExists = False
     If (W.Presentation.slides.Count = 0) Then
         Exit Function
@@ -127,7 +127,7 @@ End Function
 '    This function returns TRUE if the document window, W, has a selection.
 '    Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSelectionExists(ByVal W As DocumentWindow) As Boolean
+Public Function ActiveSelectionExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
     ActiveSelectionExists = False
     If (W.Selection.Type = ppSelectionNone) Then
         Exit Function
@@ -140,7 +140,7 @@ End Function
 '    This function returns TRUE if the document window, W, has an active
 '    slide.  Otherwise, it returns FALSE.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlideExists(ByVal W As DocumentWindow) As Boolean
+Public Function ActiveSlideExists(ByVal W As PowerPoint.DocumentWindow) As Boolean
     ActiveSlideExists = False
     
     If (ActiveWindowSlideExists(W) = False) Then
@@ -160,7 +160,7 @@ End Function
 '   window has an active slide.  If no active slide exists, then this
 '   function will generate an error.
 '-------------------------------------------------------------------------------
-Public Function ActiveSlide(ByVal W As DocumentWindow) As Slide
+Public Function ActiveSlide(ByVal W As PowerPoint.DocumentWindow) As PowerPoint.Slide
     If (W.ViewType = ppViewSlideSorter) Then
         Set ActiveSlide = W.Selection.SlideRange(1)
     Else

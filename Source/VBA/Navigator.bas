@@ -79,7 +79,7 @@ Public Sub Navigator_Run()
         If (Navigator_Loaded = True) Then
             NavigatorForm.Refresh
         End If
-        NavigatorForm.show
+        NavigatorForm.Show
     Loop Until (Navigator_Loaded = False)
 End Sub
 

@@ -90,7 +90,7 @@ Attribute PPTApplication.VB_VarHelpID = -1
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_NewPresentation _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
     Menu_Refresh
 End Sub
@@ -100,7 +100,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationClose _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
     Menu_Refresh
 End Sub
@@ -110,7 +110,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationNewSlide _
 ( _
-    ByVal S As Slide _
+    ByVal S As PowerPoint.Slide _
 )
     Menu_Refresh
 End Sub
@@ -120,7 +120,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationOpen _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
     Menu_Refresh
 End Sub
@@ -130,7 +130,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationPrint _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
     Menu_Refresh
 End Sub
@@ -140,7 +140,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_PresentationSave _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
     Menu_Refresh
 End Sub
@@ -150,7 +150,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowBegin _
 ( _
-    ByVal SSW As SlideShowWindow _
+    ByVal SSW As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -159,7 +159,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowEnd _
 ( _
-    ByVal P As Presentation _
+    ByVal P As PowerPoint.Presentation _
 )
 End Sub
 
@@ -168,7 +168,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowNextBuild _
 ( _
-    ByVal SSW As SlideShowWindow _
+    ByVal SSW As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -177,7 +177,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_SlideShowNextSlide _
 ( _
-    ByVal SSW As SlideShowWindow _
+    ByVal SSW As PowerPoint.SlideShowWindow _
 )
 End Sub
 
@@ -186,8 +186,8 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowActivate _
 ( _
-    ByVal P As Presentation, _
-    ByVal W As DocumentWindow _
+    ByVal P As PowerPoint.Presentation, _
+    ByVal W As PowerPoint.DocumentWindow _
 )
     Menu_Refresh
 End Sub
@@ -197,7 +197,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowBeforeDoubleClick _
 ( _
-    ByVal Sel As Selection, _
+    ByVal Sel As PowerPoint.Selection, _
     Cancel As Boolean _
 )
 End Sub
@@ -207,7 +207,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowBeforeRightClick _
 ( _
-    ByVal Sel As Selection, _
+    ByVal Sel As PowerPoint.Selection, _
     Cancel As Boolean _
 )
 End Sub
@@ -217,8 +217,8 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowDeactivate _
 ( _
-    ByVal P As Presentation, _
-    ByVal W As DocumentWindow _
+    ByVal P As PowerPoint.Presentation, _
+    ByVal W As PowerPoint.DocumentWindow _
 )
     Menu_Disable
 End Sub
@@ -228,7 +228,7 @@ End Sub
 '-------------------------------------------------------------------------------
 Private Sub PPTApplication_WindowSelectionChange _
 ( _
-    ByVal Sel As Selection _
+    ByVal Sel As PowerPoint.Selection _
 )
     Menu_Refresh
 End Sub

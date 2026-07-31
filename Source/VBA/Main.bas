@@ -27,6 +27,8 @@ Attribute VB_Name = "Main"
 '   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 '
 ' Change History:
+'   1.01.0000:
+'     Added a text banner above the slide show.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -133,7 +135,7 @@ Private Function ValidOperatingSystem() As Boolean
         Case Else
             Dim msgPrompt As String
             Dim msgTitle As String
-            Dim msgResponse As VbMsgBoxResult
+            Dim msgResponse As VBA.VbMsgBoxResult
             msgPrompt = _
                 "The 'Worship Service Assistant' add-in " & _
                 "has not been tested on " & _
@@ -184,7 +186,7 @@ Private Function ValidApplication() As Boolean
         Case Else
             Dim msgPrompt As String
             Dim msgTitle As String
-            Dim msgResponse As VbMsgBoxResult
+            Dim msgResponse As VBA.VbMsgBoxResult
             msgPrompt = _
                 "The 'Worship Service Assistant' add-in " & _
                 "has not been tested on " & _
