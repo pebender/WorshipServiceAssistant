@@ -9,7 +9,7 @@ Attribute VB_Name = "Banner"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2000,2001,2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -39,9 +39,11 @@ Attribute VB_Name = "Banner"
 '   of the copyright holder.
 '
 ' Change History:
-'
+'   1.00.1005:
+'     (1) Worked around problem under Windows XP with PowerPoint XP
+'         that would cause the banner to fail to display.
 '   1.00.0002:
-'     Added support for abitrary banner color.
+'     (1) Added support for abitrary banner color.
 '   1.00.0000:
 '     Initial revision.
 '===============================================================================
@@ -185,11 +187,23 @@ Public Sub Create()
                         .Superscript = msoFalse
                         .Emboss = msoFalse
                         .Shadow = msoFalse
+                        .Color.RGB = RGB(0, 0, 0)
                     End With
                 End With
             End With
         End With
         Pres.slides.Add 1, ppLayoutTitleOnly
+        
+        '
+        ' There should be no need to fill in the title text.
+        ' However, it appears that under Windows XP with PowerPoint XP,
+        ' if there is no title text when the slide show is started,
+        ' then no title text can be added later.
+        '
+        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
+        Pres.slides(1).Shapes.Title.TextFrame.TextRange.Text = "Welcome"
+        Pres.SlideMaster.Shapes.Title.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
+        
         SlideShow_Setup Pres
     End If
     If (ActiveSlideShowExists(Pres) = True) Then
@@ -213,6 +227,7 @@ Public Sub Create()
             SSW.Activate
         End If
     End If
+    
     Pres.Saved = msoTrue
 End Sub
 

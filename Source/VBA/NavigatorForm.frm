@@ -72,8 +72,19 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.00.1006:
+'     (1) Worked around problem where PowerPoint XP would ask the user
+'         to save some presentations already marked as saved.
+'   1.01.0005:
+'     (1) Changed UserForm_Initialize so that it hide all visible
+'         floating and pop-up command bars, because floating and pop-up
+'         command bars can get in the way of the Navigator form.
+'     (2) Changed code so that default button would be highlighted in
+'         both the Presentation page and the Banner page.
+'     (3) Changed code so that 'm and m will match when searching
+'         slide titles.
 '   1.01.0004:
-'     (1) Fixed bug that caused the Slide Show Show/Hide button text to fail
+'     (1) Fixed Slide Show Show/Hide button that caused the button not
 '         to update.
 '     (2) Fixed banner checking bug in SlideShowLoad.
 '   1.01.0003:
@@ -263,7 +274,12 @@ Private Sub UpdatePresentationControls(ByVal W As PowerPoint.DocumentWindow)
     Me.ControlSlideSelectionList.Enabled = True
     
     '
-    ' Set captions to their defaults.
+    ' Set default button.
+    '
+    Me.ControlSlideShowLoad.default = True
+    
+    '
+    ' Set default button captions.
     '
     Me.ControlSlideShowHide.Caption = "Hide"
     
@@ -376,7 +392,12 @@ Private Sub UpdateBannerControls(ByVal W As PowerPoint.DocumentWindow)
     Me.ControlBannerSelectionClear.Enabled = True
     
     '
-    ' Set Disable/Enable button caption.
+    ' Set default button.
+    '
+    Me.ControlBannerShowLoad.default = True
+    
+    '
+    ' Set button captions.
     '
     If (Banner.Enabled = True) Then
         Me.ControlBannerConfigurationBannerDisable.Caption = "Banner Disable"
@@ -868,6 +889,7 @@ Private Function CleanEverything(Title As String) As String
     T = Replace(T, Chr(147), Chr(34))  ' replace open double quote with double quote
     T = Replace(T, Chr(148), Chr(34))  ' replace close double quote with double quote
     
+    T = Replace(T, "'m", "m")          ' ignore ' in 'm
     T = Replace(T, "'s", "s")          ' ignore ' in 's
     T = Replace(T, "'t", "t")          ' ignore ' in 't
     T = Replace(T, "'ve", "ve")        ' ignore ' in 've
@@ -1082,6 +1104,20 @@ Private Sub UserForm_Initialize()
     
     NavigatorFormLocked = True
     
+    '
+    ' Hide any floating or pop-up menus so that they do not interfere with
+    ' the Navigator form.
+    '
+    Dim B As CommandBar
+    For Each B In Application.CommandBars
+        If ((B.Position = msoBarFloating) Or _
+            (B.Position = msoBarPopup)) Then
+            If (B.Visible = True) Then
+                B.Visible = False
+            End If
+        End If
+    Next
+    
     If (Presentation.IsPresentation(Application.ActiveWindow.Presentation) = False) Then
         If (Presentation.Exists = True) Then
             For Each P In Application.Presentations
@@ -1169,6 +1205,7 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
             If (SlideShow_IsSlideShow(P) = True) Then
                 UnloadPresentationView P
             End If
+            P.Saved = msoTrue
         Next
         W.Activate
         
@@ -1184,6 +1221,13 @@ End Sub
 Private Sub UserForm_Activate()
     NavigatorFormLocked = True
     NavigatorValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Description:
+'-------------------------------------------------------------------------------
+Private Sub Pages_Change()
+    Refresh
 End Sub
 
 '-------------------------------------------------------------------------------
