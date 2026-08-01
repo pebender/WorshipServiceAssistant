@@ -40,6 +40,10 @@ Attribute VB_Name = "modHelp"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0003:
+'     (1) Created the gTopicShow routine to put a better wrapper around the
+'         showing of HTML help.
+'     (2) Added the gGotoHomepage and gAuthorEmail routines
 '   1.03.0002:
 '     (1) Made changes to the source code so that it follows Microsoft's
 '         Visual Basic coding conventions.
@@ -74,39 +78,59 @@ Option Base 0
 ' Public Constants.
 '===============================================================================
 
-'-------------------------------------------------------------------------------
-' HTML Help control API constants.
-'-------------------------------------------------------------------------------
-Public Const HH_DISPLAY_TOPIC As Long = &H0
-Public Const HH_HELP_CONTEXT  As Long = &HF
-
-'-------------------------------------------------------------------------------
-' Topic identifiers.
-'-------------------------------------------------------------------------------
-Public Const GlngIDH_Topic_WSA                        As Long = 10000
-Public Const GlngIDH_Topic_WSAHowTo                   As Long = 11000
-Public Const GlngIDH_Topic_WSACommandBar              As Long = 12000
-Public Const GlngIDH_Topic_WSACommandBarNavigator     As Long = 12100
-Public Const GlngIDH_Topic_WSAKnownIssues             As Long = 10100
-Public Const GlngIDH_Topic_WSACopyrightPermission     As Long = 10200
-Public Const GlngIDH_Topic_WSAHistory                 As Long = 10300
-
-Public Const GstrIDH_TopicPath_WSA                    As String = "HTML/WSA.htm"
-Public Const GstrIDH_TopicPath_WSAHowTo               As String = "HTML/WSA/HowTo.htm"
-Public Const GstrIDH_TopicPath_WSACommandBar          As String = "HTML/WSA/CommandBar.htm"
-Public Const GstrIDH_TopicPath_WSACommandBarNavigator As String = "HTML/WSA/CommandBar/Navigator.htm"
-Public Const GstrIDH_TopicPath_WSAKnownIssues         As String = "HTML/WSA/KnownIssues.htm"
-Public Const GstrIDH_TopicPath_WSACopyrightPermission As String = "HTML/WSA/CopyrightPermission.htm"
-Public Const GstrIDH_TopicPath_WSAHistory             As String = "HTML/WSA/History.htm"
-
-
-'===============================================================================
-' Public Variables.
-'===============================================================================
+Public Enum HelpTopic
+    WSA = 0
+    WSAHowTo = 1
+    WSACommandBar = 2
+    WSACommandBarNavigator = 3
+    WSAKnownIssues = 4
+    WSACopyrightPermission = 5
+    WSAHistory = 6
+End Enum
 
 
 '===============================================================================
 ' Private Constants.
+'===============================================================================
+
+' HTML Help (HH_) constants.
+Private Const HH_DISPLAY_TOPIC As Long = &H0
+Private Const HH_HELP_CONTEXT  As Long = &HF
+
+' Show Window (SW_) contants.
+Private Const SW_SHOWNORMAL    As Long = 1
+
+
+'===============================================================================
+' Public Function Declarations.
+'===============================================================================
+
+
+'===============================================================================
+' Private  Function Declarations.
+'===============================================================================
+
+Private Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
+    ( _
+        ByVal hwndCaller As Long, _
+        ByVal pszFile As String, _
+        ByVal uCommand As Long, _
+        ByVal dwData As Any _
+    ) As Long
+
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" _
+    ( _
+        ByVal hwnd As Long, _
+        ByVal lpVerb As String, _
+        ByVal lpFile As String, _
+        ByVal lpParameters As String, _
+        ByVal lpDirectory As String, _
+        ByVal nShowCmd As Integer _
+    ) As Long
+
+
+'===============================================================================
+' Public Variables.
 '===============================================================================
 
 
@@ -119,13 +143,40 @@ Public Const GstrIDH_TopicPath_WSAHistory             As String = "HTML/WSA/Hist
 ' Public Subroutines and Functions.
 '===============================================================================
 
-Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
-    ( _
-        ByVal hwndCaller As Long, _
-        ByVal pszFile As String, _
-        ByVal uCommand As Long, _
-        ByVal dwData As Any _
-    ) As Long
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gTopicShow _
+( _
+    ByRef lngTopic As HelpTopic _
+)
+    Dim strHelpFile As String
+    Dim astrTopicPath(6) As String
+    
+    astrTopicPath(HelpTopic.WSA) = "HTML/WSA.htm"
+    astrTopicPath(HelpTopic.WSAHowTo) = "HTML/WSA/HowTo.htm"
+    astrTopicPath(HelpTopic.WSACommandBar) = "HTML/WSA/CommandBar.htm"
+    astrTopicPath(HelpTopic.WSACommandBarNavigator) = "HTML/WSA/CommandBar/Navigator.htm"
+    astrTopicPath(HelpTopic.WSAKnownIssues) = "HTML/WSA/KnownIssues.htm"
+    astrTopicPath(HelpTopic.WSACopyrightPermission) = "HTML/WSA/CopyrightPermission.htm"
+    astrTopicPath(HelpTopic.WSAHistory) = "HTML/WSA/History.htm"
+    
+    strHelpFile = mstrFileNameGet(True)
+    
+    If (strHelpFile = "") Then
+        Exit Sub
+     End If
+    
+    Call modHelp.HtmlHelp( _
+        0&, _
+        strHelpFile, _
+        modHelp.HH_DISPLAY_TOPIC, _
+        astrTopicPath(lngTopic))
+End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
@@ -134,7 +185,51 @@ Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Function gstrFileNameGet _
+Public Sub gHomepageVisit _
+( _
+)
+    ShellExecute _
+        0&, _
+        VBA.vbNullString, _
+        modProject.GstrHomepage, _
+        VBA.vbNullString, _
+        VBA.vbNullString, _
+        SW_SHOWNORMAL
+End Sub
+
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gAuthorEmail _
+( _
+)
+    ShellExecute _
+        0&, _
+        VBA.vbNullString, _
+        modProject.GstrEmail & "?subject=" & modProject.GstrName & "%20" & modProject.GstrVersion & ":%20", _
+        VBA.vbNullString, _
+        VBA.vbNullString, _
+        SW_SHOWNORMAL
+End Sub
+
+
+'===============================================================================
+' Private Subroutines and Functions.
+'===============================================================================
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mstrFileNameGet _
 ( _
     ByRef blnNotFoundMessageShow As Boolean _
 ) As String
@@ -193,10 +288,5 @@ Public Function gstrFileNameGet _
         End If
      End If
     
-    gstrFileNameGet = strHelpFileName
+    mstrFileNameGet = strHelpFileName
 End Function
-
-
-'===============================================================================
-' Private Subroutines and Functions.
-'===============================================================================

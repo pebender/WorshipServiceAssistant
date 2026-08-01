@@ -100,12 +100,14 @@ Option Base 0
 '-------------------------------------------------------------------------------
 Public Sub gRun _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+    ByRef dwCurrent As PowerPoint.DocumentWindow _
 )
-    mSlidesSortByTitle _
-        prePresentation:=dwDocumentWindow.Presentation, _
-        lngLowerIndex:=1, _
-        lngUpperIndex:=dwDocumentWindow.Presentation.Slides.Count
+    If ((dwCurrent Is Nothing) = False) Then
+        mSlidesSortByTitle _
+            prePresentation:=dwCurrent.Presentation, _
+            lngLowerIndex:=1, _
+            lngUpperIndex:=dwCurrent.Presentation.Slides.Count
+    End If
 End Sub
 
 

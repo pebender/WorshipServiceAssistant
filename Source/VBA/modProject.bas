@@ -61,7 +61,7 @@ Option Base 0
 '===============================================================================
 Public Const GstrName As String = "WorshipServiceAssistant"
 Public Const GstrNamePretty As String = "Worship Service Assistant"
-Public Const GstrVersion As String = "1.04.0002"
+Public Const GstrVersion As String = "1.04.0003"
 Public Const GstrAuthor As String = "Paul Bender"
 Public Const GstrCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
 Public Const GstrHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
@@ -75,10 +75,9 @@ Public Const GstrEmail As String = "mailto:pbender@alumni.ucsd.edu"
 ' This variable is true if the project is running.
 Public gblnLoaded As Boolean
 
-' This variable contains the list of categories in the 'Set Category' menu.
-Public gastrCategories() As String
+Public gblnDebugEnabled As Boolean
 
-Public glngSlideShowWindowMonitor As Long
+Public gstrSlideShowWindowMonitor As String
 Public glngSlideShowWindowSize As Long
 
 
@@ -90,7 +89,7 @@ Public glngSlideShowWindowSize As Long
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private udtAEH As New WSAApplicationEventHandler
+Private udtAEH As New WSAApplicationEventHandlers
 
 
 '===============================================================================
@@ -108,9 +107,15 @@ Private udtAEH As New WSAApplicationEventHandler
 Public Sub gLoad _
 ( _
 )
+    Dim udtOptions As New WorshipServiceAssistant.WSAApplicationOptions
+    Dim astrMonitorList() As String
+    
+    astrMonitorList = udtOptions.DisplayMonitorList
+    
     modProject.gblnLoaded = True
-    modProject.glngSlideShowWindowMonitor = 0
-    modProject.glngSlideShowWindowSize = 0
+    modProject.gblnDebugEnabled = False
+    modProject.gstrSlideShowWindowMonitor = astrMonitorList(UBound(astrMonitorList))
+    modProject.glngSlideShowWindowSize = 1
     
     modToolbar.gLoad
     

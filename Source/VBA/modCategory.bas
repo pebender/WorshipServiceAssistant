@@ -1,15 +1,7 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-END
-Attribute VB_Name = "WSADocumentWindowCollection"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Name = "modCategory"
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.WSADocumentWindowCollection
+'   WorshipServiceAssistant.modCategory
 '
 ' Description:
 '
@@ -47,7 +39,7 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
-'   1.04.0000:
+'   1.04.0003:
 '     Initial revision.
 '===============================================================================
 
@@ -55,6 +47,7 @@ Attribute VB_Exposed = False
 '===============================================================================
 ' Options.
 '===============================================================================
+Option Private Module
 Option Explicit
 Option Compare Text
 Option Base 0
@@ -78,25 +71,13 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
-Private mudtCollection As New WorshipServiceAssistant.WSACollection
+Private mblnInitialized As Boolean
+Private mastrCategoryList() As String
 
 
 '===============================================================================
-' Public Properties and Methods.
+' Public Subroutines and Functions.
 '===============================================================================
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Property Get Count _
-( _
-)
-    Count = mudtCollection.Count
-End Property
 
 '-------------------------------------------------------------------------------
 ' Purpose:
@@ -108,8 +89,16 @@ End Property
 Public Function Item _
 ( _
     ByRef lngIndex As Long _
-) As WorshipServiceAssistant.WSADocumentWindow
-    Set Item = mudtCollection.Item(lngIndex)
+) As String
+    If (mblnInitialized = False) Then
+        mInitialize
+    End If
+    
+    Item = ""
+    
+    If ((lngIndex >= LBound(mastrCategoryList)) And lngIndex <= UBound(mastrCategoryList)) Then
+        Item = mastrCategoryList(lngIndex)
+    End If
 End Function
 
 '-------------------------------------------------------------------------------
@@ -119,11 +108,14 @@ End Function
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Function Index _
+Public Function Count _
 ( _
-    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
 ) As Long
-    Index = mudtCollection.Index(udtWindow)
+    If (mblnInitialized = False) Then
+        mInitialize
+    End If
+    
+    Count = UBound(mastrCategoryList) - LBound(mastrCategoryList) + 1
 End Function
 
 '-------------------------------------------------------------------------------
@@ -133,11 +125,24 @@ End Function
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub Add _
+Public Sub CategorySet _
 ( _
-    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
+    ByRef sldRange As PowerPoint.SlideRange, _
+    ByRef strCategory As String _
 )
-    mudtCollection.Add udtWindow
+    Dim sldSlide As PowerPoint.Slide
+    
+    If ((sldRange Is Nothing) = False) Then
+        If (sldRange.Count >= 1) Then
+            For Each sldSlide In sldRange
+                If ((strCategory = "") Or (strCategory = "<none>")) Then
+                    sldSlide.Tags.Delete "Category"
+                Else
+                    sldSlide.Tags.Add "Category", strCategory
+                End If
+            Next
+        End If
+    End If
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -147,83 +152,33 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub Remove _
+Public Function CategoryGet _
 ( _
-    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
-)
-    mudtCollection.Remove udtWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub Initialize _
-( _
-)
-    mudtCollection.Initialize
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub Terminate _
-( _
-)
-    mudtCollection.Terminate
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub ConfigurationSave _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub ConfigurationRestore _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub ConfigurationInitialize _
-( _
-)
-End Sub
+    ByRef sldRange As PowerPoint.SlideRange _
+) As String
+    Dim sldSlide As PowerPoint.Slide
+    Dim strCategory As String
+    
+    strCategory = ""
+    
+    If ((sldRange Is Nothing) = False) Then
+        If (sldRange.Count >= 1) Then
+            strCategory = sldRange(1).Tags("Category")
+            For Each sldSlide In sldRange
+                If (sldSlide.Tags("Category") <> strCategory) Then
+                        strCategory = ""
+                    Exit For
+                End If
+            Next
+        End If
+    End If
+    
+    CategoryGet = strCategory
+End Function
 
 
 '===============================================================================
-' Private Properties and Methods.
-'===============================================================================
-
-
-'===============================================================================
-' Private Event Handlers.
+' Private Subroutines and Functions.
 '===============================================================================
 
 '-------------------------------------------------------------------------------
@@ -233,20 +188,17 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub Class_Initialize _
+Public Sub mInitialize _
 ( _
 )
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Private Sub Class_Terminate _
-( _
-)
+    ReDim mastrCategoryList(1 To 7)
+    mastrCategoryList(1) = "<none>"
+    mastrCategoryList(2) = "Worship"
+    mastrCategoryList(3) = "Choir"
+    mastrCategoryList(4) = "Hymn"
+    mastrCategoryList(5) = "Carol"
+    mastrCategoryList(6) = "Children"
+    mastrCategoryList(7) = "Liturgy"
+    mblnInitialized = True
 End Sub
 

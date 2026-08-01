@@ -53,6 +53,12 @@ Attribute VB_Name = "modToolbar"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0003:
+'     (1) Changed impacted gWSAHelp_OnAction* routines to use the
+'         modHelp.gTopicShow, modHelp.gHomepageGoto and modHelp.gAuthorEmail
+'         routines.
+'     (2) Moved category routines to the modCategory module.
+'     (3) Cleaned up the code.
 '   1.04.0001:
 '     (1) Changed the name of the "Debug" menu's menu "SSW Display" to
 '         "SSW Monitor".
@@ -108,33 +114,18 @@ Option Base 0
 
 
 '===============================================================================
+' Private Constants.
+'===============================================================================
+
+
+'===============================================================================
 ' Public Variables.
 '===============================================================================
 
 
 '===============================================================================
-' Private Constants.
-'===============================================================================
-Private Const MstrToolbarName As String = "Worship Service Assistant"
-
-
-'===============================================================================
 ' Private Variables.
 '===============================================================================
-
-' These variables are direct pointers to the toolbar, the menus and the buttons.
-Private mtlbWSA                     As Office.CommandBar
-Private mcmdWSANavigator            As Office.CommandBarButton
-Private mmnuWSASongEdit             As Office.CommandBarPopup
-Private mmnuWSASongEditSetCategory  As Office.CommandBarPopup
-Private mcmdWSASongEditSort         As Office.CommandBarButton
-Private mcmdWSASongEditCreateIndex  As Office.CommandBarButton
-Private mcboWSACategory             As Office.CommandBarComboBox
-Private mmnuWSADebug                As Office.CommandBarPopup
-Private mmnuWSADebugSSWMonitor      As Office.CommandBarPopup
-Private mmnuWSADebugSSWSize         As Office.CommandBarPopup
-Private mmnuWSAHelp                 As Office.CommandBarPopup
-Private mcmdWSAHelpDebug            As Office.CommandBarButton
 
 
 '===============================================================================
@@ -143,7 +134,6 @@ Private mcmdWSAHelpDebug            As Office.CommandBarButton
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Unistalls the command bar.
 ' Assumptions:
 ' Effects:
 ' Inputs:
@@ -152,35 +142,11 @@ Private mcmdWSAHelpDebug            As Office.CommandBarButton
 Public Sub gUnload _
 ( _
 )
-    Dim tlbTemp As Office.CommandBar
-    Dim ctrTemp As Office.CommandBarControl
-    
-    '
-    ' Uninstall any "Worship Service Assistant" command bars.
-    '
-    For Each tlbTemp In Application.CommandBars
-        If (tlbTemp.BuiltIn = False) Then
-            If (VBA.Left(tlbTemp.Name, VBA.Len(MstrToolbarName)) = MstrToolbarName) Then
-                tlbTemp.Delete
-            End If
-        End If
-    Next
-    For Each tlbTemp In Application.CommandBars
-        If (tlbTemp.BuiltIn = False) Then
-            For Each ctrTemp In tlbTemp.Controls
-                If (ctrTemp.BuiltIn = False) Then
-                    If (VBA.Left(ctrTemp.Tag, VBA.Len(MstrToolbarName)) = MstrToolbarName) Then
-                        ctrTemp.Delete
-                    End If
-                End If
-            Next
-        End If
-    Next
+    mWSA_Delete
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Installs the command bar.
 ' Assumptions:
 ' Effects:
 ' Inputs:
@@ -189,95 +155,14 @@ End Sub
 Public Sub gLoad _
 ( _
 )
-    Dim tlbTemp As Office.CommandBar
-    Dim lngBarRowIndex As Long
-    
-    ' Uninstall any pre-existing "Worship Service Assistant" command bars.
-    modToolbar.gUnload
-    
-    ' Find the end of command bar list.  The "Worship Service Assistant" will
-    ' be placed at the end of the command bar list.
-    For Each tlbTemp In Application.CommandBars
-        If (tlbTemp.RowIndex > lngBarRowIndex) Then
-            lngBarRowIndex = tlbTemp.RowIndex
-        End If
-    Next
-    lngBarRowIndex = lngBarRowIndex + 1
-    
-    ' Install the 'Worship Service Assistant' command bar.
-    Set mtlbWSA = Application.CommandBars.Add( _
-        Temporary:=True)
-    
-    ' Configure the 'Worship Service Assistant' command bar.
-    With mtlbWSA
-        .Name = MstrToolbarName
-        .Position = msoBarTop
-        .RowIndex = lngBarRowIndex
-        .Visible = True
-        .Protection = _
-            Office.msoBarNoChangeDock + _
-            Office.msoBarNoChangeVisible + _
-            Office.msoBarNoCustomize + _
-            Office.msoBarNoMove + _
-            Office.msoBarNoResize + _
-            Office.msoBarNoVerticalDock
-    End With
-        
-    ' Install the 'Worship Service Assistant' command bar items.
-    NavigatorControlAdd
-    SongEditControlAdd
-    CategoryControlAdd
-    DebugControlAdd
-    HelpControlAdd
-    
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gDisable _
-( _
-)
-    Dim lngIndex As Long
-    
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
         modProject.gLoad
         Exit Sub
     End If
     
-    mcboWSACategory.Enabled = True
-    mcboWSACategory.Text = ""
-    mcboWSACategory.Enabled = False
-    
-    ' Disable all controls.
-    mcmdWSANavigator.Enabled = False
-    mmnuWSASongEdit.Enabled = False
-    mmnuWSASongEditSetCategory.Enabled = False
-    mcmdWSASongEditSort.Enabled = True
-    mcmdWSASongEditCreateIndex.Enabled = False
-    mcboWSACategory.Enabled = False
-    mmnuWSAHelp.Enabled = False
-    mcmdWSAHelpDebug.Enabled = False
-    
-    mcmdWSAHelpDebug.State = Office.msoButtonUp
-    
-    If (mmnuWSADebug.Visible = True) Then
-        mmnuWSADebug.Enabled = False
-        mmnuWSADebugSSWMonitor.Enabled = False
-        mmnuWSADebugSSWSize.Enabled = False
-        For lngIndex = 1 To mmnuWSADebugSSWMonitor.Controls.Count Step 1
-            mmnuWSADebugSSWMonitor.Controls(lngIndex).State = Office.msoButtonUp
-        Next
-        For lngIndex = 1 To mmnuWSADebugSSWSize.Controls.Count Step 1
-            mmnuWSADebugSSWSize.Controls(lngIndex).State = Office.msoButtonUp
-        Next
-    End If
+    mWSA_Add
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -290,103 +175,34 @@ End Sub
 Public Sub gRefresh _
 ( _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
         modProject.gLoad
         Exit Sub
     End If
     
-    modToolbar.gDisable
-    
-    ' By default, enable all visible controls (except Category).
-    mtlbWSA.Enabled = True
-    mcmdWSANavigator.Enabled = True
-    mmnuWSASongEdit.Enabled = True
-    mmnuWSASongEditSetCategory.Enabled = True
-    mcmdWSASongEditSort.Enabled = True
-    mcmdWSASongEditCreateIndex.Enabled = True
-    mcboWSACategory.Enabled = False
-    If (mmnuWSADebug.Visible = True) Then
-        mmnuWSADebug.Enabled = True
-        mmnuWSADebugSSWMonitor.Enabled = True
-        mmnuWSADebugSSWSize.Enabled = True
-    End If
-    mmnuWSAHelp.Enabled = True
-    mcmdWSAHelpDebug.Enabled = True
-    
-    If (modActive.gblnActiveWindowExists = False) Then
-        mmnuWSASongEdit.Enabled = False
-        mmnuWSASongEditSetCategory.Enabled = False
-        mcmdWSASongEditSort.Enabled = False
-        mcmdWSASongEditCreateIndex.Enabled = False
-        
-        mcboWSACategory.Enabled = True
-        mcboWSACategory.Text = ""
-        mcboWSACategory.Enabled = False
-    Else
-        Set dwDocumentWindow = Application.ActiveWindow
-        
-        If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = False) Then
-            mmnuWSASongEdit.Enabled = False
-            mmnuWSASongEditSetCategory.Enabled = False
-            mcmdWSASongEditSort.Enabled = False
-            mcmdWSASongEditCreateIndex.Enabled = False
-        End If
-        
-        If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
-            mmnuWSASongEditSetCategory.Enabled = False
-            mcmdWSASongEditSort.Enabled = False
-        End If
-        
-        mcboWSACategory.Enabled = True
-        mcboWSACategory.Text = CategoryGet(dwDocumentWindow)
-        mcboWSACategory.Enabled = False
-    End If
-    
-    If (mmnuWSADebug.Visible = True) Then
-        mcmdWSAHelpDebug.State = Office.msoButtonDown
-        
-        mmnuWSADebug.Enabled = True
-        mmnuWSADebugSSWMonitor.Enabled = True
-        mmnuWSADebugSSWSize.Enabled = True
-        
-        mmnuWSADebugSSWMonitor.Controls(modProject.glngSlideShowWindowMonitor + 1).State = Office.msoButtonDown
-        mmnuWSADebugSSWSize.Controls(modProject.glngSlideShowWindowSize + 1).State = Office.msoButtonDown
-    End If
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Launchs the slide navigator. In order to exit, the slide navigator must be
-'   unloaded. If the slide navigator is only hidden, then this routine will
-'   automatically refresh it and re-show it.  This is a hack to work around
-'   some focus problems resulting from activating slide shows and activating
-'   new presentations.
 ' Assumptions:
 ' Effects:
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionNavigator _
+Public Sub gWSANavigator_OnAction _
 ( _
 )
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
         modProject.gLoad
-        Exit Sub
-    End If
-    
-    ' Update the menu bar.
-    modToolbar.gRefresh
-    
-    ' Exit if the control is not enabled.
-    If (CommandBars.ActionControl.Enabled = False) Then
         Exit Sub
     End If
     
     modNavigator.gRun
+    
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -396,34 +212,11 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionSongEdit _
+Public Sub gWSASongEditSetCategoryButton_OnAction _
 ( _
 )
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionSongEditSetCategory _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionSongEditSetCategoryButton _
-( _
-)
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
+    Dim dwCurrent As PowerPoint.DocumentWindow
+    Dim sldCurrent As PowerPoint.SlideRange
     
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
@@ -431,14 +224,12 @@ Public Sub gOnActionSongEditSetCategoryButton _
         Exit Sub
     End If
     
-    If (modActive.gblnActiveWindowExists = False) Then
-        Exit Sub
-    End If
+    Set dwCurrent = mValidWindow(mActiveWindow)
+    Set sldCurrent = mSlideRange(dwCurrent)
     
-    Set dwDocumentWindow = Application.ActiveWindow
+    modCategory.CategorySet sldCurrent, CommandBars.ActionControl.Caption
     
-    CategorySet dwDocumentWindow, CommandBars.ActionControl.Caption
-    modToolbar.gRefresh
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -448,24 +239,16 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionSongEditSort _
+Public Sub gWSASongEditSort_OnAction _
 ( _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
         modProject.gLoad
         Exit Sub
     End If
     
-    If (modActive.gblnActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Set dwDocumentWindow = Application.ActiveWindow
-    
-    modSort.gRun dwDocumentWindow
+    modSort.gRun mValidWindow(mActiveWindow)
     
     VBA.MsgBox _
         buttons:= _
@@ -474,6 +257,8 @@ Public Sub gOnActionSongEditSort _
             modProject.GstrNamePretty, _
         Prompt:= _
             "Slide sort is complete."
+            
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -483,24 +268,16 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionSongEditIndex _
+Public Sub gWSASongEditIndex_OnAction _
 ( _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    
     ' Load the project if the project is not loaded
     If (modProject.gblnLoaded = False) Then
         modProject.gLoad
         Exit Sub
     End If
     
-    If (modActive.gblnActiveWindowExists = False) Then
-        Exit Sub
-    End If
-    
-    Set dwDocumentWindow = Application.ActiveWindow
-    
-    modIndex.gRun dwDocumentWindow
+    modIndex.gRun mValidWindow(mActiveWindow)
     
     VBA.MsgBox _
         buttons:= _
@@ -509,6 +286,8 @@ Public Sub gOnActionSongEditIndex _
             modProject.GstrNamePretty, _
         Prompt:= _
             "Slide index generation is complete."
+            
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -518,31 +297,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionDebug _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWMonitor _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWMonitorButton _
+Public Sub gWSADebugSSWMonitorButton_OnAction _
 ( _
 )
     ' Load the project if the project is not loaded
@@ -551,8 +306,9 @@ Public Sub gOnActionDebugSSWMonitorButton _
         Exit Sub
     End If
     
-    modProject.glngSlideShowWindowMonitor = CommandBars.ActionControl.Index - 1
-    modToolbar.gRefresh
+    modProject.gstrSlideShowWindowMonitor = VBA.CStr(CommandBars.ActionControl.Parameter)
+    
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -562,19 +318,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWSize _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWSizeButton _
+Public Sub gWSADebugSSWSizeButton_OnAction _
 ( _
 )
     ' Load the project if the project is not loaded
@@ -583,8 +327,9 @@ Public Sub gOnActionDebugSSWSizeButton _
         Exit Sub
     End If
     
-    modProject.glngSlideShowWindowSize = CommandBars.ActionControl.Index - 1
-    modToolbar.gRefresh
+    modProject.glngSlideShowWindowSize = VBA.CStr(CommandBars.ActionControl.Parameter)
+    
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -594,174 +339,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionHelp _
-( _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpHelp _
-( _
-)
-    Dim strHelpFile As String
-    
-    ' Load the project if the project is not loaded
-    If (modProject.gblnLoaded = False) Then
-        modProject.gLoad
-        Exit Sub
-    End If
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-    
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSA)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpHelpHowTo _
-( _
-)
-    Dim strHelpFile As String
-    
-    ' Load the project if the project is not loaded
-    If (modProject.gblnLoaded = False) Then
-        modProject.gLoad
-        Exit Sub
-    End If
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-        
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSAHowTo)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpHelpCommandBar _
-( _
-)
-    Dim strHelpFile As String
-    
-    ' Load the project if the project is not loaded
-    If (modProject.gblnLoaded = False) Then
-        modProject.gLoad
-        Exit Sub
-    End If
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-    
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSACommandBar)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpHelpKnownIssues _
-( _
-)
-    Dim strHelpFile As String
-    
-    ' Load the project if the project is not loaded
-    If (modProject.gblnLoaded = False) Then
-        modProject.gLoad
-        Exit Sub
-    End If
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-    
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSAKnownIssues)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpHelpCopyrightPermission _
-( _
-)
-    Dim strHelpFile As String
-    
-    ' Load the project if the project is not loaded
-    If (modProject.gblnLoaded = False) Then
-        modProject.gLoad
-        Exit Sub
-    End If
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-    
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSACopyrightPermission)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Public Sub gOnActionHelpVisitHomepage _
+Public Sub gWSAHelpHelp_OnAction _
 ( _
 )
     ' Load the project if the project is not loaded
@@ -770,13 +348,9 @@ Public Sub gOnActionHelpVisitHomepage _
         Exit Sub
     End If
     
-    modWin32Shell32.ShellExecute _
-        0&, _
-        VBA.vbNullString, _
-        modProject.GstrHomepage, _
-        VBA.vbNullString, _
-        VBA.vbNullString, _
-        modWin32Shell32.SW_SHOWNORMAL
+    modHelp.gTopicShow HelpTopic.WSA
+    
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -786,7 +360,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionHelpEmailAuthor _
+Public Sub gWSAHelpHelpHowTo_OnAction _
 ( _
 )
     ' Load the project if the project is not loaded
@@ -795,13 +369,9 @@ Public Sub gOnActionHelpEmailAuthor _
         Exit Sub
     End If
     
-    modWin32Shell32.ShellExecute _
-        0&, _
-        VBA.vbNullString, _
-        modProject.GstrEmail & "?subject=" & modProject.GstrName & "%20" & modProject.GstrVersion & ":%20", _
-        VBA.vbNullString, _
-        VBA.vbNullString, _
-        modWin32Shell32.SW_SHOWNORMAL
+    modHelp.gTopicShow HelpTopic.WSAHowTo
+    
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -811,7 +381,112 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionHelpDebug _
+Public Sub gWSAHelpHelpCommandBar_OnAction _
+( _
+)
+    ' Load the project if the project is not loaded
+    If (modProject.gblnLoaded = False) Then
+        modProject.gLoad
+        Exit Sub
+    End If
+    
+    modHelp.gTopicShow HelpTopic.WSACommandBar
+    
+    mWSA_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gWSAHelpHelpKnownIssues_OnAction _
+( _
+)
+    ' Load the project if the project is not loaded
+    If (modProject.gblnLoaded = False) Then
+        modProject.gLoad
+        Exit Sub
+    End If
+    
+    modHelp.gTopicShow HelpTopic.WSAKnownIssues
+    
+    mWSA_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gWSAHelpHelpCopyrightPermission_OnAction _
+( _
+)
+    ' Load the project if the project is not loaded
+    If (modProject.gblnLoaded = False) Then
+        modProject.gLoad
+        Exit Sub
+    End If
+    
+    modHelp.gTopicShow HelpTopic.WSACopyrightPermission
+    
+    mWSA_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gWSAHelpVisitHomepage_OnAction _
+( _
+)
+    ' Load the project if the project is not loaded
+    If (modProject.gblnLoaded = False) Then
+        modProject.gLoad
+        Exit Sub
+    End If
+    
+    modHelp.gHomepageVisit
+    
+    mWSA_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gWSAHelpEmailAuthor_OnAction _
+( _
+)
+    ' Load the project if the project is not loaded
+    If (modProject.gblnLoaded = False) Then
+        modProject.gLoad
+        Exit Sub
+    End If
+    
+    modHelp.gAuthorEmail
+    
+    mWSA_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub gWSAHelpDebug_OnAction _
 ( _
 )
     Dim intResponse As VBA.VbMsgBoxResult
@@ -822,7 +497,7 @@ Public Sub gOnActionHelpDebug _
         Exit Sub
     End If
     
-    If (mmnuWSADebug.Visible = False) Then
+    If (modProject.gblnDebugEnabled = False) Then
         intResponse = VBA.MsgBox( _
             buttons:= _
                 VBA.vbYesNo + VBA.vbDefaultButton2 + VBA.vbExclamation, _
@@ -839,11 +514,15 @@ Public Sub gOnActionHelpDebug _
         End If
     End If
     
-    mmnuWSADebug.Visible = Not mmnuWSADebug.Visible
+    modProject.gblnDebugEnabled = Not modProject.gblnDebugEnabled
+    With Application.CommandBars(modProject.GstrName).Controls("Debug")
+        modProject.gstrSlideShowWindowMonitor = _
+            .Controls("SSW Monitor").Controls("<Default>").Parameter
+        modProject.glngSlideShowWindowSize = _
+            VBA.CLng(.Controls("SSW Size").Controls("<Default>").Parameter)
+    End With
     
-    modProject.glngSlideShowWindowMonitor = 0
-    modProject.glngSlideShowWindowSize = 0
-    modToolbar.gRefresh
+    mWSA_Update
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -853,7 +532,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionHelpAbout _
+Public Sub gWSAHelpAbout_OnAction _
 ( _
 )
     Dim strPrompt As String
@@ -886,6 +565,8 @@ Public Sub gOnActionHelpAbout _
             "About " & modProject.GstrNamePretty, _
         Prompt:= _
             strPrompt
+    
+    mWSA_Update
 End Sub
 
 
@@ -895,310 +576,438 @@ End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Installs the 'Navigator' control on the command bar specified by the
-'   variable mtlbWSA.
 ' Assumptions:
 ' Effects:
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub NavigatorControlAdd _
+Private Sub mWSA_Delete _
 ( _
 )
-    ' Install the 'Navigator' control.
-    Set mcmdWSANavigator = mtlbWSA.Controls.Add( _
-        Type:=Office.msoControlButton, _
-        Temporary:=True)
+    Dim tlb As Office.CommandBar
     
-    ' Configure the 'Navigator' control.
-    With mcmdWSANavigator
-        .Style = Office.msoButtonCaption
-        .Caption = "Navigator"
-        .TooltipText = "Launch the Navigator"
-        .OnAction = "modToolbar.gOnActionNavigator"
-        .BeginGroup = True
-        .Width = 72
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-'   Installs the 'SongEdit' control on the command bar specified by the
-'   variable mtlbWSA.
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Private Sub SongEditControlAdd _
-( _
-)
-    Dim cmdMenuItem As Office.CommandBarButton
-    Dim lngCategory As Long
-    
-    ' Install the 'SongEdit' control.
-    Set mmnuWSASongEdit = mtlbWSA.Controls.Add( _
-        Type:=Office.msoControlPopup, _
-        Temporary:=True)
-    
-    ' Configure the 'SongEdit' control.
-    With mmnuWSASongEdit
-        .Caption = "Song Edit"
-        .TooltipText = "View the 'Song Edit' menu items"
-        .OnAction = "modToolbar.gOnActionSongEdit"
-        .BeginGroup = True
-        .Width = 72
-        
-        Set mmnuWSASongEditSetCategory = .Controls.Add( _
-            Type:=Office.msoControlPopup, _
-            Temporary:=True)
-        mmnuWSASongEditSetCategory.Caption = "Set Category"
-        mmnuWSASongEditSetCategory.TooltipText = "Set the category of the selected slides"
-        mmnuWSASongEditSetCategory.BeginGroup = False
-        
-        Set mcmdWSASongEditSort = .Controls.Add( _
-            Type:=Office.msoControlButton, _
-            Temporary:=True)
-        mcmdWSASongEditSort.Caption = "Sort"
-        mcmdWSASongEditSort.TooltipText = "Sort slides aphabetically"
-        mcmdWSASongEditSort.OnAction = "modToolbar.gOnActionSongEditSort"
-        mcmdWSASongEditSort.BeginGroup = False
-        
-        Set mcmdWSASongEditCreateIndex = .Controls.Add( _
-            Type:=Office.msoControlButton, _
-            Temporary:=True)
-        mcmdWSASongEditCreateIndex.Caption = "Create Index"
-        mcmdWSASongEditCreateIndex.TooltipText = "Generate slide index"
-        mcmdWSASongEditCreateIndex.OnAction = "modToolbar.gOnActionSongEditIndex"
-        mcmdWSASongEditCreateIndex.BeginGroup = False
-    End With
-    
-    ReDim modProject.gastrCategories(5)
-    modProject.gastrCategories(0) = "Worship"
-    modProject.gastrCategories(1) = "Choir"
-    modProject.gastrCategories(2) = "Hymn"
-    modProject.gastrCategories(3) = "Carol"
-    modProject.gastrCategories(4) = "Children"
-    modProject.gastrCategories(5) = "Liturgy"
-    With mmnuWSASongEditSetCategory
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "<none>"
-        cmdMenuItem.TooltipText = "Set slide category to '<none>'"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionSongEditSetCategoryButton"
-        cmdMenuItem.BeginGroup = False
-    
-        For lngCategory = LBound(modProject.gastrCategories) To UBound(modProject.gastrCategories) Step 1
-            Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-            cmdMenuItem.Caption = modProject.gastrCategories(lngCategory)
-            cmdMenuItem.OnAction = "modToolbar.gOnActionSongEditSetCategoryButton"
-            cmdMenuItem.BeginGroup = False
-        Next
-        If (.Controls.Count >= 2) Then
-            .Controls(2).BeginGroup = True
+    ' Uninstall any "Worship Service Assistant" command bars.
+    For Each tlb In Application.CommandBars
+        If (tlb.BuiltIn = False) Then
+            If (tlb.Name = modProject.GstrName) Then
+                tlb.Delete
+            End If
         End If
-    End With
+    Next
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Installs the 'Category' control on the command bar specified by the
-'   variable mtlbWSA.
 ' Assumptions:
 ' Effects:
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub CategoryControlAdd _
+Private Sub mWSA_Add _
 ( _
 )
-
-    ' Install the 'Category' control.
-    Set mcboWSACategory = mtlbWSA.Controls.Add( _
-        Type:=Office.msoControlEdit, _
-        Temporary:=True)
+    Dim tlb As Office.CommandBar
+    Dim lngBarRowIndex As Long
     
-    ' Configure the 'Category' control.
-    With mcboWSACategory
-        .Caption = "Category"
-        .Text = ""
-        .TooltipText = "Slide Category"
-        .BeginGroup = True
-        .Width = 72
+    ' Delete any pre-existing "Worship Service Assistant" command bars.
+    mWSA_Delete
+    
+    ' Find the end of command bar list.  The "Worship Service Assistant" will
+    ' be placed at the end of the command bar list.
+    For Each tlb In Application.CommandBars
+        If (tlb.RowIndex > lngBarRowIndex) Then
+            lngBarRowIndex = tlb.RowIndex
+        End If
+    Next
+    lngBarRowIndex = lngBarRowIndex + 1
+    
+    ' Install and configure the 'Worship Service Assistant' command bar.
+    With Application.CommandBars.Add(Temporary:=True)
+        .Name = modProject.GstrName
+        .Position = msoBarTop
+        .RowIndex = lngBarRowIndex
+        .Visible = True
+        .Protection = _
+            Office.msoBarNoChangeDock + _
+            Office.msoBarNoChangeVisible + _
+            Office.msoBarNoCustomize + _
+            Office.msoBarNoMove + _
+            Office.msoBarNoResize + _
+            Office.msoBarNoVerticalDock
     End With
+        
+    ' Install the 'Worship Service Assistant' command bar items.
+    mWSANavigator_Add
+    mWSASongEdit_Add
+    mWSACategory_Add
+    mWSADebug_Add
+    mWSAHelp_Add
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Installs the 'Debug' control on the command bar specified by the
-'   variable mtlbWSA.
 ' Assumptions:
 ' Effects:
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub DebugControlAdd _
+Private Sub mWSANavigator_Add _
 ( _
 )
-    Dim lngMonitor As Long
-    Dim lngSize As Long
-    Dim cmdMenuItem As Office.CommandBarButton
-    
-    ' Install the 'Debug' control.
-    Set mmnuWSADebug = mtlbWSA.Controls.Add( _
-        Type:=Office.msoControlPopup, _
-        Temporary:=True)
-    
-    ' Configure the 'Debug' control.
-    With mmnuWSADebug
-        .Caption = "Debug"
-        .TooltipText = "View the 'Debug' menu items"
-        .OnAction = "modToolbar.gOnActionDebug"
-        .BeginGroup = True
-        .Width = 72
-        
-        Set mmnuWSADebugSSWMonitor = .Controls.Add( _
-            Type:=Office.msoControlPopup, _
-            Temporary:=True)
-        mmnuWSADebugSSWMonitor.Caption = "SSW Monitor"
-        mmnuWSADebugSSWMonitor.TooltipText = "Set the slide show window monitor"
-        mmnuWSADebugSSWMonitor.BeginGroup = False
-        
-        Set mmnuWSADebugSSWSize = .Controls.Add( _
-            Type:=Office.msoControlPopup, _
-            Temporary:=True)
-        mmnuWSADebugSSWSize.Caption = "SSW Size"
-        mmnuWSADebugSSWSize.TooltipText = "Set the slide show window size"
-        mmnuWSADebugSSWSize.BeginGroup = False
-        
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+            .Style = Office.msoButtonCaption
+            .Caption = "Navigator"
+            .TooltipText = "Launch the Navigator"
+            .OnAction = "modToolbar.gWSANavigator_OnAction"
+            .BeginGroup = True
+            .Width = 72
+        End With
     End With
-    
-    With mmnuWSADebugSSWMonitor
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Default"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWMonitorButton"
-        cmdMenuItem.BeginGroup = False
-        cmdMenuItem.State = Office.msoButtonUp
-        lngMonitor = 1
-        While lngMonitor <= modWin32User32.GetSystemMetrics(modWin32User32.SM_CMONITORS)
-            Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-            cmdMenuItem.Caption = "Monitor " & lngMonitor
-            cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWMonitorButton"
-            cmdMenuItem.BeginGroup = False
-            cmdMenuItem.State = Office.msoButtonUp
-            lngMonitor = lngMonitor + 1
-        Wend
-        If (.Controls.Count >= 2) Then
-            .Controls(2).BeginGroup = True
-        End If
-    End With
-    
-    With mmnuWSADebugSSWSize
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Default"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWSizeButton"
-        cmdMenuItem.BeginGroup = False
-        cmdMenuItem.State = Office.msoButtonUp
-        lngSize = 1
-        While lngSize <= 64
-            Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-            cmdMenuItem.Caption = "1/" & lngSize
-            cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWSizeButton"
-            cmdMenuItem.BeginGroup = False
-            cmdMenuItem.State = Office.msoButtonUp
-            lngSize = lngSize * 2
-        Wend
-        If (.Controls.Count >= 2) Then
-            .Controls(2).BeginGroup = True
-        End If
-    End With
-    
-    mmnuWSADebug.Visible = False
 End Sub
 
 '-------------------------------------------------------------------------------
 ' Purpose:
-'   Installs the 'Help' control on the command bar specified by the
-'   variable mtlbWSA.
 ' Assumptions:
 ' Effects:
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Function HelpControlAdd _
+Private Sub mWSASongEdit_Add _
 ( _
-) As Boolean
-    Dim cmdMenuItem As Office.CommandBarButton
+)
+    Dim lng As Long
     
-    ' Install the 'Help' control.
-    Set mmnuWSAHelp = mtlbWSA.Controls.Add( _
-        Type:=Office.msoControlPopup, _
-        Temporary:=True)
-    
-    ' Configure the 'Help' control.
-    With mmnuWSAHelp
-        .Caption = "Help"
-        .TooltipText = "View the 'Help' menu items"
-        .OnAction = "modToolbar.gOnActionHelp"
-        .BeginGroup = True
-        .Width = 72
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "&Help"
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' help"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpHelp"
-        cmdMenuItem.BeginGroup = False
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Help on How To ..."
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' How To ... help"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpHelpHowTo"
-        cmdMenuItem.BeginGroup = False
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Help on Command Bar"
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' Command Bar help"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpHelpCommandBar"
-        cmdMenuItem.BeginGroup = False
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Help on Known Issues"
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' known issues"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpHelpKnownIssues"
-        cmdMenuItem.BeginGroup = False
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Help on Copyright and Permisison"
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' copyright and permission notice"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpHelpCopyrightPermission"
-        cmdMenuItem.BeginGroup = False
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Visit the Homepage"
-        cmdMenuItem.TooltipText = "Visit the '" & modProject.GstrNamePretty & "' homepage"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpVisitHomepage"
-        cmdMenuItem.BeginGroup = True
-               
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "Email the Author"
-        cmdMenuItem.TooltipText = "Email the '" & modProject.GstrNamePretty & "' author"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpEmailAuthor"
-        cmdMenuItem.BeginGroup = False
-               
-        Set mcmdWSAHelpDebug = .Controls.Add( _
-            Type:=Office.msoControlButton, _
-            Temporary:=True)
-        mcmdWSAHelpDebug.Caption = "Debug"
-        mcmdWSAHelpDebug.TooltipText = "Show or hide the Debug menu"
-        mcmdWSAHelpDebug.OnAction = "modToolbar.gOnActionHelpDebug"
-        mcmdWSAHelpDebug.BeginGroup = True
-        mcmdWSAHelpDebug.State = Office.msoButtonUp
-        
-        Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-        cmdMenuItem.Caption = "&About"
-        cmdMenuItem.TooltipText = "View the '" & modProject.GstrNamePretty & "' about box"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionHelpAbout"
-        cmdMenuItem.BeginGroup = True
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+            .Caption = "Song Edit"
+            .TooltipText = "View the 'Song Edit' menu items"
+            .BeginGroup = True
+            .Width = 72
+            With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+                .Caption = "Set Category"
+                .TooltipText = "Set the category of the selected slides"
+                .BeginGroup = False
+                For lng = 1 To modCategory.Count Step 1
+                    With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                        .Caption = modCategory.Item(lng)
+                        .OnAction = "modToolbar.gWSASongEditSetCategoryButton_OnAction"
+                        .BeginGroup = False
+                    End With
+                Next
+                If (.Controls.Count >= 2) Then
+                    .Controls(2).BeginGroup = True
+                End If
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Sort"
+                .TooltipText = "Sort slides aphabetically"
+                .OnAction = "modToolbar.gWSASongEditSort_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Create Index"
+                .TooltipText = "Generate slide index"
+                .OnAction = "modToolbar.gWSASongEditIndex_OnAction"
+                .BeginGroup = False
+            End With
+        End With
     End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub mWSACategory_Add _
+( _
+)
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls.Add(Type:=Office.msoControlEdit, Temporary:=True)
+            .Caption = "Category"
+            .Text = ""
+            .TooltipText = "Slide Category"
+            .BeginGroup = True
+            .Width = 72
+        End With
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub mWSADebug_Add _
+( _
+)
+    Dim lng As Long
+    Dim udtOptions As New WorshipServiceAssistant.WSAApplicationOptions
+    Dim astrMonitorList() As String
+    
+    ' Get monitor names
+    astrMonitorList = udtOptions.DisplayMonitorList
+    
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+            .Caption = "Debug"
+            .TooltipText = "View the 'Debug' menu items"
+            .BeginGroup = True
+            .Width = 72
+            With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+                .Caption = "SSW Monitor"
+                .TooltipText = "Set the slide show window monitor"
+                .BeginGroup = False
+                With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                    .Caption = "<Default>"
+                    .OnAction = "modToolbar.gWSADebugSSWMonitorButton_OnAction"
+                    .BeginGroup = False
+                    .Parameter = VBA.CStr(astrMonitorList(UBound(astrMonitorList)))
+                End With
+                For lng = LBound(astrMonitorList) To UBound(astrMonitorList) Step 1
+                    With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                        .Caption = astrMonitorList(lng)
+                        .OnAction = "modToolbar.gWSADebugSSWMonitorButton_OnAction"
+                        .BeginGroup = False
+                        .Parameter = astrMonitorList(lng)
+                    End With
+                Next
+                If (.Controls.Count >= 2) Then
+                    .Controls(2).BeginGroup = True
+                End If
+            End With
+            With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+                .Caption = "SSW Size"
+                .TooltipText = "Set the slide show window size"
+                .BeginGroup = False
+                With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                    .Caption = "<Default>"
+                    .OnAction = "modToolbar.gWSADebugSSWSizeButton_OnAction"
+                    .BeginGroup = False
+                    .State = Office.msoButtonUp
+                    .Parameter = VBA.CStr(1)
+                End With
+                lng = 1
+                While lng <= 8
+                    With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                        .Caption = "1/" & VBA.CStr(lng * lng)
+                        .OnAction = "modToolbar.gWSADebugSSWSizeButton_OnAction"
+                        .BeginGroup = False
+                        .State = Office.msoButtonUp
+                        .Parameter = VBA.CStr(lng)
+                    End With
+                    lng = lng * 2
+                Wend
+                If (.Controls.Count >= 2) Then
+                    .Controls(2).BeginGroup = True
+                End If
+            End With
+        End With
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub mWSAHelp_Add _
+( _
+)
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls.Add(Type:=Office.msoControlPopup, Temporary:=True)
+            .Caption = "Help"
+            .TooltipText = "View the 'Help' menu items"
+            .BeginGroup = True
+            .Width = 72
+            Dim mnu As Control
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "&Help"
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' help"
+                .OnAction = "modToolbar.gWSAHelpHelp_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Help on How To ..."
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' How To ... help"
+                .OnAction = "modToolbar.gWSAHelpHelpHowTo_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Help on Command Bar"
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' Command Bar help"
+                .OnAction = "modToolbar.gWSAHelpHelpCommandBar_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Help on Known Issues"
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' known issues"
+                .OnAction = "modToolbar.gWSAHelpHelpKnownIssues_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Help on Copyright and Permisison"
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' copyright and permission notice"
+                .OnAction = "modToolbar.gWSAHelpHelpCopyrightPermission_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Visit the Homepage"
+                .TooltipText = "Visit the '" & modProject.GstrNamePretty & "' homepage"
+                .OnAction = "modToolbar.gWSAHelpVisitHomepage_OnAction"
+                .BeginGroup = True
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Email the Author"
+                .TooltipText = "Email the '" & modProject.GstrNamePretty & "' author"
+                .OnAction = "modToolbar.gWSAHelpEmailAuthor_OnAction"
+                .BeginGroup = False
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "Debug"
+                .TooltipText = "Show or hide the Debug menu"
+                .OnAction = "modToolbar.gWSAHelpDebug_OnAction"
+                .BeginGroup = True
+            End With
+            With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+                .Caption = "&About"
+                .TooltipText = "View the '" & modProject.GstrNamePretty & "' about box"
+                .OnAction = "modToolbar.gWSAHelpAbout_OnAction"
+                .BeginGroup = True
+            End With
+        End With
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub mWSA_Update _
+( _
+)
+    Dim dwCurrent As PowerPoint.DocumentWindow
+    Dim sldCurrent As PowerPoint.SlideRange
+    Dim cmd As Office.CommandBarButton
+    
+    Set dwCurrent = mValidWindow(mActiveWindow)
+    Set sldCurrent = mSlideRange(dwCurrent)
+    
+    With Application.CommandBars(modProject.GstrName)
+        With .Controls("Song Edit")
+            .Enabled = True
+            If ((dwCurrent Is Nothing) = True) Then
+                .Enabled = False
+            Else
+                If (dwCurrent.Presentation.Slides.Count = 0) Then
+                    .Enabled = False
+                End If
+            End If
+            With .Controls("Set Category")
+                .Enabled = True
+                If ((dwCurrent Is Nothing) = True) Then
+                    .Enabled = False
+                Else
+                    If (dwCurrent.Presentation.Slides.Count = 0) Then
+                        .Enabled = False
+                    End If
+                    If ((sldCurrent Is Nothing) = True) Then
+                        .Enabled = False
+                    End If
+                End If
+            End With
+            With .Controls("Sort")
+                .Enabled = True
+                If ((dwCurrent Is Nothing) = True) Then
+                    .Enabled = False
+                Else
+                    If (dwCurrent.Presentation.Slides.Count = 0) Then
+                        .Enabled = False
+                    End If
+                End If
+            End With
+            With .Controls("Create Index")
+                .Enabled = True
+                If ((dwCurrent Is Nothing) = True) Then
+                    .Enabled = False
+                Else
+                    If (dwCurrent.Presentation.Slides.Count = 0) Then
+                        .Enabled = False
+                    End If
+                End If
+            End With
+        End With
+        With .Controls("Category")
+            .Enabled = True
+            .Text = modCategory.CategoryGet(sldCurrent)
+            .Enabled = False
+        End With
+        With .Controls("Debug")
+            If (modProject.gblnDebugEnabled = True) Then
+                .Visible = True
+                .Enabled = True
+            Else
+                .Visible = False
+                .Enabled = False
+            End If
+            With .Controls("SSW Monitor")
+                For Each cmd In .Controls
+                    If (cmd.Parameter = VBA.CStr(modProject.gstrSlideShowWindowMonitor)) Then
+                        cmd.State = Office.msoButtonDown
+                    Else
+                        cmd.State = Office.msoButtonUp
+                    End If
+                Next
+            End With
+            With .Controls("SSW Size")
+                For Each cmd In .Controls
+                    If (cmd.Parameter = VBA.CStr(modProject.glngSlideShowWindowSize)) Then
+                        cmd.State = Office.msoButtonDown
+                    Else
+                        cmd.State = Office.msoButtonUp
+                    End If
+                Next
+            End With
+        End With
+        With .Controls("Help")
+            With .Controls("Debug")
+                If (modProject.gblnDebugEnabled = True) Then
+                    .State = Office.msoButtonDown
+                End If
+            End With
+        End With
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function mActiveWindow _
+( _
+) As PowerPoint.DocumentWindow
+    On Error GoTo mActiveWindow_Exit
+    
+    Set mActiveWindow = Nothing
+    
+    If ((PowerPoint.Application.ActiveWindow Is Nothing) = False) Then
+        Set mActiveWindow = PowerPoint.Application.ActiveWindow
+    End If
+    
+mActiveWindow_Exit:
 End Function
 
 '-------------------------------------------------------------------------------
@@ -1208,35 +1017,34 @@ End Function
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub CategorySet _
+Private Function mValidWindow _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow, _
-    ByRef Category As String _
-)
-    Dim sldSlide As PowerPoint.Slide
+    ByVal dwCurrent As PowerPoint.DocumentWindow _
+) As PowerPoint.DocumentWindow
+    Dim ppActiveWindowViewType As PowerPoint.PpViewType
     
-    If ((modActive.gblnActiveSelectionExists(dwDocumentWindow) = False) And _
-        (modActive.gblnActiveSlideExists(dwDocumentWindow) = True)) Then
-        Set sldSlide = modActive.gsldActiveSlideGet(dwDocumentWindow)
-        If (Category = "") Then
-            sldSlide.Tags.Delete "Category"
-        ElseIf (VBA.LCase(Category) = "<none>") Then
-            sldSlide.Tags.Delete "Category"
-        Else
-            sldSlide.Tags.Add "Category", Category
-        End If
-    Else
-        For Each sldSlide In dwDocumentWindow.Selection.SlideRange
-            If (Category = "") Then
-                sldSlide.Tags.Delete "Category"
-            ElseIf (VBA.LCase(Category) = "<none>") Then
-                sldSlide.Tags.Delete "Category"
-            Else
-                sldSlide.Tags.Add "Category", Category
+    Set mValidWindow = Nothing
+    
+    If ((dwCurrent Is Nothing) = False) Then
+        With dwCurrent
+            ppActiveWindowViewType = .ViewType
+            If (.ViewType = PowerPoint.ppViewNormal) Then
+                Select Case .Panes(2).ViewType
+                    Case PowerPoint.ppViewSlide
+                        ppActiveWindowViewType = PowerPoint.ppViewNormal
+                    Case PowerPoint.ppViewSlideMaster
+                        ppActiveWindowViewType = PowerPoint.ppViewSlideMaster
+                End Select
             End If
-        Next
+        End With
+    
+        If ((ppActiveWindowViewType = PowerPoint.ppViewSlide) Or _
+            (ppActiveWindowViewType = PowerPoint.ppViewNormal) Or _
+            (ppActiveWindowViewType = PowerPoint.ppViewSlideSorter)) Then
+            Set mValidWindow = dwCurrent
+        End If
     End If
-End Sub
+End Function
 
 '-------------------------------------------------------------------------------
 ' Purpose:
@@ -1245,35 +1053,20 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Function CategoryGet _
+Private Function mSlideRange _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-) As String
-    Dim sldSlide As PowerPoint.Slide
+    ByRef dwCurrent As PowerPoint.DocumentWindow _
+) As PowerPoint.SlideRange
+    On Error GoTo mSlideRange_Exit
     
-    CategoryGet = ""
-    
-    If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = False) Then
-        CategoryGet = ""
-    ElseIf (modActive.gblnActiveSelectionExists(dwDocumentWindow) = False) Then
-        If (modActive.gblnActiveSlideExists(dwDocumentWindow) = True) Then
-            CategoryGet = modActive.gsldActiveSlideGet(dwDocumentWindow).Tags("Category")
-        Else
-            CategoryGet = ""
+    Set mSlideRange = Nothing
+    If ((mValidWindow(dwCurrent) Is Nothing) = False) Then
+        If (dwCurrent.Selection.Type <> PowerPoint.ppSelectionNone) Then
+            Set mSlideRange = dwCurrent.Selection.SlideRange
+        ElseIf (VBA.IsNull(dwCurrent.View.Slide) = False) Then
+            Set mSlideRange = dwCurrent.Presentation.Slides.Range(dwCurrent.View.Slide.SlideIndex)
         End If
-    ElseIf (dwDocumentWindow.Selection.SlideRange.Count = 0) Then
-        If (modActive.gblnActiveSlideExists(dwDocumentWindow) = True) Then
-            CategoryGet = modActive.gsldActiveSlideGet(dwDocumentWindow).Tags("Category")
-        Else
-            CategoryGet = ""
-        End If
-    Else
-        CategoryGet = dwDocumentWindow.Selection.SlideRange(1).Tags("Category")
-        For Each sldSlide In dwDocumentWindow.Selection.SlideRange
-            If (sldSlide.Tags("Category") <> CategoryGet) Then
-                    CategoryGet = ""
-                Exit For
-            End If
-        Next
     End If
+
+mSlideRange_Exit:
 End Function

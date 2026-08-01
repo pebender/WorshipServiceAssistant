@@ -2,14 +2,14 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "WSAApplicationEventHandler"
+Attribute VB_Name = "WSAApplicationEventHandlers"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.WSAApplicationEventHandler
+'   WorshipServiceAssistant.WSAApplicationEventHandlers
 '
 ' Description:
 '
@@ -70,12 +70,12 @@ Option Base 0
 
 
 '===============================================================================
-' Public Variables.
-'===============================================================================
-
-
-'===============================================================================
 ' Private Constants.
+'===============================================================================
+
+
+'===============================================================================
+' Public Variables.
 '===============================================================================
 
 
@@ -376,7 +376,7 @@ Private Sub mApplication_WindowDeactivate _
     ByVal prePresentation As PowerPoint.Presentation, _
     ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
 )
-    modToolbar.gDisable
+    modToolbar.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------

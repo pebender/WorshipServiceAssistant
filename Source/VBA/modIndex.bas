@@ -62,12 +62,12 @@ Option Base 0
 
 
 '===============================================================================
-' Public Variables.
-'===============================================================================
-
-
-'===============================================================================
 ' Private Constants.
+'===============================================================================
+
+
+'===============================================================================
+' Public Variables.
 '===============================================================================
 
 
@@ -117,178 +117,180 @@ Public Sub gRun _
     Dim lngTemp As Long
     Dim astrCategoryList() As String
     
-    If (modActive.gblnActiveWindowSlideExists(dwCurrent) = True) Then
-        Set preCurrent = dwCurrent.Presentation
-        
-        ' Find all the slide categories that are in the category list,
-        ' preserving the order of the category list.
-        ReDim astrCategoryList(0)
-        For lngCategoryIndex = LBound(modProject.gastrCategories) To UBound(modProject.gastrCategories) Step 1
-            strCategory = modProject.gastrCategories(lngCategoryIndex)
+    If ((dwCurrent Is Nothing) = False) Then
+        If (dwCurrent.Presentation.Slides.Count >= 1) Then
+            Set preCurrent = dwCurrent.Presentation
+            
+            ' Find all the slide categories that are in the category list,
+            ' preserving the order of the category list.
+            ReDim astrCategoryList(0)
+            For lngCategoryIndex = 1 To modCategory.Count Step 1
+                strCategory = modCategory.Item(lngCategoryIndex)
+                For lngIndex = 1 To preCurrent.Slides.Count Step 1
+                    If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
+                        astrCategoryList(UBound(astrCategoryList)) = strCategory
+                        ReDim Preserve astrCategoryList(UBound(astrCategoryList) + 1)
+                        Exit For
+                    End If
+                Next
+            Next
+            
+            ' Find all the slide categories that are not in the category list,
+            ' preserving the order of occurance in the slides.
             For lngIndex = 1 To preCurrent.Slides.Count Step 1
-                If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
+                strCategory = preCurrent.Slides(lngIndex).Tags("Category")
+                For lngCategoryIndex = LBound(astrCategoryList) To UBound(astrCategoryList) - 1 Step 1
+                    If (strCategory = astrCategoryList(lngCategoryIndex)) Then
+                        Exit For
+                    End If
+                Next
+                If (lngCategoryIndex >= UBound(astrCategoryList)) Then
                     astrCategoryList(UBound(astrCategoryList)) = strCategory
                     ReDim Preserve astrCategoryList(UBound(astrCategoryList) + 1)
-                    Exit For
                 End If
             Next
-        Next
-        
-        ' Find all the slide categories that are not in the category list,
-        ' preserving the order of occurance in the slides.
-        For lngIndex = 1 To preCurrent.Slides.Count Step 1
-            strCategory = preCurrent.Slides(lngIndex).Tags("Category")
-            For lngCategoryIndex = LBound(astrCategoryList) To UBound(astrCategoryList) - 1 Step 1
-                If (strCategory = astrCategoryList(lngCategoryIndex)) Then
-                    Exit For
-                End If
-            Next
-            If (lngCategoryIndex >= UBound(astrCategoryList)) Then
-                astrCategoryList(UBound(astrCategoryList)) = strCategory
-                ReDim Preserve astrCategoryList(UBound(astrCategoryList) + 1)
-            End If
-        Next
-        
-        ReDim Preserve astrCategoryList(UBound(astrCategoryList) - 1)
-        
-        Set preIndex = mppIndexAdd()
             
-        With preIndex.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
-            lngRowHeight = .SpaceBefore + .SpaceWithin + .SpaceAfter
-        End With
-        lngColWidth = 72 * 2.5
-        lngColMax = preIndex.PageSetup.SlideWidth
-        lngColMax = VBA.Int(lngColMax / lngColWidth)
-        lngRowMax = preIndex.PageSetup.SlideHeight
-        If (preIndex.SlideMaster.Shapes.HasTitle = Office.msoTrue) Then
-            lngRowMax = lngRowMax - preIndex.SlideMaster.Shapes.Title.Height
-        End If
-        lngRowMax = VBA.Int(lngRowMax / lngRowHeight)
-        
-        strIndexTitle = preCurrent.Name
-        If (VBA.LCase(VBA.Right(strIndexTitle, 4)) = ".ppt") Then
-            strIndexTitle = VBA.Left(strIndexTitle, VBA.Len(strIndexTitle) - 4)
-        End If
-        strIndexTitle = _
-            strIndexTitle & " Index" & _
-            VBA.Chr(11) & _
-            "(Generated on " & Date & " at " & Time & ")"
-        
-        lngColIndex = lngColMax + 1
-        For lngCategoryIndex = LBound(astrCategoryList) To UBound(astrCategoryList) Step 1
-            strCategory = astrCategoryList(lngCategoryIndex)
-            lngRowIndex = lngRowMax + 1
-            blnColorState = False
-            strSlideTitleLast = ""
-            lngSlideTitleRemaining = 0
-            lngBlockTitleRemaining = 0
+            ReDim Preserve astrCategoryList(UBound(astrCategoryList) - 1)
+            
+            Set preIndex = mppIndexAdd()
+                
+            With preIndex.SlideMaster.TextStyles(ppBodyStyle).Levels(1).ParagraphFormat
+                lngRowHeight = .SpaceBefore + .SpaceWithin + .SpaceAfter
+            End With
+            lngColWidth = 72 * 2.5
+            lngColMax = preIndex.PageSetup.SlideWidth
+            lngColMax = VBA.Int(lngColMax / lngColWidth)
+            lngRowMax = preIndex.PageSetup.SlideHeight
             If (preIndex.SlideMaster.Shapes.HasTitle = Office.msoTrue) Then
-                lngShapeBottomLast = preIndex.SlideMaster.Shapes.Title.Height
-            Else
-                lngShapeBottomLast = 0
+                lngRowMax = lngRowMax - preIndex.SlideMaster.Shapes.Title.Height
             End If
-            strSlideTitleLast = ""
-            For lngIndex = 1 To preCurrent.Slides.Count Step 1
-                If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
-                    '
-                    ' Get the slide's title
-                    '
-                    If (preCurrent.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
-                        strSlideTitle = mstrIndexTitleClean(preCurrent.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
-                    Else
-                        strSlideTitle = ""
-                    End If
-                    
-                    If ((strSlideTitle <> "") And (strSlideTitle <> strSlideTitleLast)) Then
-                        If (lngSlideTitleRemaining <= 0) Then
-                            lngSlideTitleRemaining = mlngIndexGroupDetermine(preCurrent, lngIndex)
-                            blnColorState = Not blnColorState
-                            lngBlockTitleRemaining = 0
-                            If (lngRowIndex + lngSlideTitleRemaining > lngRowMax) Then
-                                lngRowIndex = lngRowMax + 1
-                                lngTemp = lngSlideTitleRemaining
-                                lngTemp = lngTemp - (lngTemp Mod lngRowMax)
-                                lngTemp = lngTemp / lngRowMax
-                                If (lngTemp <= lngColMax) Then
-                                    If (lngColIndex + lngTemp > lngColMax) Then
-                                        lngColIndex = lngColMax + 1
+            lngRowMax = VBA.Int(lngRowMax / lngRowHeight)
+            
+            strIndexTitle = preCurrent.Name
+            If (VBA.LCase(VBA.Right(strIndexTitle, 4)) = ".ppt") Then
+                strIndexTitle = VBA.Left(strIndexTitle, VBA.Len(strIndexTitle) - 4)
+            End If
+            strIndexTitle = _
+                strIndexTitle & " Index" & _
+                VBA.Chr(11) & _
+                "(Generated on " & Date & " at " & Time & ")"
+            
+            lngColIndex = lngColMax + 1
+            For lngCategoryIndex = LBound(astrCategoryList) To UBound(astrCategoryList) Step 1
+                strCategory = astrCategoryList(lngCategoryIndex)
+                lngRowIndex = lngRowMax + 1
+                blnColorState = False
+                strSlideTitleLast = ""
+                lngSlideTitleRemaining = 0
+                lngBlockTitleRemaining = 0
+                If (preIndex.SlideMaster.Shapes.HasTitle = Office.msoTrue) Then
+                    lngShapeBottomLast = preIndex.SlideMaster.Shapes.Title.Height
+                Else
+                    lngShapeBottomLast = 0
+                End If
+                strSlideTitleLast = ""
+                For lngIndex = 1 To preCurrent.Slides.Count Step 1
+                    If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
+                        '
+                        ' Get the slide's title
+                        '
+                        If (preCurrent.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
+                            strSlideTitle = mstrIndexTitleClean(preCurrent.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
+                        Else
+                            strSlideTitle = ""
+                        End If
+                        
+                        If ((strSlideTitle <> "") And (strSlideTitle <> strSlideTitleLast)) Then
+                            If (lngSlideTitleRemaining <= 0) Then
+                                lngSlideTitleRemaining = mlngIndexGroupDetermine(preCurrent, lngIndex)
+                                blnColorState = Not blnColorState
+                                lngBlockTitleRemaining = 0
+                                If (lngRowIndex + lngSlideTitleRemaining > lngRowMax) Then
+                                    lngRowIndex = lngRowMax + 1
+                                    lngTemp = lngSlideTitleRemaining
+                                    lngTemp = lngTemp - (lngTemp Mod lngRowMax)
+                                    lngTemp = lngTemp / lngRowMax
+                                    If (lngTemp <= lngColMax) Then
+                                        If (lngColIndex + lngTemp > lngColMax) Then
+                                            lngColIndex = lngColMax + 1
+                                        End If
                                     End If
                                 End If
                             End If
-                        End If
-                        
-                        If (lngRowIndex > lngRowMax) Then
-                            lngRowIndex = 1
-                            lngColIndex = lngColIndex + 1
-                            If (lngColIndex > lngColMax) Then
+                            
+                            If (lngRowIndex > lngRowMax) Then
                                 lngRowIndex = 1
-                                lngColIndex = 1
-                                Set sldSlide = mppIndexSlideAdd(preIndex)
-                                mppIndexTitleAdd sldSlide, strIndexTitle
-                            End If
-                            Set shpShape = mppIndexCategoryAdd(sldSlide, lngColIndex, lngRowIndex, 2, strCategory)
-                            lngShapeBottomLast = shpShape.Top + shpShape.Height
-                            shpShape.Fill.ForeColor.RGB = VBA.RGB(255, 255, 255)
-                            lngRowIndex = lngRowIndex + 2
-                            lngBlockTitleRemaining = 0
-                            If (preIndex.SlideMaster.Shapes.HasTitle = Office.msoTrue) Then
-                                lngShapeBottomLast = _
-                                    preIndex.SlideMaster.Shapes.Title.Top + _
-                                    preIndex.SlideMaster.Shapes.Title.Height
-                            Else
-                                lngShapeBottomLast = 0
-                            End If
-                        End If
-                        
-                        If (lngBlockTitleRemaining <= 0) Then
-                            lngTemp = lngRowMax - VBA.Int(lngShapeBottomLast / lngRowHeight) + 1
-                            If (lngSlideTitleRemaining <= lngTemp) Then
-                                Set shpShape = mppIndexShapeAdd(sldSlide, lngColIndex, lngRowIndex, lngSlideTitleRemaining)
-                                lngBlockTitleRemaining = lngSlideTitleRemaining
-                            Else
-                                Set shpShape = mppIndexShapeAdd(sldSlide, lngColIndex, lngRowIndex, lngTemp)
-                                lngBlockTitleRemaining = lngTemp
-                            End If
-                            lngShapeBottomLast = shpShape.Top + shpShape.Height
-                            If (blnColorState = False) Then
-                                shpShape.Fill.ForeColor.RGB = VBA.RGB(220, 220, 220)
-                            Else
-                                shpShape.Fill.ForeColor.RGB = VBA.RGB(255, 255, 255)
-                            End If
-                        End If
-                        
-                        If (shpShape.TextFrame.HasText = Office.msoFalse) Then
-                            strShapeText = ""
-                            lngShapeLineCount = 1
-                        Else
-                            strShapeText = shpShape.TextFrame.TextRange.Text & VBA.vbCrLf
-                            lngShapeLineCount = shpShape.TextFrame.TextRange.Lines.Count + 1
-                        End If
-                        strShapeText = strShapeText & str(lngIndex) & "." & VBA.Chr(9) & strSlideTitle
-                        shpShape.TextFrame.TextRange.Text = strShapeText
-                        With shpShape.TextFrame.TextRange
-                            blnShapeLineChop = False
-                            While (.Lines.Count > lngShapeLineCount)
-                                If (blnShapeLineChop = True) Then
-                                    .Text = VBA.Left(.Text, VBA.Len(.Text) - 4)
+                                lngColIndex = lngColIndex + 1
+                                If (lngColIndex > lngColMax) Then
+                                    lngRowIndex = 1
+                                    lngColIndex = 1
+                                    Set sldSlide = mppIndexSlideAdd(preIndex)
+                                    mppIndexTitleAdd sldSlide, strIndexTitle
                                 End If
-                                While (VBA.Right(.Text, 1) <> " ")
+                                Set shpShape = mppIndexCategoryAdd(sldSlide, lngColIndex, lngRowIndex, 2, strCategory)
+                                lngShapeBottomLast = shpShape.Top + shpShape.Height
+                                shpShape.Fill.ForeColor.RGB = VBA.RGB(255, 255, 255)
+                                lngRowIndex = lngRowIndex + 2
+                                lngBlockTitleRemaining = 0
+                                If (preIndex.SlideMaster.Shapes.HasTitle = Office.msoTrue) Then
+                                    lngShapeBottomLast = _
+                                        preIndex.SlideMaster.Shapes.Title.Top + _
+                                        preIndex.SlideMaster.Shapes.Title.Height
+                                Else
+                                    lngShapeBottomLast = 0
+                                End If
+                            End If
+                            
+                            If (lngBlockTitleRemaining <= 0) Then
+                                lngTemp = lngRowMax - VBA.Int(lngShapeBottomLast / lngRowHeight) + 1
+                                If (lngSlideTitleRemaining <= lngTemp) Then
+                                    Set shpShape = mppIndexShapeAdd(sldSlide, lngColIndex, lngRowIndex, lngSlideTitleRemaining)
+                                    lngBlockTitleRemaining = lngSlideTitleRemaining
+                                Else
+                                    Set shpShape = mppIndexShapeAdd(sldSlide, lngColIndex, lngRowIndex, lngTemp)
+                                    lngBlockTitleRemaining = lngTemp
+                                End If
+                                lngShapeBottomLast = shpShape.Top + shpShape.Height
+                                If (blnColorState = False) Then
+                                    shpShape.Fill.ForeColor.RGB = VBA.RGB(220, 220, 220)
+                                Else
+                                    shpShape.Fill.ForeColor.RGB = VBA.RGB(255, 255, 255)
+                                End If
+                            End If
+                            
+                            If (shpShape.TextFrame.HasText = Office.msoFalse) Then
+                                strShapeText = ""
+                                lngShapeLineCount = 1
+                            Else
+                                strShapeText = shpShape.TextFrame.TextRange.Text & VBA.vbCrLf
+                                lngShapeLineCount = shpShape.TextFrame.TextRange.Lines.Count + 1
+                            End If
+                            strShapeText = strShapeText & str(lngIndex) & "." & VBA.Chr(9) & strSlideTitle
+                            shpShape.TextFrame.TextRange.Text = strShapeText
+                            With shpShape.TextFrame.TextRange
+                                blnShapeLineChop = False
+                                While (.Lines.Count > lngShapeLineCount)
+                                    If (blnShapeLineChop = True) Then
+                                        .Text = VBA.Left(.Text, VBA.Len(.Text) - 4)
+                                    End If
+                                    While (VBA.Right(.Text, 1) <> " ")
+                                        .Text = VBA.Left(.Text, VBA.Len(.Text) - 1)
+                                    Wend
                                     .Text = VBA.Left(.Text, VBA.Len(.Text) - 1)
+                                    .Text = .Text & " ..."
+                                    blnShapeLineChop = True
                                 Wend
-                                .Text = VBA.Left(.Text, VBA.Len(.Text) - 1)
-                                .Text = .Text & " ..."
-                                blnShapeLineChop = True
-                            Wend
-                        End With
-                        
-                        lngRowIndex = lngRowIndex + 1
-                        lngBlockTitleRemaining = lngBlockTitleRemaining - 1
-                        lngSlideTitleRemaining = lngSlideTitleRemaining - 1
+                            End With
+                            
+                            lngRowIndex = lngRowIndex + 1
+                            lngBlockTitleRemaining = lngBlockTitleRemaining - 1
+                            lngSlideTitleRemaining = lngSlideTitleRemaining - 1
+                        End If
+                        strSlideTitleLast = strSlideTitle
                     End If
-                    strSlideTitleLast = strSlideTitle
-                End If
+                Next
             Next
-        Next
+        End If
     End If
 End Sub
 

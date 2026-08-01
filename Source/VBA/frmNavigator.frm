@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 '===============================================================================
 ' Name:
 '   WorshipServiceAssistant.frmNavigator
@@ -81,6 +82,9 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0003:
+'     (1) Changed mNavigatorGeneralHelp_Action routine to use the
+'         modHelp.gTopicShow routine.
 '   1.04.0000:
 '     (1) Reorganized the code and improved the comments.
 '     (2) Changed updating routines (mNavigator*_Update) and input processing
@@ -1487,23 +1491,11 @@ Private Sub mNavigatorGeneralHelp_Action _
 ( _
     ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
 )
-    Dim strHelpFile As String
-    
     If (Me.cmdGeneralHelp.Enabled = False) Then
         Exit Sub
     End If
     
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-    End If
-    
-    Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSACommandBarNavigator)
+    modHelp.gTopicShow WSACommandBarNavigator
 End Sub
 
 '-------------------------------------------------------------------------------

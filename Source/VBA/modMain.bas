@@ -212,7 +212,7 @@ Private Function ValidApplication _
     ' Get operating system, application and application version.
     '
     strApplicationName = Application.Name
-    strApplicationVersion = Application.VERSION
+    strApplicationVersion = Application.Version
     
     '
     ' Check operating system, application and application version.
