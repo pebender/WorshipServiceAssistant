@@ -4,12 +4,12 @@ Attribute VB_Name = "Description"
 '===============================================================================
 ' Prefixes for constants, variables and routines:
 '   Scope:
-'     'g': Global
 '     'm': Module
 '     '' : Local
 '   Size:
 '     '' : Scalar
 '     'a': Array
+'     'c': Collection
 '   Type:
 '     ''   : Routine with no return value.
 '     'int': Integer.
@@ -43,22 +43,29 @@ Attribute VB_Name = "Description"
 '===============================================================================
 
 '===============================================================================
-' WSA Object Model
+' WorshipServiceAssistant Object Model
 '===============================================================================
-' WSA                                   WSAApplication
-'   Banner                              WSABanner
-'     Presentation                      WSAPresentation
-'       Windows                         WSAWindowCollection
-'         Window                        WSAWindow
-'       Slides                          WSASlideCollection
-'         Slide                         WSASlide
-'       SlideShowWindow                 WSASlideShowWindow
-'   Presentations                       WSAPresentationCollection
-'     Presentation                      WSAPresentation
-'       Windows                         WSAWindowCollection
-'         Window                        WSAWindow
-'       Slides                          WSASlideCollection
-'         Slide                         WSASlide
-'       SlideShowWindow                 WSASlideShowWindow
+' Application                        Application
+'   Help                             Help
+'   Options                          Options
+'   EventHandlers                    ApplicationEventHandlers
+'   Toolbar                          Toolbar
+'   Banner                           Banner
+'   ActivePresentation               Presentation
+'   ActiveWindow                     DocumentWindow
+'   ActiveSlide                      Slide
+'   ActiveSlideSelection             SlideRange
+'   Presentations                    Presentations
+'     Presentation                   Presentation
+'       ActiveWindow                 DocumentWindow
+'       ActiveSlide                  Slide
+'       ActiveSlideSelection         SlideRange
+'       Windows                      DocumentWindows
+'         Window                     DocumentWindow
+'           ActiveSlide              Slide
+'           ActiveSlideSelection     SlideRange
+'       Slides                       Slides
+'         Slide                      Slide
+'       SlideShowWindow              SlideShowWindow
 '===============================================================================
 
