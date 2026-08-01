@@ -81,13 +81,17 @@ Option Base 0
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Public Sub gRun _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+    ByRef dwCurrent As PowerPoint.DocumentWindow _
 )
-    Dim prePresentation As PowerPoint.Presentation
+    Dim preCurrent As PowerPoint.Presentation
     Dim preIndex As PowerPoint.Presentation
     Dim strCategory As String
     Dim lngCategoryIndex As Long
@@ -113,18 +117,16 @@ Public Sub gRun _
     Dim lngTemp As Long
     Dim astrCategoryList() As String
     
-    If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = True) Then
-        Set prePresentation = dwDocumentWindow.Presentation
+    If (modActive.gblnActiveWindowSlideExists(dwCurrent) = True) Then
+        Set preCurrent = dwCurrent.Presentation
         
-        '
         ' Find all the slide categories that are in the category list,
         ' preserving the order of the category list.
-        '
         ReDim astrCategoryList(0)
         For lngCategoryIndex = LBound(modProject.gastrCategories) To UBound(modProject.gastrCategories) Step 1
             strCategory = modProject.gastrCategories(lngCategoryIndex)
-            For lngIndex = 1 To prePresentation.Slides.Count Step 1
-                If (prePresentation.Slides(lngIndex).Tags("Category") = strCategory) Then
+            For lngIndex = 1 To preCurrent.Slides.Count Step 1
+                If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
                     astrCategoryList(UBound(astrCategoryList)) = strCategory
                     ReDim Preserve astrCategoryList(UBound(astrCategoryList) + 1)
                     Exit For
@@ -132,12 +134,10 @@ Public Sub gRun _
             Next
         Next
         
-        '
         ' Find all the slide categories that are not in the category list,
         ' preserving the order of occurance in the slides.
-        '
-        For lngIndex = 1 To prePresentation.Slides.Count Step 1
-            strCategory = prePresentation.Slides(lngIndex).Tags("Category")
+        For lngIndex = 1 To preCurrent.Slides.Count Step 1
+            strCategory = preCurrent.Slides(lngIndex).Tags("Category")
             For lngCategoryIndex = LBound(astrCategoryList) To UBound(astrCategoryList) - 1 Step 1
                 If (strCategory = astrCategoryList(lngCategoryIndex)) Then
                     Exit For
@@ -165,7 +165,7 @@ Public Sub gRun _
         End If
         lngRowMax = VBA.Int(lngRowMax / lngRowHeight)
         
-        strIndexTitle = prePresentation.Name
+        strIndexTitle = preCurrent.Name
         If (VBA.LCase(VBA.Right(strIndexTitle, 4)) = ".ppt") Then
             strIndexTitle = VBA.Left(strIndexTitle, VBA.Len(strIndexTitle) - 4)
         End If
@@ -188,20 +188,20 @@ Public Sub gRun _
                 lngShapeBottomLast = 0
             End If
             strSlideTitleLast = ""
-            For lngIndex = 1 To prePresentation.Slides.Count Step 1
-                If (prePresentation.Slides(lngIndex).Tags("Category") = strCategory) Then
+            For lngIndex = 1 To preCurrent.Slides.Count Step 1
+                If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
                     '
                     ' Get the slide's title
                     '
-                    If (prePresentation.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
-                        strSlideTitle = mstrIndexTitleClean(prePresentation.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
+                    If (preCurrent.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
+                        strSlideTitle = mstrIndexTitleClean(preCurrent.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
                     Else
                         strSlideTitle = ""
                     End If
                     
                     If ((strSlideTitle <> "") And (strSlideTitle <> strSlideTitleLast)) Then
                         If (lngSlideTitleRemaining <= 0) Then
-                            lngSlideTitleRemaining = mlngIndexGroupDetermine(prePresentation, lngIndex)
+                            lngSlideTitleRemaining = mlngIndexGroupDetermine(preCurrent, lngIndex)
                             blnColorState = Not blnColorState
                             lngBlockTitleRemaining = 0
                             If (lngRowIndex + lngSlideTitleRemaining > lngRowMax) Then
@@ -264,7 +264,7 @@ Public Sub gRun _
                             strShapeText = shpShape.TextFrame.TextRange.Text & VBA.vbCrLf
                             lngShapeLineCount = shpShape.TextFrame.TextRange.Lines.Count + 1
                         End If
-                        strShapeText = strShapeText & Str(lngIndex) & "." & VBA.Chr(9) & strSlideTitle
+                        strShapeText = strShapeText & str(lngIndex) & "." & VBA.Chr(9) & strSlideTitle
                         shpShape.TextFrame.TextRange.Text = strShapeText
                         With shpShape.TextFrame.TextRange
                             blnShapeLineChop = False
@@ -298,39 +298,43 @@ End Sub
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mppIndexAdd _
 ( _
 ) As PowerPoint.Presentation
-    Dim prePresentation As PowerPoint.Presentation
+    Dim preIndex As PowerPoint.Presentation
     Dim lngShapeIndex As Long
     Dim lngLevelIndex As Long
     Dim lngRulerIndex As Long
     Dim lngTabStopIndex As Long
     
-    Set prePresentation = Application.Presentations.Add
+    Set preIndex = Application.Presentations.Add
     
-    With prePresentation.PageSetup
+    With preIndex.PageSetup
         .SlideOrientation = Office.msoOrientationVertical
         .SlideSize = PowerPoint.ppSlideSizeLetterPaper
         .SlideWidth = 72 * 7.5
         .SlideHeight = 72 * 10
     End With
     
-    For lngShapeIndex = prePresentation.SlideMaster.Shapes.Count To 1 Step -1
-        prePresentation.SlideMaster.Shapes(lngShapeIndex).Delete
+    For lngShapeIndex = preIndex.SlideMaster.Shapes.Count To 1 Step -1
+        preIndex.SlideMaster.Shapes(lngShapeIndex).Delete
     Next
     
-    prePresentation.SlideMaster.Shapes.AddTitle
-    With prePresentation.SlideMaster.Shapes.Title
+    preIndex.SlideMaster.Shapes.AddTitle
+    With preIndex.SlideMaster.Shapes.Title
         .Left = 0
         .Top = 0
-        .Width = prePresentation.PageSetup.SlideWidth
+        .Width = preIndex.PageSetup.SlideWidth
         .Height = 72 * 0.5
     End With
     
-    With prePresentation.SlideMaster.TextStyles(ppTitleStyle)
+    With preIndex.SlideMaster.TextStyles(ppTitleStyle)
         .TextFrame.AutoSize = PowerPoint.ppAutoSizeNone
         .TextFrame.MarginLeft = 72 * 0.1
         .TextFrame.MarginTop = 0
@@ -374,7 +378,7 @@ Private Function mppIndexAdd _
         Next
     End With
     
-    With prePresentation.SlideMaster.TextStyles(PowerPoint.ppBodyStyle)
+    With preIndex.SlideMaster.TextStyles(PowerPoint.ppBodyStyle)
         For lngLevelIndex = 1 To .Levels.Count Step 1
             .Levels(lngLevelIndex).Font.AutoRotateNumbers = Office.msoFalse
             .Levels(lngLevelIndex).Font.BaselineOffset = 0
@@ -403,7 +407,7 @@ Private Function mppIndexAdd _
         Next
     End With
     
-    With prePresentation.SlideMaster.TextStyles(PowerPoint.ppDefaultStyle)
+    With preIndex.SlideMaster.TextStyles(PowerPoint.ppDefaultStyle)
         .TextFrame.AutoSize = PowerPoint.ppAutoSizeNone
         .TextFrame.MarginLeft = 72 * 0.1
         .TextFrame.MarginTop = 0
@@ -440,21 +444,25 @@ Private Function mppIndexAdd _
         Next
     End With
     
-    Set mppIndexAdd = prePresentation
+    Set mppIndexAdd = preIndex
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mppIndexSlideAdd _
 ( _
-    ByRef prePresentation As PowerPoint.Presentation _
+    ByRef preCurrent As PowerPoint.Presentation _
 ) As PowerPoint.Slide
     Dim sldIndex As PowerPoint.Slide
     Dim lngIndex As Long
     Dim shpTitle As PowerPoint.Shape
     
-    Set sldIndex = prePresentation.Slides.Add(prePresentation.Slides.Count + 1, PowerPoint.ppLayoutText)
+    Set sldIndex = preCurrent.Slides.Add(preCurrent.Slides.Count + 1, PowerPoint.ppLayoutText)
     
     Set shpTitle = sldIndex.Shapes.Title
     
@@ -469,7 +477,11 @@ Private Function mppIndexSlideAdd _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mppIndexTitleAdd _
 ( _
@@ -477,9 +489,9 @@ Private Function mppIndexTitleAdd _
     ByRef strTitle As String _
 ) As PowerPoint.Shape
     Dim shpTitle As PowerPoint.Shape
-    Dim prePresentation As PowerPoint.Presentation
+    Dim preCurrent As PowerPoint.Presentation
     
-    Set prePresentation = sldSlide.Parent
+    Set preCurrent = sldSlide.Parent
     
     Set shpTitle = sldSlide.Shapes.Title
     
@@ -494,7 +506,11 @@ Private Function mppIndexTitleAdd _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mppIndexCategoryAdd _
 ( _
@@ -505,7 +521,6 @@ Private Function mppIndexCategoryAdd _
     ByRef strCategory As String _
 ) As PowerPoint.Shape
     Dim ppCategoryShape As PowerPoint.Shape
-    Dim prePresentation As PowerPoint.Presentation
     
     Set ppCategoryShape = mppIndexShapeAdd(sldSlide, lngColStart, lngRowStart, lngRowCount)
         
@@ -519,7 +534,11 @@ Private Function mppIndexCategoryAdd _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mppIndexShapeAdd _
 ( _
@@ -579,7 +598,11 @@ Private Function mppIndexShapeAdd _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mstrIndexTitleClean _
 ( _
@@ -654,11 +677,15 @@ Private Function mstrIndexTitleClean _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mlngIndexGroupDetermine _
 ( _
-    ByRef prePresentation As PowerPoint.Presentation, _
+    ByRef preCurrent As PowerPoint.Presentation, _
     ByRef lngStart As Long _
 ) As Long
     Dim strCategory As String
@@ -669,8 +696,8 @@ Private Function mlngIndexGroupDetermine _
     Dim lngIndex As Long
     Dim lngCount As Long
 
-    If (prePresentation.Slides(lngStart).Shapes.HasTitle = Office.msoTrue) Then
-        strTitle = mstrIndexTitleClean(prePresentation.Slides(lngStart).Shapes.Title.TextFrame.TextRange.Text)
+    If (preCurrent.Slides(lngStart).Shapes.HasTitle = Office.msoTrue) Then
+        strTitle = mstrIndexTitleClean(preCurrent.Slides(lngStart).Shapes.Title.TextFrame.TextRange.Text)
     Else
         strTitle = ""
     End If
@@ -678,12 +705,12 @@ Private Function mlngIndexGroupDetermine _
         strTitleLast = strTitle
         intGroup = VBA.Asc(VBA.LCase(VBA.Left(strTitle, 1))) - VBA.Asc("a") + 1
         intGroupLast = intGroup
-        strCategory = prePresentation.Slides(lngStart).Tags("Category")
+        strCategory = preCurrent.Slides(lngStart).Tags("Category")
         lngCount = 1
-        For lngIndex = lngStart To prePresentation.Slides.Count Step 1
-            If (prePresentation.Slides(lngIndex).Tags("Category") = strCategory) Then
-                If (prePresentation.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
-                    strTitle = mstrIndexTitleClean(prePresentation.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
+        For lngIndex = lngStart To preCurrent.Slides.Count Step 1
+            If (preCurrent.Slides(lngIndex).Tags("Category") = strCategory) Then
+                If (preCurrent.Slides(lngIndex).Shapes.HasTitle = Office.msoTrue) Then
+                    strTitle = mstrIndexTitleClean(preCurrent.Slides(lngIndex).Shapes.Title.TextFrame.TextRange.Text)
                 Else
                     strTitle = ""
                 End If

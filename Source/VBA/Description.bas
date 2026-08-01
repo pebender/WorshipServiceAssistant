@@ -1,4 +1,6 @@
-Attribute VB_Name = "Conventions"
+Attribute VB_Name = "Description"
+'===============================================================================
+' Naming Conventations
 '===============================================================================
 ' Prefixes for constants, variables and routines:
 '   Scope:
@@ -38,5 +40,19 @@ Attribute VB_Name = "Conventions"
 ' The project does not require that names of globals be globally unique.
 ' Therefore, when a global is referenced, the referece includes both the
 ' name of the global and the name of parent of the global.
+'===============================================================================
+
+'===============================================================================
+' WSA Object Model
+'===============================================================================
+' WSA                                   WSAApplication
+'   Banner                              WSABanner
+'   Presentations                       WSAPresentationCollection
+'     Presentation                      WSAPresentation
+'       Windows                         WSAWindowCollection
+'         Window                        WSAWindow
+'       Slides                          WSASlideCollection
+'         Slide                         WSASlide
+'     SlideShowWindow                   WSASlideShowWindow
 '===============================================================================
 

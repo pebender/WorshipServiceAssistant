@@ -13,6 +13,44 @@
 
 <h1>History</h1>
 
+<h2>Version 1.04.0000 Changes:</h2>
+<p>
+  Release date: August 17, 2002.
+</p>
+<ol>
+  <li>
+    Changed the slide body matching performed by the Navigator Slide Selection frame
+    so that the matching starts at word boundaries.
+  </li>
+  <li>
+    Changed the slide body matching performed by the Navigator Slide Selection frame
+    so that the matching is the same "forgiving" matching used for slide title matching.
+  </li>
+  <li>
+    Sped up the matching when the Navigator Slide Selection Mode
+    is set to filter on the body.
+  </li>
+  <li>
+    Hid the banner presentation document window.
+  </li>
+  <li>
+    Fixed a bug that would cause PowerPoint to crash when a
+    Worship Service Assistant toolbar menu was clicked and
+    Worship Service Assistant had crashed.
+  </li>
+  <li>
+    Restructured the code for the Navigator.
+    In the past, the Navigator form,
+    with the help of some Navigator support modules,
+    implemented both the Navigator's front end and the Navigator's back end.
+    Now, the Navigator form implements only the Navigator's front end.
+    The Navigator's back end is implemented by several class modules.
+    The Navigator support modules no longer exist.    
+    This restructuring made it easier to add the faster filter matching
+    and makes the code easier to maintain.
+  </li>
+</ol>
+
 <h2>Version 1.03.0002 Changes:</h2>
 <p>
   Release date: July 29, 2002.

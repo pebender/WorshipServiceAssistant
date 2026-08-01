@@ -80,12 +80,16 @@ Option Base 0
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
-'   Launch the slide navigator.  In order to exit, the slide navigator must be
-'   unloaded.  If the slide navigator is only hidden, then this routine will
-'   automatically refresh it and re-show it.  This is a hack to work around
+' Purpose:
+'   Launch the slide navigator. In order to exit, the slide navigator must be
+'   unloaded. If the slide navigator is only hidden, then this routine will
+'   automatically refresh it and re-show it. This is a hack to work around
 '   some focus problems resulting from activating slide shows and activating
 '   new presentations.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Public Sub gRun _
 ( _
@@ -95,7 +99,7 @@ Public Sub gRun _
     '
     Do
         If (mblnLoaded = True) Then
-            frmNavigator.gRefresh
+            frmNavigator.gUpdate
         End If
         frmNavigator.Show
     Loop Until (mblnLoaded = False)
@@ -107,8 +111,12 @@ End Sub
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
 '   Determine if the slide navigator is loaded.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function mblnLoaded _
 ( _

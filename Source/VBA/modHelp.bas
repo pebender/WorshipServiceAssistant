@@ -119,10 +119,6 @@ Public Const GstrIDH_TopicPath_WSAHistory             As String = "HTML/WSA/Hist
 ' Public Subroutines and Functions.
 '===============================================================================
 
-'-------------------------------------------------------------------------------
-' Description:
-'   HTML Help control API function declarations.
-'-------------------------------------------------------------------------------
 Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
     ( _
         ByVal hwndCaller As Long, _
@@ -132,9 +128,13 @@ Declare Function HtmlHelp Lib "HHCtrl.ocx" Alias "HtmlHelpA" _
     ) As Long
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Function gstrFileNameGet _
+Public Function gstrFileNameGet _
 ( _
     ByRef blnNotFoundMessageShow As Boolean _
 ) As String

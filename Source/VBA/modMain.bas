@@ -86,22 +86,22 @@ Option Base 0
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
 '   Automatically loads the project.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Public Sub Auto_Open _
 ( _
 )
-    '
     ' Validate operating system.
-    '
     If (ValidOperatingSystem = False) Then
         Exit Sub
     End If
     
-    '
     ' Validate application.
-    '
     If (ValidApplication = False) Then
         Exit Sub
     End If
@@ -110,8 +110,12 @@ Public Sub Auto_Open _
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
 '   Automatically unloads the project.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Public Sub Auto_Close _
 ( _
@@ -125,10 +129,14 @@ End Sub
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
 '   This function makes checks to make sure that the add-in is being run on a
 '   valid operating system.  If the add-in has not been tested on the operating
 '   system, then the user is prompted.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function ValidOperatingSystem _
 ( _
@@ -176,10 +184,14 @@ Private Function ValidOperatingSystem _
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
 '   This function checks to make sure that the add-in is being run on a
 '   valid application.  If the add-in has not been tested on the application,
 '   then the user is prompted.
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
 Private Function ValidApplication _
 ( _

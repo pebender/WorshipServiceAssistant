@@ -1,7 +1,15 @@
-Attribute VB_Name = "modPresentation"
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "WSAPresentationCollection"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.modPresentation
+'   WorshipServiceAssistant.WSAPresentationCollection
 '
 ' Description:
 '
@@ -9,7 +17,7 @@ Attribute VB_Name = "modPresentation"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -39,10 +47,7 @@ Attribute VB_Name = "modPresentation"
 '   of the copyright holder.
 '
 ' Change History:
-'   1.03.0002:
-'     (1) Made changes to the source code so that it follows Microsoft's
-'         Visual Basic coding conventions.
-'   1.00.0000:
+'   1.04.0000:
 '     Initial revision.
 '===============================================================================
 
@@ -50,7 +55,6 @@ Attribute VB_Name = "modPresentation"
 '===============================================================================
 ' Options.
 '===============================================================================
-Option Private Module
 Option Explicit
 Option Compare Text
 Option Base 0
@@ -74,73 +78,138 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
+Private mudtCollection As New WorshipServiceAssistant.WSACollection
 
 
 '===============================================================================
-' Public Subroutines and Functions.
+' Public Properties and Methods.
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Public Function gblnExists _
+Public Property Get Count _
 ( _
-) As Boolean
-    Dim prePresentation As PowerPoint.Presentation
-    
-    gblnExists = False
-    For Each prePresentation In Application.Presentations
-        If (modBanner.gblnIsBanner(prePresentation) = False) Then
-            If (prePresentation.Windows.Count > 0) Then
-                If (prePresentation.Slides.Count > 0) Then
-                    gblnExists = True
-                End If
-            End If
-        End If
-    Next
+) As Long
+    Count = mudtCollection.Count
+End Property
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function Item _
+( _
+    ByRef lngIndex As Long _
+) As WorshipServiceAssistant.WSAPresentation
+    Set Item = mudtCollection.Item(lngIndex)
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Public Function gblnIsPresentation _
+Public Function Index _
 ( _
-    ByRef prePresentation As PowerPoint.Presentation _
-) As Boolean
-    gblnIsPresentation = False
-    If (modBanner.gblnIsBanner(prePresentation) = False) Then
-        If (prePresentation.Windows.Count > 0) Then
-            If (prePresentation.Slides.Count > 0) Then
-                gblnIsPresentation = True
-            End If
-        End If
-    End If
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+) As Long
+    Index = mudtCollection.Index(udtPresentation)
 End Function
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Public Function gblnSlideShowExists _
+Public Sub Add _
 ( _
-    ByVal prePresentation As PowerPoint.Presentation _
-) As Boolean
-    On Error GoTo gblnSlideShowExists_False
-    
-    gblnSlideShowExists = True
-    
-    If (VBA.IsNull(prePresentation.SlideShowWindow) = True) Then
-        GoTo gblnSlideShowExists_False
-    End If
-    If (VBA.IsEmpty(prePresentation.SlideShowWindow) = True) Then
-        GoTo gblnSlideShowExists_False
-    End If
-Exit Function
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    mudtCollection.Add udtPresentation
+End Sub
 
-gblnSlideShowExists_False:
-    gblnSlideShowExists = False
-End Function
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Remove _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    mudtCollection.Remove udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Initialize _
+( _
+)
+    mudtCollection.Initialize
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Terminate _
+( _
+)
+    mudtCollection.Terminate
+End Sub
 
 
 '===============================================================================
-' Private Subroutines and Functions.
+' Private Properties and Methods.
 '===============================================================================
+
+
+'===============================================================================
+' Private Event Handlers.
+'===============================================================================
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub Class_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub Class_Terminate _
+( _
+)
+End Sub

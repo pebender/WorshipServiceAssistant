@@ -2,14 +2,14 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "ApplicationEventHandler"
+Attribute VB_Name = "WSASlideCollection"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.ApplicationEventHandlers
+'   WorshipServiceAssistant.WSASlideCollection
 '
 ' Description:
 '
@@ -17,7 +17,7 @@ Attribute VB_Exposed = False
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001 Paul Bender
+'   Copyright (c) 2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -47,12 +47,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
-'   1.03.0002:
-'     (1) Made changes to the source code so that it follows Microsoft's
-'         Visual Basic coding conventions.
-'   1.00.0000:
+'   1.04.0000:
 '     Initial revision.
 '===============================================================================
+
 
 '===============================================================================
 ' Options.
@@ -71,12 +69,6 @@ Option Base 0
 ' Public Variables.
 '===============================================================================
 
-'
-' Application variable for setting application events.
-'
-Public WithEvents PPTApplication As Application
-Attribute PPTApplication.VB_VarHelpID = -1
-
 
 '===============================================================================
 ' Private Constants.
@@ -86,15 +78,175 @@ Attribute PPTApplication.VB_VarHelpID = -1
 '===============================================================================
 ' Private Variables.
 '===============================================================================
+Private mudtCollection As New WorshipServiceAssistant.WSACollection
 
 
 '===============================================================================
-' Public Subroutines and Functions.
+' Public Properties and Methods.
 '===============================================================================
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Property Get Count _
+( _
+)
+    Count = mudtCollection.Count
+End Property
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function Item _
+( _
+    ByRef lngIndex As Long _
+) As WorshipServiceAssistant.WSASlide
+    Set Item = mudtCollection.Item(lngIndex)
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function Index _
+( _
+    ByRef udtSlide As WorshipServiceAssistant.WSASlide _
+) As Long
+    Index = mudtCollection.Index(udtSlide)
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Add _
+( _
+    ByRef mudtSlide As WorshipServiceAssistant.WSASlide _
+)
+    mudtCollection.Add mudtSlide
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Remove _
+( _
+    ByRef udtSlide As WorshipServiceAssistant.WSASlide _
+)
+    mudtCollection.Remove udtSlide
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function TitleMatches _
+( _
+    ByRef lngIndexes() As Long, _
+    ByRef strMatch As String _
+) As Long
+    Dim lngIndex As Long
+    Dim lngCount As Long
+    Dim strTitleMatch As String
+    Dim lngTitleMatchLen As Long
+    
+    ReDim lngIndexes(0 To Me.Count - 1)
+    lngCount = 0
+    If (Me.Count >= 1) Then
+        strTitleMatch = Me.Item(1).StringForTitleMatch(strMatch)
+        lngTitleMatchLen = VBA.Len(strTitleMatch)
+        
+        For lngIndex = 1 To Me.Count Step 1
+            If (Me.Item(lngIndex).TitleMatches(strTitleMatch, lngTitleMatchLen) = True) Then
+                lngIndexes(lngCount) = lngIndex
+                lngCount = lngCount + 1
+            End If
+        Next
+    End If
+    TitleMatches = lngCount
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function TitleOrBodyMatches _
+( _
+    ByRef lngIndexes() As Long, _
+    ByRef strMatch As String _
+) As Long
+    Dim lngIndex As Long
+    Dim lngCount As Long
+    Dim strTitleOrBodyMatch As String
+    Dim lngTitleOrBodyMatchLen As Long
+    
+    ReDim lngIndexes(0 To Me.Count - 1)
+    lngCount = 0
+    If (Me.Count >= 1) Then
+        strTitleOrBodyMatch = Me.Item(1).StringForTitleMatch(strMatch)
+        lngTitleOrBodyMatchLen = VBA.Len(strTitleOrBodyMatch)
+        
+        For lngIndex = 1 To Me.Count Step 1
+            If (Me.Item(lngIndex).TitleOrBodyMatches(strTitleOrBodyMatch, lngTitleOrBodyMatchLen) = True) Then
+                lngIndexes(lngCount) = lngIndex
+                lngCount = lngCount + 1
+            End If
+        Next
+    End If
+    TitleOrBodyMatches = lngCount
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Terminate _
+( _
+)
+End Sub
 
 
 '===============================================================================
-' Private Subroutines and Functions.
+' Private Properties and Methods.
 '===============================================================================
 
 
@@ -103,150 +255,25 @@ Attribute PPTApplication.VB_VarHelpID = -1
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Private Sub PPApplication_NewPresentation _
+Private Sub Class_Initialize _
 ( _
-    ByVal prePresentation As PowerPoint.Presentation _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_PresentationClose _
-( _
-    ByVal prePresentation As PowerPoint.Presentation _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_PresentationNewSlide _
-( _
-    ByVal sldSlide As PowerPoint.Slide _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_PresentationOpen _
-( _
-    ByVal prePresentation As PowerPoint.Presentation _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_PresentationPrint _
-( _
-    ByVal prePresentation As PowerPoint.Presentation _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_PresentationSave _
-( _
-    ByVal prePresentation As PowerPoint.Presentation _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_SlideShowBegin _
-( _
-    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
 )
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
 '-------------------------------------------------------------------------------
-Private Sub PPTApplication_SlideShowEnd _
+Private Sub Class_Terminate _
 ( _
-    ByVal prePresentation As PowerPoint.Presentation _
 )
 End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_SlideShowNextBuild _
-( _
-    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_SlideShowNextSlide _
-( _
-    ByVal sswSlideShowWindow As PowerPoint.SlideShowWindow _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_WindowActivate _
-( _
-    ByVal prePresentation As PowerPoint.Presentation, _
-    ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    modToolbar.gRefresh
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_WindowBeforeDoubleClick _
-( _
-    ByVal selSelection As PowerPoint.Selection, _
-    blnCancel As Boolean _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_WindowBeforeRightClick _
-( _
-    ByVal selSelection As PowerPoint.Selection, _
-    blnCancel As Boolean _
-)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_WindowDeactivate _
-( _
-    ByVal prePresentation As PowerPoint.Presentation, _
-    ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    modToolbar.gDisable
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub PPTApplication_WindowSelectionChange _
-( _
-    ByVal selSelection As PowerPoint.Selection _
-)
-    modToolbar.gRefresh
-End Sub
-

@@ -17,15 +17,19 @@ Attribute VB_Exposed = False
 ' Name:
 '   WorshipServiceAssistant.frmNavigator
 '
+' Warning:
+'   To use the form, call the modNavigator.gRun routine.
+'   Calls to the form's Load or Show methods will result in incorrect behavior.
+'
 ' Description:
 '   The form implements the Navigator.
+'
+'   The form is modal, allowing the form to take more control.
 '
 '   The form contains an empty frame (fraEmpty) to which the focus is locked.
 '   The empty frame is not visible to the user because its height and width
 '   are both 0.  The form handles all if the keyboard input processing using
-'   its KeyPress and KeyDown event handlers.  The KeyPress event handler
-'   processes the alphanumeric input for the slide filters.  The KeyDown event
-'   handler processes the shortcut inputs.
+'   its KeyPress and KeyDown event handlers.
 '
 '   Since the form is modal, the user cannot change any of the presentations
 '   while the form is running.  As a result, the form can perform all of the
@@ -37,6 +41,11 @@ Attribute VB_Exposed = False
 '   view, setting up the slide show view and cleaning up the slide titles.
 '   Information associated with a presentation or a slide is stored in the
 '   Tags property of the presentation or slide.
+'
+'   However, there are PowerPoint actions (in particular, actions which
+'   activate document windows or slide show windows) that do not behave
+'   when there is a visible modal form. Therefore, this form will often
+'   hide itself. It relies on the modNavigator.gRun routine to show
 '
 ' Author:
 '   Paul Bender <pbender@alumni.ucsd.edu>
@@ -72,6 +81,22 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0000:
+'     (1) Reorganized the code and improved the comments.
+'     (2) Changed updating routines (mNavigator*_Update) and input processing
+'         routines (mNavigator*_Action, mNavigator*_KeyPress and
+'         mNavigator*_KeyDown) to make better use of the Enabled property of
+'         the controls.
+'     (3) Added information to the Tag property of the
+'         lblPresentationSelectionName and lstPresentationSlideSelectionList
+'         controls so that they can now know whether or not they need
+'         to be updated.
+'     (4) Moved the PowerPoint and Application routines to the class module
+'         WSAApplication.
+'     (5) Moved the Presentation routines to the class module
+'         WSAPresentation.
+'     (6) Moved the TitleMatch and BodyMatch routines to the class module
+'         WSASlide.
 '   1.03.0002:
 '     (1) Changed the source code so that it follows Microsoft's
 '         Visual Basic coding conventions.
@@ -114,7 +139,8 @@ Attribute VB_Exposed = False
 '   1.01.0004:
 '     (1) Fixed Slide Show Show/Hide button that caused the button not
 '         to update.
-'     (2) Fixed banner checking bug in mSlideShowLoad.
+'     (2) Fixed banner checking bug in
+'         mNavigatorPresentationSlideShowLoad_Action.
 '   1.01.0003:
 '     (1) Fixed errors in control tip text.
 '     (2) Fixed errors in form re-sizing in UpdateFormSize.
@@ -122,8 +148,8 @@ Attribute VB_Exposed = False
 '         so that the slide miniture window will not be displayed and
 '         so that the slides will zoom to fit.
 '     (4) Changed form so that it does not resize based on page.
-'     (5) Changed mSlideShowLoad so that transitions between presentations
-'         would be more seamless.
+'     (5) Changed mNavigatorPresentationSlideShowLoad_Action so that
+'         transitions between presentations would be more seamless.
 '   1.01.0002:
 '     (1) Added banner color support.
 '     (2) Replaced NavigatorForm with Me.
@@ -180,35 +206,33 @@ Option Base 0
 Private mblnNavigatorFormLoaded As Boolean
 
 '
-' Indicates whether or not the Navigator form's focus is locked to the empty
-' frame.  Normally the focus is locked to the empty frame.  However, sometimes
+' Indicates whether or not the Navigator form's focus is locked to the frmEmpty
+' frame.  Normally the focus is locked to the frmEmpty frame. However, sometimes
 ' it is necessary to change the focus in order to force the Navigator form
 ' to be the active window.  During this time, the focus must be unlocked.
 '
-Private mblnNavigatorFormLocked As Boolean
+Private mblnNavigatorFocusLocked As Boolean
 
-Private msswActive As PowerPoint.SlideShowWindow
+Private WSA As WorshipServiceAssistant.WSAApplication
+
 
 '===============================================================================
 ' Public Subroutines and Functions.
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Updates the form, so that the it reflects the active PowerPoint document
+'   window.
 '-------------------------------------------------------------------------------
-Public Sub gRefresh _
+Public Sub gUpdate _
 ( _
 )
-    Dim dwActive As PowerPoint.DocumentWindow
-    
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
     
-    Set dwActive = Application.ActiveWindow
-    mPresentationNameUpdate dwActive
-    mSlideListUpdate dwActive
-    mControlsUpdate dwActive
+    mNavigator_Update WSA.ActivePresentation
 End Sub
 
 
@@ -216,1066 +240,127 @@ End Sub
 ' Private Subroutines and Functions.
 '===============================================================================
 
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mControlsUpdate _
-( _
-    ByRef dwDocumentWindow As DocumentWindow _
-)
-    '
-    ' Mave general frame visible and enabled by default.
-    '
-    Me.fraGeneral.Visible = True
-    Me.cmdGeneralPageNext.Visible = True
-    Me.cmdGeneralHelp.Visible = True
-    Me.cmdGeneralExit.Visible = True
-    Me.tabPages.Visible = True
-    Me.tabPages("tabPresentation").Visible = True
-    Me.tabPages("tabBanner").Visible = True
-    Me.fraGeneral.Enabled = True
-    Me.cmdGeneralPageNext.Enabled = True
-    Me.cmdGeneralHelp.Enabled = True
-    Me.cmdGeneralExit.Enabled = True
-    Me.tabPages.Enabled = True
-    Me.tabPages("tabPresentation").Enabled = True
-    Me.tabPages("tabBanner").Enabled = True
-    '
-    ' Disable control associated with active control.
-    '
-    If (Me.tabPages(Me.tabPages.Value).Name = "tabPresentation") Then
-        mPresentationControlsUpdate dwDocumentWindow
-        Me.Caption = "Navigator - Presentation"
-    ElseIf (Me.tabPages(Me.tabPages.Value).Name = "tabBanner") Then
-        mBannerControlsUpdate dwDocumentWindow
-        Me.Caption = "Navigator - Banner"
-    End If
-    
-    '
-    ' Set focus and try to make sure that the Navigator is the
-    ' active window. Changing the focus seems to accomplish it.
-    '
-    mblnNavigatorFormLocked = False
-    Me.fraGeneral.SetFocus
-    Me.fraEmpty.SetFocus
-    mblnNavigatorFormLocked = True
-    
-    '
-    ' Set pointer.
-    '
-    Me.MousePointer = fmMousePointerArrow
-    Me.Repaint
-End Sub
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' mNavigator*_Initialize subroutines.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Initializes the form.
 '-------------------------------------------------------------------------------
-Private Sub mPresentationControlsUpdate _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    '
-    ' Make everything visible by default.
-    '
-    Me.fraSlideShow.Visible = True
-    Me.cmdSlideShowLoad.Visible = True
-    Me.cmdSlideShowHide.Visible = True
-    Me.cmdSlideShowRun.Visible = True
-    Me.cmdSlideShowPause.Visible = True
-    Me.cmdSlideShowEffectPrev.Visible = True
-    Me.cmdSlideShowEffectNext.Visible = True
-    Me.fraPresentationSelection.Visible = True
-    Me.lblPresentationSelectionName.Visible = True
-    Me.cmdPresentationSelectionPrev.Visible = True
-    Me.cmdPresentationSelectionNext.Visible = True
-    Me.fraSlideSelection.Visible = True
-    Me.cmdSlideSelectionMode.Visible = True
-    Me.lblSlideSelectionMode.Visible = True
-    Me.lblSlideSelectionNumber.Visible = True
-    Me.lblSlideSelectionText.Visible = True
-    Me.cmdSlideSelectionClear.Visible = True
-    Me.lstSlideSelectionList.Visible = True
-    
-    '
-    ' Make everything enabled by default.
-    '
-    Me.fraSlideShow.Enabled = True
-    Me.cmdSlideShowLoad.Enabled = True
-    Me.cmdSlideShowHide.Enabled = True
-    Me.cmdSlideShowRun.Enabled = True
-    Me.cmdSlideShowPause.Enabled = True
-    Me.cmdSlideShowEffectPrev.Enabled = True
-    Me.cmdSlideShowEffectNext.Enabled = True
-    Me.fraPresentationSelection.Enabled = True
-    Me.lblPresentationSelectionName.Enabled = True
-    Me.cmdPresentationSelectionPrev.Enabled = True
-    Me.cmdPresentationSelectionNext.Enabled = True
-    Me.fraSlideSelection.Enabled = True
-    Me.cmdSlideSelectionMode.Enabled = True
-    Me.lblSlideSelectionMode.Enabled = True
-    Me.lblSlideSelectionNumber.Enabled = True
-    Me.lblSlideSelectionText.Enabled = True
-    Me.cmdSlideSelectionClear.Enabled = True
-    Me.lstSlideSelectionList.Enabled = True
-    
-    '
-    ' Set default button.
-    '
-    Me.cmdSlideShowLoad.Default = True
-    
-    '
-    ' Set default button captions.
-    '
-    Me.cmdSlideShowHide.Caption = "Hide"
-    
-    '
-    ' Since there are no slides,
-    ' disable slide controls.
-    '
-    If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = False) Then
-        Me.cmdSlideShowLoad.Enabled = False
-        Me.cmdSlideShowHide.Enabled = False
-        Me.cmdSlideShowRun.Enabled = False
-        Me.cmdSlideShowPause.Enabled = False
-        Me.cmdSlideShowEffectPrev.Enabled = False
-        Me.cmdSlideShowEffectNext.Enabled = False
-    End If
-    '
-    ' Since there are no slides in the slide list,
-    ' disable slide show controls.
-    '
-    If (Me.lstSlideSelectionList.ListCount = 0) Then
-        Me.cmdSlideShowLoad.Enabled = False
-        Me.cmdSlideShowHide.Enabled = False
-        Me.cmdSlideShowRun.Enabled = False
-        Me.cmdSlideShowPause.Enabled = False
-        Me.cmdSlideShowEffectPrev.Enabled = False
-        Me.cmdSlideShowEffectNext.Enabled = False
-    End If
-    '
-    ' Since there are no slides in the slide list,
-    ' disable slide load control.
-    '
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Me.cmdSlideShowHide.Enabled = False
-        Me.cmdSlideShowRun.Enabled = False
-        Me.cmdSlideShowPause.Enabled = False
-        Me.cmdSlideShowEffectPrev.Enabled = False
-        Me.cmdSlideShowEffectNext.Enabled = False
-    End If
-    '
-    ' Since the slide show is hidden,
-    ' relable the hide control as Show.
-    '
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = True) Then
-        If (dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowBlackScreen) Then
-            Me.cmdSlideShowHide.Caption = "Show"
-        End If
-    End If
-    '
-    ' Since the slide show is running,
-    ' disable the run control.
-    '
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = True) Then
-        If (dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowRunning) Then
-            Me.cmdSlideShowRun.Enabled = False
-        End If
-    End If
-    '
-    ' Since the slide show is paused,
-    ' disable the pause control.
-    '
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = True) Then
-        If (dwDocumentWindow.Presentation.SlideShowWindow.View.State = PowerPoint.ppSlideShowPaused) Then
-            Me.cmdSlideShowPause.Enabled = False
-        End If
-    End If
-    '
-    ' Update Slide Selection Mode dependent controls.
-    '
-    Select Case Me.cmdSlideSelectionMode.Tag
-        Case "0"
-            Me.lblSlideSelectionMode.Caption = "Filter matching Number and Title"
-            Me.fraSlideSelection.BorderColor = VBA.vbInactiveBorder
-        Case "1"
-            Me.lblSlideSelectionMode.Caption = "Filter matching Number and Title and Body"
-            Me.fraSlideSelection.BorderColor = VBA.vbRed
-        Case Else
-            Me.lblSlideSelectionMode.Caption = ""
-            Me.fraSlideSelection.BorderColor = VBA.vbInactiveBorder
-    End Select
-    '
-    ' Since the slide filter is clear,
-    ' disable the slide filter clear control.
-    '
-    If ((Me.lblSlideSelectionNumber.Caption = "") And _
-        (Me.lblSlideSelectionText.Caption = "")) Then
-        Me.cmdSlideSelectionClear.Enabled = False
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerControlsUpdate _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    '
-    ' Make everything visible by default.
-    '
-    Me.fraBannerConfiguration.Visible = True
-    Me.cmdBannerConfigurationBannerDisable.Visible = True
-    Me.fraBannerShow.Visible = True
-    Me.cmdBannerShowLoad.Visible = True
-    Me.cmdBannerShowHide.Visible = True
-    Me.fraBannerColor.Visible = True
-    Me.lblBannerColorName.Visible = True
-    Me.cmdBannerColorPrev.Visible = True
-    Me.cmdBannerColorNext.Visible = True
-    Me.fraBannerSelection.Visible = True
-    Me.lblBannerSelectionText.Visible = True
-    Me.cmdBannerSelectionClear.Visible = True
-    
-    '
-    ' Make everything enabled by default.
-    '
-    Me.fraBannerConfiguration.Enabled = True
-    Me.cmdBannerConfigurationBannerDisable.Enabled = True
-    Me.fraBannerShow.Enabled = True
-    Me.cmdBannerShowLoad.Enabled = True
-    Me.cmdBannerShowHide.Enabled = True
-    Me.fraBannerColor.Enabled = True
-    Me.lblBannerColorName.Enabled = True
-    Me.cmdBannerColorPrev.Enabled = True
-    Me.cmdBannerColorNext.Enabled = True
-    Me.fraBannerSelection.Enabled = True
-    Me.lblBannerSelectionText.Enabled = True
-    Me.cmdBannerSelectionClear.Enabled = True
-    
-    '
-    ' Set default button.
-    '
-    Me.cmdBannerShowLoad.Default = True
-    
-    '
-    ' Set button captions.
-    '
-    If (modBanner.gblnEnabled = True) Then
-        Me.cmdBannerConfigurationBannerDisable.Caption = "Banner Disable"
-    Else
-        Me.cmdBannerConfigurationBannerDisable.Caption = "Banner Enable"
-    End If
-    
-    '
-    ' Set Hide/Show button caption.
-    '
-    If (modBanner.gblnVisible = True) Then
-        Me.cmdBannerShowHide.Caption = "Hide"
-    Else
-        Me.cmdBannerShowHide.Caption = "Show"
-    End If
-    
-    '
-    ' Set banner color name colors.
-    '
-    If (modBanner.gblnEnabled = True) Then
-        With Me.lblBannerColorName
-            .BackColor = VBA.RGB(0, 0, 0)
-            .ForeColor = VBA.RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
-        End With
-    Else
-        With Me.lblBannerColorName
-            .BackColor = VBA.RGB(0, 0, 0)
-            .ForeColor = VBA.RGB(0, 0, 0)
-        End With
-    End If
-    
-    If (modBanner.gblnEnabled = False) Then
-        Me.cmdBannerShowLoad.Enabled = False
-        Me.cmdBannerShowHide.Enabled = False
-        Me.fraBannerShow.Enabled = False
-        Me.lblBannerColorName.Enabled = False
-        Me.cmdBannerColorPrev.Enabled = False
-        Me.cmdBannerColorNext.Enabled = False
-        Me.lblBannerSelectionText = ""
-        Me.lblBannerSelectionText.Enabled = False
-        Me.cmdBannerSelectionClear.Enabled = False
-        Me.fraBannerSelection.Enabled = False
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mGeneralPageNext _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim lngPage As Long
-    
-    lngPage = Me.tabPages.Value
-    lngPage = lngPage + 1
-    If (lngPage >= Me.tabPages.Count) Then
-        lngPage = 0
-    End If
-    mblnNavigatorFormLocked = False
-    Me.tabPages.Value = lngPage
-    mblnNavigatorFormLocked = True
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowLoad _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim sswSlideShowWindow As PowerPoint.SlideShowWindow
-    
-    If ((Me.lblSlideSelectionNumber.Caption <> "") Or _
-        (Me.lblSlideSelectionText.Caption <> "")) Then
-        Me.lblSlideSelectionNumber.Caption = ""
-        Me.lblSlideSelectionText.Caption = ""
-        mSlideListUpdate dwDocumentWindow
-    End If
-    
-    Me.Hide
-    
-    '
-    ' Create slide show if one does not exist.
-    '
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        modSlideShow.gBegin dwDocumentWindow
-        modBanner.gApply dwDocumentWindow.Presentation.SlideShowWindow
-    End If
-    
-    modSlideShow.gLoad dwDocumentWindow
-    
-    dwDocumentWindow.Presentation.SlideShowWindow.Activate
-        
-' Exit Sub
-    
-    If (Not (dwDocumentWindow.Presentation.SlideShowWindow Is msswActive)) Then
-        Set msswActive = dwDocumentWindow.Presentation.SlideShowWindow
-        '
-        ' Black other slide shows.
-        ' This will stop the slide shows from running.
-        '
-        For Each sswSlideShowWindow In Application.SlideShowWindows
-            If ((Not (sswSlideShowWindow Is dwDocumentWindow.Presentation.SlideShowWindow)) And _
-                (Not modBanner.gblnIsBanner(sswSlideShowWindow.Presentation))) Then
-                sswSlideShowWindow.View.State = PowerPoint.ppSlideShowBlackScreen
-            End If
-        Next
-    End If
-    
-    dwDocumentWindow.Activate
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowHide _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Exit Sub
-    End If
-    
-    modSlideShow.gHide dwDocumentWindow
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowRun _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Exit Sub
-    End If
-    
-    modSlideShow.gRun dwDocumentWindow
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowPause _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Exit Sub
-    End If
-    
-    modSlideShow.gPause dwDocumentWindow
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowEffectPrev _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Exit Sub
-    End If
-    
-    modSlideShow.gEffectPrev dwDocumentWindow
-    
-    cmdSlideSelectionClear_Click
-    
-    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = True) Then
-        Me.lstSlideSelectionList.ListIndex = modActive.gppActiveSlideGet(dwDocumentWindow).SlideIndex - 1
-    End If
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideShowEffectNext _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modActive.gblnActiveSlideShowExists(dwDocumentWindow.Presentation) = False) Then
-        Exit Sub
-    End If
-        
-    modSlideShow.gEffectNext dwDocumentWindow
-    
-    cmdSlideSelectionClear_Click
-    
-    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = True) Then
-        Me.lstSlideSelectionList.ListIndex = modActive.gppActiveSlideGet(dwDocumentWindow).SlideIndex - 1
-    End If
-    
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mPresentationSelectionPrev _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim lngIndexCurr As Long
-    Dim lngIndexPrev As Long
-    
-    If (Application.Presentations.Count <= 1) Then
-        Exit Sub
-    End If
-    
-    For lngIndexCurr = Application.Presentations.Count To 1 Step -1
-        If (Application.Presentations(lngIndexCurr) Is dwDocumentWindow.Presentation) Then
-            Exit For
-        End If
-    Next
-    
-    lngIndexPrev = lngIndexCurr
-    Do
-        lngIndexPrev = lngIndexPrev - 1
-        If (lngIndexPrev < 1) Then
-            lngIndexPrev = Application.Presentations.Count
-        End If
-    Loop While ((lngIndexPrev <> lngIndexCurr) And (modSlideShow.gblnIsSlideShow(Application.Presentations(lngIndexPrev)) = False))
-    
-    If (lngIndexPrev <> lngIndexCurr) Then
-        Application.Presentations(lngIndexPrev).Windows(1).Activate
-        Set dwDocumentWindow = Application.ActiveWindow
-        mPresentationNameUpdate dwDocumentWindow
-        mSlideListUpdate dwDocumentWindow
-        mControlsUpdate dwDocumentWindow
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mPresentationSelectionNext _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim lngIndexCurr As Long
-    Dim lngIndexNext As Long
-    
-    If (Application.Presentations.Count <= 1) Then
-        Exit Sub
-    End If
-    
-    For lngIndexCurr = 1 To Application.Presentations.Count Step 1
-        If (Application.Presentations(lngIndexCurr) Is dwDocumentWindow.Presentation) Then
-            Exit For
-        End If
-    Next
-    
-    lngIndexNext = lngIndexCurr
-    Do
-        lngIndexNext = lngIndexNext + 1
-        If (lngIndexNext > Application.Presentations.Count) Then
-            lngIndexNext = 1
-        End If
-    Loop While ((lngIndexNext <> lngIndexCurr) And (modSlideShow.gblnIsSlideShow(Application.Presentations(lngIndexNext)) = False))
-    
-    If (lngIndexNext <> lngIndexCurr) Then
-        Application.Presentations(lngIndexNext).Windows(1).Activate
-        Set dwDocumentWindow = Application.ActiveWindow
-        mPresentationNameUpdate dwDocumentWindow
-        mSlideListUpdate dwDocumentWindow
-        mControlsUpdate dwDocumentWindow
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideSelectionMode _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Select Case Me.cmdSlideSelectionMode.Tag
-        Case "0"                        ' Title
-            Me.cmdSlideSelectionMode.Tag = "1"
-        Case "1"                        ' Title and Body
-            Me.cmdSlideSelectionMode.Tag = "0"
-        Case Else
-            Me.cmdSlideSelectionMode.Tag = "0"
-    End Select
-    
-    mSlideListUpdate dwDocumentWindow
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideSelectionClear _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If ((Me.lblSlideSelectionNumber.Caption <> "") Or _
-        (Me.lblSlideSelectionText.Caption <> "")) Then
-        Me.lblSlideSelectionNumber.Caption = ""
-        Me.lblSlideSelectionText.Caption = ""
-        mSlideListUpdate dwDocumentWindow
-    End If
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideSelectionUpdate _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim lngIndex As Long
-    
-    '
-    ' Set slide selected in the presentation to match the
-    ' slide selected in the slide list control
-    '
-    With Me.lstSlideSelectionList
-        If (.ListIndex >= 0) Then
-            lngIndex = .List(.ListIndex, 0)
-            dwDocumentWindow.View.Slide = dwDocumentWindow.Presentation.Slides(lngIndex)
-        End If
-    End With
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideSelectionPrev _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    With Me.lstSlideSelectionList
-        If (.ListCount <= 1) Then
-            Exit Sub
-        End If
-        If (.ListIndex > 0) Then
-            .ListIndex = .ListIndex - 1
-        Else
-            .ListIndex = .ListCount - 1
-        End If
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideSelectionNext _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    With Me.lstSlideSelectionList
-        If (.ListCount <= 1) Then
-            Exit Sub
-        End If
-        If (.ListIndex < .ListCount - 1) Then
-            .ListIndex = .ListIndex + 1
-        Else
-            .ListIndex = 0
-        End If
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerConfigurationBannerDisable _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    modBanner.gblnEnabled = Not modBanner.gblnEnabled
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerShowLoad _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    Dim intRed As Integer
-    Dim intGreen As Integer
-    Dim intBlue As Integer
-    
-    If (modBanner.gblnEnabled = False) Then
-        Exit Sub
-    End If
-    
-    With Me.lblBannerColorName
-        If (.ListIndex >= 0) Then
-            intRed = .List(.ListIndex, 1)
-            intGreen = .List(.ListIndex, 2)
-            intBlue = .List(.ListIndex, 3)
-        Else
-            intRed = 0
-            intGreen = 0
-            intBlue = 0
-        End If
-    End With
-    modBanner.gLoad Me.lblBannerSelectionText.Caption, intRed, intGreen, intBlue
-    mBannerSelectionClear dwDocumentWindow
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerShowHide _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modBanner.gblnEnabled = False) Then
-        Exit Sub
-    End If
-    modBanner.gblnVisible = Not modBanner.gblnVisible
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerColorPrev _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    With Me.lblBannerColorName
-        If (.ListCount <= 1) Then
-            Exit Sub
-        End If
-        If (.ListIndex > 0) Then
-            .ListIndex = .ListIndex - 1
-        Else
-            .ListIndex = .ListCount - 1
-        End If
-    End With
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerColorNext _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    With Me.lblBannerColorName
-        If (.ListCount <= 1) Then
-            Exit Sub
-        End If
-        If (.ListIndex < .ListCount - 1) Then
-            .ListIndex = .ListIndex + 1
-        Else
-            .ListIndex = 0
-        End If
-    End With
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mBannerSelectionClear _
-( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
-)
-    If (modBanner.gblnEnabled = False) Then
-        Exit Sub
-    End If
-    Me.lblBannerSelectionText.Caption = ""
-    mControlsUpdate dwDocumentWindow
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Function mblnNavigatorValid _
-( _
-) As Boolean
-    mblnNavigatorValid = False
-    If (modActive.gblnActiveWindowExists = False) Then
-        Me.Hide
-        Exit Function
-    End If
-    mblnNavigatorValid = True
-End Function
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mSlideTitlesUpdate _
-( _
-    ByRef prePresentation As PowerPoint.Presentation _
-)
-    Dim sldSlide As PowerPoint.Slide
-    Dim strTitle As String
-    Dim blnSaved As Boolean
-    
-    blnSaved = prePresentation.Saved
-    For Each sldSlide In prePresentation.Slides
-        If (sldSlide.Shapes.HasTitle = Office.msoTrue) Then
-            strTitle = sldSlide.Shapes.Title.TextFrame.TextRange.Text
-        Else
-            strTitle = ""
-        End If
-        sldSlide.Tags.Add "WorshipServiceAssistant_TitleDisplay", mStringWhiteSpaceClean(strTitle)
-        sldSlide.Tags.Add "WorshipServiceAssistant_TitleMatch", mStringEverythingClean(strTitle)
-    Next
-    prePresentation.Saved = blnSaved
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Function mStringWhiteSpaceClean _
-( _
-    ByRef strDirty As String _
-) As String
-    Dim strClean As String
-    
-    strClean = strDirty
-    
-    '
-    ' Fix white space.
-    '
-    strClean = VBA.Replace(strClean, VBA.Chr(9), " ")        ' replace tab with space
-    strClean = VBA.Replace(strClean, VBA.Chr(11), " ")       ' replace line feed with space
-    strClean = VBA.Replace(strClean, VBA.Chr(13), " ")       ' replace return with space
-    '
-    ' Fix quotes.
-    '
-    strClean = VBA.Replace(strClean, "`", VBA.Chr(39))       ' replace back single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(145), VBA.Chr(39))  ' replace open single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(146), VBA.Chr(39))  ' replace close single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(147), VBA.Chr(34))  ' replace open double quote with double quote
-    strClean = VBA.Replace(strClean, VBA.Chr(148), VBA.Chr(34))  ' replace close double quote with double quote
-
-    While (VBA.InStr(strClean, "  ") > 0)
-        strClean = VBA.Replace(strClean, "  ", " ")
-    Wend
-    
-    mStringWhiteSpaceClean = strClean
-End Function
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Function mStringEverythingClean _
-( _
-    ByRef strDirty As String _
-) As String
-    Dim strClean As String
-    
-    strClean = VBA.LCase(strDirty)
-    
-    '
-    ' Fix white space.
-    '
-    strClean = VBA.Replace(strClean, VBA.Chr(9), " ")        ' replace tab with space
-    strClean = VBA.Replace(strClean, VBA.Chr(11), " ")       ' replace line feed with space
-    strClean = VBA.Replace(strClean, VBA.Chr(13), " ")       ' replace return with space
-    '
-    ' Fix quotes.
-    '
-    strClean = VBA.Replace(strClean, "`", VBA.Chr(39))       ' replace back single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(145), VBA.Chr(39))  ' replace open single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(146), VBA.Chr(39))  ' replace close single quote with single quote
-    strClean = VBA.Replace(strClean, VBA.Chr(147), VBA.Chr(34))  ' replace open double quote with double quote
-    strClean = VBA.Replace(strClean, VBA.Chr(148), VBA.Chr(34))  ' replace close double quote with double quote
-    
-    strClean = VBA.Replace(strClean, "'m", "m")          ' ignore ' in 'm
-    strClean = VBA.Replace(strClean, "'s", "s")          ' ignore ' in 's
-    strClean = VBA.Replace(strClean, "'t", "t")          ' ignore ' in 't
-    strClean = VBA.Replace(strClean, "'ve", "ve")        ' ignore ' in 've
-    
-    '
-    ' Remove basic punctuation.
-    '
-    strClean = VBA.Replace(strClean, "-", " ")
-    strClean = VBA.Replace(strClean, ",", " ")
-    strClean = VBA.Replace(strClean, ";", " ")
-    strClean = VBA.Replace(strClean, ":", " ")
-    strClean = VBA.Replace(strClean, ".", " ")
-    strClean = VBA.Replace(strClean, "!", " ")
-    strClean = VBA.Replace(strClean, "?", " ")
-    strClean = VBA.Replace(strClean, "/", " ")
-    strClean = VBA.Replace(strClean, VBA.Chr(39), " ")
-    strClean = VBA.Replace(strClean, VBA.Chr(34), " ")
-    
-    While (VBA.InStr(strClean, "  ") > 0)
-        strClean = VBA.Replace(strClean, "  ", " ")
-    Wend
-    
-    '
-    ' Replace commonly interchanged words.
-    '
-    strClean = " " & strClean & " "
-    strClean = VBA.Replace(strClean, " oh ", " o ")
-    strClean = VBA.Replace(strClean, " alleluia ", " hallelujah ")
-    strClean = VBA.Replace(strClean, " allelujah ", " hallelujah ")
-    strClean = VBA.Replace(strClean, " emanuel ", " immanuel ")
-    strClean = VBA.Replace(strClean, " emmanuel ", " immanuel ")
-    strClean = VBA.Replace(strClean, " imanuel ", " immanuel ")
-    If (VBA.Len(strClean) >= 2) Then
-        strClean = VBA.Left(strClean, VBA.Len(strClean) - 1)
-        strClean = VBA.Right(strClean, VBA.Len(strClean) - 1)
-    End If
-    
-    mStringEverythingClean = strClean
-End Function
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mApplicationViewUpdate _
-( _
-    ByRef blnSave As Boolean _
-)
-    Static sblnWindowWindowStateMax As Boolean
-    Static sintWindowState As PowerPoint.PpWindowState
-    Static slngTop As Long
-    Static slngLeft As Long
-    Static slngHeight As Long
-    Static slngWidth As Long
-    
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    
-    '
-    ' Save current view.
-    '
-    If (blnSave = True) Then
-        sblnWindowWindowStateMax = False
-        For Each dwDocumentWindow In Application.Windows
-            If (dwDocumentWindow.WindowState = PowerPoint.ppWindowMaximized) Then
-                sblnWindowWindowStateMax = True
-            End If
-        Next
-        sintWindowState = Application.WindowState
-        Application.WindowState = PowerPoint.ppWindowNormal
-        slngTop = Application.Top
-        slngLeft = Application.Left
-        slngHeight = Application.Height
-        slngWidth = Application.Width
-        Application.WindowState = sintWindowState
-    '
-    ' Restore old view.
-    '
-    Else
-        If (sblnWindowWindowStateMax = True) Then
-            Application.Windows(1).WindowState = PowerPoint.ppWindowMaximized
-        End If
-        Application.WindowState = PowerPoint.ppWindowNormal
-        Application.Height = 0
-        Application.Width = 0
-        Application.Top = slngTop
-        Application.Left = slngLeft
-        Application.Height = slngHeight
-        Application.Width = slngWidth
-        Application.WindowState = sintWindowState
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mApplicationViewSet _
+Private Sub mNavigator_Initialize _
 ( _
 )
-    Dim lngTop As Long
-    Dim lngLeft As Long
-    Dim lngHeight As Long
-    Dim lngWidth As Long
-    
-    Application.WindowState = PowerPoint.ppWindowMaximized
-    lngTop = Application.Top + 3
-    lngLeft = Application.Left + 3
-    lngHeight = Application.Height - 6
-    lngWidth = Application.Width - 6
-    Application.WindowState = PowerPoint.ppWindowNormal
-    Application.Height = 0
-    Application.Width = 0
-    Application.Top = lngTop
-    Application.Left = lngLeft + Me.Width
-    Application.Height = lngHeight
-    Application.Width = lngWidth - Me.Width
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mPresentationViewLoad _
-( _
-    ByRef prePresentation As PowerPoint.Presentation _
-)
-    Dim intWindowState As PowerPoint.PpWindowState
-    Dim intViewType As PowerPoint.PpViewType
-    Dim intView_DisplaySlideMiniature As Office.MsoTriState
-    Dim intView_ZoomToFit As Office.MsoTriState
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    Dim intSaved As Office.MsoTriState
-    
-    If (prePresentation.Windows.Count > 0) Then
-        Set dwDocumentWindow = prePresentation.Windows(1)
-        
-        '
-        ' Save current view.
-        '
-        intWindowState = dwDocumentWindow.WindowState
-        intViewType = dwDocumentWindow.ViewType
-        If (intViewType = PowerPoint.ppViewNormal) Then
-            Select Case dwDocumentWindow.Panes(2).ViewType
-                Case PowerPoint.ppViewSlide
-                    intViewType = PowerPoint.ppViewNormal
-                Case PowerPoint.ppViewSlideMaster
-                    intViewType = PowerPoint.ppViewSlideMaster
-            End Select
-        End If
-        intView_DisplaySlideMiniature = dwDocumentWindow.View.DisplaySlideMiniature
-        intView_ZoomToFit = dwDocumentWindow.View.ZoomToFit
-        
-        intSaved = prePresentation.Saved
-        prePresentation.Tags.Add "WorshipServiceAssistant_Window_WindowState", intWindowState
-        prePresentation.Tags.Add "WorshipServiceAssistant_Window_ViewType", intViewType
-        prePresentation.Tags.Add "WorshipServiceAssistant_Window_View_DisplaySlideMiniature", intView_DisplaySlideMiniature
-        prePresentation.Tags.Add "WorshipServiceAssistant_Window_View_ZoomToFit", intView_ZoomToFit
-        prePresentation.Saved = intSaved
-        
-        '
-        ' Set view.
-        '
-        dwDocumentWindow.WindowState = PowerPoint.ppWindowMaximized
-        dwDocumentWindow.ViewType = PowerPoint.ppViewSlide
-        dwDocumentWindow.View.DisplaySlideMiniature = Office.msoFalse
-        dwDocumentWindow.View.ZoomToFit = Office.msoTrue
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mPresentationViewUnload _
-( _
-    ByRef prePresentation As PowerPoint.Presentation _
-)
-    Dim intWindowState As PowerPoint.PpWindowState
-    Dim intViewType As PowerPoint.PpViewType
-    Dim intView_DisplaySlideMiniature As Office.MsoTriState
-    Dim intView_ZoomToFit As Office.MsoTriState
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    
-    If (prePresentation.Windows.Count > 0) Then
-        Set dwDocumentWindow = prePresentation.Windows(1)
-        
-        '
-        ' Unload current view.
-        '
-        intWindowState = prePresentation.Tags("WorshipServiceAssistant_Window_WindowState")
-        intViewType = prePresentation.Tags("WorshipServiceAssistant_Window_ViewType")
-        intView_DisplaySlideMiniature = prePresentation.Tags("WorshipServiceAssistant_Window_View_DisplaySlideMiniature")
-        intView_ZoomToFit = prePresentation.Tags("WorshipServiceAssistant_Window_View_ZoomToFit")
-        
-        dwDocumentWindow.WindowState = intWindowState
-        dwDocumentWindow.ViewType = intViewType
-        dwDocumentWindow.View.DisplaySlideMiniature = intView_DisplaySlideMiniature
-        dwDocumentWindow.View.ZoomToFit = intView_ZoomToFit
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mFormInitialize _
-( _
-)
-    '
-    ' Initialize sizes.
-    '
     Const LngFormOverhead As Long = 22
     Const LngPageOverhead As Long = 6
-    Const LngFrameOverhead As Long = 14
     
-    Dim avarColor(6, 3) As Variant
-    
+    ' Initialize form size.
     Me.Height = Application.Height
+    
+    ' Initialize tabPages multipage size.
     Me.tabPages.Height = _
         Me.Height - _
         Me.tabPages.Top - _
         LngFormOverhead
-    Me.fraSlideSelection.Height = _
+    
+    ' Initialize fraPresentationSlideSelection frame size.
+    Me.fraPresentationSlideSelection.Height = _
         Me.tabPages.Height - _
         LngPageOverhead - _
-        Me.fraSlideSelection.Top
-    Me.lstSlideSelectionList.Height = _
-        Me.fraSlideSelection.Height - _
-        LngFrameOverhead - _
-        Me.lstSlideSelectionList.Top
+        Me.fraPresentationSlideSelection.Top
     
-    '
-    ' Initialize values.
-    '
+    ' Initialize form position.
+    Me.StartUpPosition = 0
+    Me.Left = Application.Left - Me.Width
+    Me.Top = Application.Top
+    
+    ' Initialize frames.
+    mNavigatorGeneral_Initialize
+    mNavigatorPresentationSlideShow_Initialize
+    mNavigatorPresentationSelection_Initialize
+    mNavigatorPresentationSlideSelection_Initialize
+    mNavigatorBannerConfiguration_Initialize
+    mNavigatorBannerShow_Initialize
+    mNavigatorBannerColor_Initialize
+    mNavigatorBannerSelection_Initialize
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraGeneral frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneral_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraPresentationSlideShow frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShow_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraPresentationSelection frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelection_Initialize _
+( _
+)
+    Me.lblPresentationSelectionName.Tag = ""
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraPresentationSlideSelection frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelection_Initialize _
+( _
+)
+    Const LngFrameOverhead As Long = 14
+    
+    ' Initialize size.
+    Me.lstPresentationSlideSelectionList.Height = _
+        Me.fraPresentationSlideSelection.Height - _
+        LngFrameOverhead - _
+        Me.lstPresentationSlideSelectionList.Top
+        
+    Me.cmdPresentationSlideSelectionMode.Tag = "0"
+    Me.lblPresentationSlideSelectionNumber.Caption = ""
+    Me.lblPresentationSlideSelectionText.Caption = ""
+    Me.lstPresentationSlideSelectionList.Tag = ""
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraBannerConfiguration frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerConfiguration_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraBannerShow frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerShow_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Initializes the fraBannerColor frame.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColor_Initialize _
+( _
+)
+    Dim avarColor(6, 3) As Variant
+    
     avarColor(0, 0) = "Red":     avarColor(0, 1) = 255: avarColor(0, 2) = 0:   avarColor(0, 3) = 0
     avarColor(1, 0) = "Green":   avarColor(1, 1) = 0:   avarColor(1, 2) = 255: avarColor(1, 3) = 0
     avarColor(2, 0) = "Blue":    avarColor(2, 1) = 0:   avarColor(2, 2) = 0:   avarColor(2, 3) = 255
@@ -1291,183 +376,388 @@ Private Sub mFormInitialize _
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Initializes the fraBannerSelection frame.
 '-------------------------------------------------------------------------------
-Private Sub mPresentationNameUpdate _
+Private Sub mNavigatorBannerSelection_Initialize _
 ( _
-    ByVal dwDocumentWindow As PowerPoint.DocumentWindow _
 )
-    Dim strName As String
+    Me.lblBannerSelectionText.Caption = ""
+End Sub
+
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' mNavigator*_Update subroutines.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the form to reflect the currently associated PowerPoint document
+'   window (input dwCurrent).
+' Inputs:
+'    dwCurrent:
+'      The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigator_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    mNavigatorBannerSelection_Update udtPresentation
+    mNavigatorBannerColor_Update udtPresentation
+    mNavigatorBannerShow_Update udtPresentation
+    mNavigatorBannerConfiguration_Update udtPresentation
+    mNavigatorPresentationSlideSelection_Update udtPresentation
+    mNavigatorPresentationSelection_Update udtPresentation
+    mNavigatorPresentationSlideShow_Update udtPresentation
     
-    If (modActive.gblnActiveWindowExists = False) Then
-        strName = ""
-    Else
-        strName = dwDocumentWindow.Presentation.Name
+    If (WSA.Presentations.Count <= 0) Then
+        Me.tabPages("tabPresentation").Enabled = False
     End If
-    If (VBA.Len(strName) >= 4) Then
-        If (VBA.LCase(VBA.Right(strName, 4)) = ".ppt") Then
-            strName = VBA.Left(strName, VBA.Len(strName) - 4)
-        End If
-    End If
-    Me.lblPresentationSelectionName.Caption = strName
+    
+    ' Update the selected dependent information:
+    '   (1) The form's caption.
+    '   (2) The form's default control. This is only for the visual effect,
+    '       effect as all key presses are intercepted and processed by,
+    '       event handlers.
+    '   (3) Disable hidden frames.
+    Select Case Me.tabPages(Me.tabPages.Value).Name
+        Case "tabPresentation"
+            Me.Caption = "Navigator - Presentation"
+            Me.cmdPresentationSlideShowLoad.Default = True
+            Me.fraBannerConfiguration.Enabled = False
+            Me.fraBannerShow.Enabled = False
+            Me.fraBannerColor.Enabled = False
+            Me.fraBannerSelection.Enabled = False
+        Case "tabBanner"
+            Me.Caption = "Navigator - Banner"
+            Me.cmdBannerShowLoad.Default = True
+            Me.fraPresentationSlideShow.Enabled = False
+            Me.fraPresentationSelection.Enabled = False
+            Me.fraPresentationSlideSelection.Enabled = False
+    End Select
+    
+    ' Set the focus and attempt to make sure that the Navigator is
+    ' the active window. Changing the focus seems to accomplish this.
+    mblnNavigatorFocusLocked = False
+    Me.fraGeneral.SetFocus
+    Me.fraEmpty.SetFocus
+    mblnNavigatorFocusLocked = True
+    
+    ' Set the mouse pointer.
+    Me.MousePointer = fmMousePointerArrow
+    
+    Me.Repaint
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Updates the fraGeneral frame to reflect the currently associated PowerPoint
+'   document window (input dwCurrent).
+' Inputs:
+'    dwCurrent:
+'      The current PowerPoint document window with which the form is associated.
 '-------------------------------------------------------------------------------
-Private Sub mSlideListUpdate _
+Private Sub mNavigatorGeneral_Update _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
 )
-    Dim prePresentation As PowerPoint.Presentation
-    Dim sldSlide As PowerPoint.Slide
-    Dim blnFilterModeNumber As Boolean
-    Dim blnFilterModeTitle As Boolean
-    Dim blnFilterModeBody As Boolean
-    Dim strFilterTextDirty As String
-    Dim lngFilterTextDirtyLen As Long
-    Dim strFilterTextClean As String
-    Dim lngFilterTextCleanLen As Long
-    Dim lngFilterNumber As Long
-    Dim lngSelectedSlideIndex As Long
-    Dim alngMatch() As Long
-    Dim lngMatchCount As Long
-    Dim alngList() As String
-    Dim lngListCount As Long
-    Dim lngListIndex As Long
+    ' Enable everything by default.
+    Me.fraGeneral.Enabled = True
+    Me.cmdGeneralPageNext.Enabled = True
+    Me.cmdGeneralHelp.Enabled = True
+    Me.cmdGeneralExit.Enabled = True
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the fraPresentationSlideShow frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Assumptions:
+'   In setting the state of the fraPresentationSlideShow controls, this routine assumes
+'   that the lstPresentationSlideSelectionList control is up-to-date. Therefore, routines
+'   which update fraPresentationSlideShowList should be called before this routine.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShow_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraPresentationSlideShow.Enabled = True
+    Me.cmdPresentationSlideShowLoad.Enabled = True
+    Me.cmdPresentationSlideShowHide.Enabled = True
+    Me.cmdPresentationSlideShowRun.Enabled = True
+    Me.cmdPresentationSlideShowPause.Enabled = True
+    Me.cmdPresentationSlideShowEffectPrev.Enabled = True
+    Me.cmdPresentationSlideShowEffectNext.Enabled = True
     
-    Set prePresentation = dwDocumentWindow.Presentation
-    
-    Me.lstSlideSelectionList.Clear
-    
-    If (modActive.gblnActiveWindowSlideExists(dwDocumentWindow) = False) Then
+    If ((WSA.Presentations.Count <= 0) Or (udtPresentation Is Nothing)) Then
+        Me.fraPresentationSlideShow.Enabled = False
+        Me.cmdPresentationSlideShowLoad.Enabled = False
+        Me.cmdPresentationSlideShowHide.Enabled = False
+        Me.cmdPresentationSlideShowRun.Enabled = False
+        Me.cmdPresentationSlideShowPause.Enabled = False
+        Me.cmdPresentationSlideShowEffectPrev.Enabled = False
+        Me.cmdPresentationSlideShowEffectNext.Enabled = False
         Exit Sub
     End If
     
-    If (modActive.gblnActiveSlideExists(dwDocumentWindow) = False) Then
-        dwDocumentWindow.View.Slide = prePresentation.Slides(1)
-    End If
-    lngSelectedSlideIndex = modActive.gppActiveSlideGet(dwDocumentWindow).SlideIndex
-    
-    blnFilterModeNumber = False
-    blnFilterModeTitle = False
-    blnFilterModeBody = False
-    Select Case Me.cmdSlideSelectionMode.Tag
-        Case "0"
-            blnFilterModeNumber = True
-            blnFilterModeTitle = True
-        Case "1"
-            blnFilterModeNumber = True
-            blnFilterModeTitle = True
-            blnFilterModeBody = True
-    End Select
-    
-    If (Me.lblSlideSelectionNumber <> "") Then
-        strFilterTextDirty = Me.lblSlideSelectionNumber.Caption
-        lngFilterTextDirtyLen = VBA.Len(strFilterTextDirty)
-    Else
-        strFilterTextDirty = Me.lblSlideSelectionText.Caption
-        lngFilterTextDirtyLen = VBA.Len(strFilterTextDirty)
-    End If
-    strFilterTextClean = mStringEverythingClean(strFilterTextDirty)
-    lngFilterTextCleanLen = VBA.Len(strFilterTextClean)
-    
-    lngListCount = 0
-    lngListIndex = -1
-    
-    '
-    ' Since the filter text is empty, there is no filter.
-    ' Therefore, all slides are in the list.
-    '
-    If (lngFilterTextDirtyLen = 0) Then
-        lngListCount = prePresentation.Slides.Count
-        If (lngListCount > 0) Then
-            ReDim alngList(lngListCount - 1, 1) As String
-            lngListCount = 0
-            For Each sldSlide In prePresentation.Slides
-                alngList(lngListCount, 0) = sldSlide.SlideIndex
-                alngList(lngListCount, 1) = sldSlide.Tags("WorshipServiceAssistant_TitleDisplay")
-                If (sldSlide.SlideIndex = lngSelectedSlideIndex) Then
-                    lngListIndex = lngListCount
-                End If
-                lngListCount = lngListCount + 1
-            Next
-        End If
-    '
-    ' Since the filter text is a number, assume the filter text is a slide number.
-    ' Therefore, there is one slide in the list.
-    '
-    ElseIf (IsNumeric(strFilterTextDirty)) Then
-        If (blnFilterModeNumber) Then
-            lngFilterNumber = strFilterTextDirty
-            If ((lngFilterNumber > 0) And (lngFilterNumber <= prePresentation.Slides.Count)) Then
-                ReDim alngList(0, 1) As String
-                lngListCount = 0
-                Set sldSlide = prePresentation.Slides(lngFilterNumber)
-                alngList(lngListCount, 0) = sldSlide.SlideIndex
-                alngList(lngListCount, 1) = sldSlide.Tags("WorshipServiceAssistant_TitleDisplay")
-                If (sldSlide.SlideIndex = lngSelectedSlideIndex) Then
-                    lngListIndex = lngListCount
-                End If
-                lngListCount = lngListCount + 1
+    With udtPresentation.SlideShowWindow
+        ' Since the current presentation does not have an associated slide show,
+        ' disable the slide show controls, other than load control.
+        If (.Exists = False) Then
+            Me.cmdPresentationSlideShowHide.Caption = "Hide"
+            Me.cmdPresentationSlideShowHide.Enabled = False
+            Me.cmdPresentationSlideShowRun.Enabled = False
+            Me.cmdPresentationSlideShowPause.Enabled = False
+            Me.cmdPresentationSlideShowEffectPrev.Enabled = False
+            Me.cmdPresentationSlideShowEffectNext.Enabled = False
+        Else
+            If (Me.lstPresentationSlideSelectionList.ListCount = 0) Then
+                Me.cmdPresentationSlideShowLoad.Enabled = False
+            End If
+            ' Since the slide show is hidden,
+            ' label the hide control as 'Show'.
+            If (.Visible = False) Then
+                Me.cmdPresentationSlideShowHide.Caption = "Show"
+            End If
+            ' Since the slide show is running,
+            ' disable the run control.
+            If (.Running = True) Then
+                Me.cmdPresentationSlideShowRun.Enabled = False
+            End If
+            ' Since the slide show is paused,
+            ' disable the pause control.
+            If (.Paused = True) Then
+                Me.cmdPresentationSlideShowPause.Enabled = False
             End If
         End If
-    '
-    ' Since the filter text is non-empty and non-numeric, assume that it is slide text.
-    '
-    Else
-        '
-        ' Adding new elements to a ListBox list takes time.  As a result, it is
-        ' faster to build an array with the elements, and assign the array to the
-        ' ListBox list.
-        '
-        ReDim alngMatch(prePresentation.Slides.Count) As Long
-        lngMatchCount = 0
-        If ((blnFilterModeTitle = False) And (blnFilterModeBody = False)) Then
-        ElseIf ((blnFilterModeTitle = True) And (blnFilterModeBody = False)) Then
-            For Each sldSlide In prePresentation.Slides
-                If ((VBA.Left(sldSlide.Tags("WorshipServiceAssistant_TitleMatch"), lngFilterTextCleanLen) = strFilterTextClean) Or _
-                    (VBA.Left(sldSlide.Tags("WorshipServiceAssistant_TitleDisplay"), lngFilterTextCleanLen) = strFilterTextClean)) Then
-                    alngMatch(lngMatchCount) = sldSlide.SlideIndex
-                    lngMatchCount = lngMatchCount + 1
-                End If
-            Next
-        ElseIf ((blnFilterModeTitle = False) And (blnFilterModeBody = True)) Then
-            For Each sldSlide In prePresentation.Slides
-                If (mblnBodyMatch(sldSlide, strFilterTextDirty)) Then
-                    alngMatch(lngMatchCount) = sldSlide.SlideIndex
-                    lngMatchCount = lngMatchCount + 1
-                End If
-            Next
-        ElseIf ((blnFilterModeTitle = True) And (blnFilterModeBody = True)) Then
-            For Each sldSlide In prePresentation.Slides
-                If ((VBA.Left(sldSlide.Tags("WorshipServiceAssistant_TitleMatch"), lngFilterTextCleanLen) = strFilterTextClean) Or _
-                    (VBA.Left(sldSlide.Tags("WorshipServiceAssistant_TitleDisplay"), lngFilterTextCleanLen) = strFilterTextClean) Or _
-                    mblnBodyMatch(sldSlide, strFilterTextDirty)) Then
-                    alngMatch(lngMatchCount) = sldSlide.SlideIndex
-                    lngMatchCount = lngMatchCount + 1
-                End If
-            Next
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the fraPresentationSelection frame to reflect the currently
+'   associated PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelection_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraPresentationSelection.Enabled = True
+    Me.lblPresentationSelectionName.Enabled = True
+    Me.cmdPresentationSelectionPrev.Enabled = True
+    Me.cmdPresentationSelectionNext.Enabled = True
+    
+    ' Update the lstControlPresentationName control.
+    mNavigatorPresentationSelectionName_Update udtPresentation
+    
+    If ((WSA.Presentations.Count <= 0) Or (udtPresentation Is Nothing)) Then
+        Me.lblPresentationSelectionName.Enabled = False
+        Me.cmdPresentationSelectionPrev.Enabled = False
+        Me.cmdPresentationSelectionNext.Enabled = False
+        Exit Sub
+    End If
+    
+    If (WSA.Presentations.Count <= 1) Then
+        Me.cmdPresentationSelectionPrev.Enabled = False
+        Me.cmdPresentationSelectionNext.Enabled = False
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the lblPresentationSelectionName control, so that its Caption
+'   contains the name of the Presentation containing the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'    dwCurrent:
+'      The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelectionName_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim strName As String
+    
+    If ((WSA.Presentations.Count <= 0) Or (udtPresentation Is Nothing)) Then
+        Me.lblPresentationSelectionName.Caption = ""
+        Me.lblPresentationSelectionName.Tag = ""
+        Exit Sub
+    End If
+    
+    strName = udtPresentation.Name
+    If (Me.lblPresentationSelectionName.Tag <> strName) Then
+        Me.lblPresentationSelectionName.Tag = strName
+        If (VBA.Len(strName) >= 4) Then
+            If (VBA.LCase(VBA.Right(strName, 4)) = ".ppt") Then
+                strName = VBA.Left(strName, VBA.Len(strName) - 4)
+            End If
         End If
+        Me.lblPresentationSelectionName.Caption = strName
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the fraPresentationSlideSelection frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelection_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraPresentationSlideSelection.Enabled = True
+    Me.cmdPresentationSlideSelectionMode.Enabled = True
+    Me.lblPresentationSlideSelectionMode.Enabled = True
+    Me.lblPresentationSlideSelectionNumber.Enabled = True
+    Me.lblPresentationSlideSelectionText.Enabled = True
+    Me.cmdPresentationSlideSelectionClear.Enabled = True
+    Me.lstPresentationSlideSelectionList.Enabled = True
+    
+    ' Update the lstPresentationSlideSelectionList control.
+    mNavigatorPresentationSlideSelectionList_Update udtPresentation
+    
+    If ((WSA.Presentations.Count <= 0) Or (udtPresentation Is Nothing)) Then
+        Me.cmdPresentationSlideSelectionMode.Tag = ""
+        Me.lblPresentationSlideSelectionMode.Caption = ""
+        Me.lblPresentationSlideSelectionNumber.Caption = ""
+        Me.lblPresentationSlideSelectionText.Caption = ""
+        Me.fraPresentationSlideSelection.Enabled = False
+        Me.cmdPresentationSlideSelectionMode.Enabled = False
+        Me.lblPresentationSlideSelectionMode.Enabled = False
+        Me.lblPresentationSlideSelectionNumber.Enabled = False
+        Me.lblPresentationSlideSelectionText.Enabled = False
+        Me.cmdPresentationSlideSelectionClear.Enabled = False
+        Me.lstPresentationSlideSelectionList.Enabled = False
+        Exit Sub
+    End If
+    
+    ' Update the Slide Selection Mode dependent controls.
+    Select Case Me.cmdPresentationSlideSelectionMode.Tag
+        Case "0"
+            Me.lblPresentationSlideSelectionMode.Caption = "Filter matching Number and Title"
+            Me.fraPresentationSlideSelection.BorderColor = VBA.vbInactiveBorder
+        Case "1"
+            Me.lblPresentationSlideSelectionMode.Caption = "Filter matching Number and Title and Body"
+            Me.fraPresentationSlideSelection.BorderColor = VBA.vbRed
+        Case Else
+            Me.lblPresentationSlideSelectionMode.Caption = ""
+            Me.fraPresentationSlideSelection.BorderColor = VBA.vbInactiveBorder
+    End Select
+    
+    ' Since the slide selection filter is clear,
+    ' disable the slide selection filter clear control.
+    If ((Me.lblPresentationSlideSelectionNumber.Caption = "") And _
+        (Me.lblPresentationSlideSelectionText.Caption = "")) Then
+        Me.cmdPresentationSlideSelectionClear.Enabled = False
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the lstPresentationSlideSelectionList control, so that its List property
+'   contains the numbers and titles of the slides in the currently associated
+'   PowerPoint document window (input dwCurrent) which satisfy the filter
+'   criteria specified  by the selection filter mode (form control
+'   cmdPresentationSlideSelectionMode) and the slide selection filter (form controls
+'   cmdSlideSelectionNumber and cmdSlideSelectionText).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionList_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim strFilterText As String
+    Dim lngFilterNumber As Long
+    Dim lngSelectedSlideIndex As Long
+    Dim lngMatch() As Long
+    Dim lngMatchCount As Long
+    Dim lngList() As String
+    Dim lngListCount As Long
+    Dim lngListIndex As Long
+    Dim strTag As String
+
+    If ((WSA.Presentations.Count <= 0) Or (udtPresentation Is Nothing)) Then
+        Me.lstPresentationSlideSelectionList.Tag = ""
+        Me.lstPresentationSlideSelectionList.Clear
+        Exit Sub
+    End If
         
+    If (udtPresentation.Windows.Item(1).HasActiveSlide = False) Then
+        udtPresentation.Slides.Item(1).Activate
+    End If
+    lngSelectedSlideIndex = udtPresentation.Windows.Item(1).ActiveSlide.SlideIndex
+    
+    strTag = udtPresentation.Name & "?" & _
+             udtPresentation.Windows.Item(1).ActiveSlide.SlideIndex & "?" & _
+             Me.cmdPresentationSlideSelectionMode.Tag & "?" & _
+             Me.lblPresentationSlideSelectionNumber.Caption & "?" & _
+             Me.lblPresentationSlideSelectionText.Caption
+             
+    If (Me.lstPresentationSlideSelectionList.Tag = strTag) Then
+        Exit Sub
+    End If
+    Me.lstPresentationSlideSelectionList.Tag = strTag
+    
+    strFilterText = _
+        Me.lblPresentationSlideSelectionNumber.Caption & _
+        Me.lblPresentationSlideSelectionText.Caption
+    
+    With udtPresentation.Slides
+        lngMatchCount = 0
+        ' Since the filter text is numeric, assume the it is a slide number.
+        If (IsNumeric(strFilterText)) Then
+            lngFilterNumber = strFilterText
+            If ((lngFilterNumber > 0) And (lngFilterNumber <= .Count)) Then
+                lngMatchCount = 1
+                ReDim lngMatch(lngMatchCount - 1)
+                With .Item(lngFilterNumber)
+                    lngMatch(0) = .Index
+                End With
+            End If
+        ' Since the filter text is non-numeric, assume that it is slide text.
+        Else
+            ' Selection mode is "Match Title"
+            If (Me.cmdPresentationSlideSelectionMode.Tag = "0") Then
+                lngMatchCount = .TitleMatches(lngMatch, strFilterText)
+            ' Selection mode is "Match Title and Body"
+            ElseIf (Me.cmdPresentationSlideSelectionMode.Tag = "1") Then
+                lngMatchCount = .TitleOrBodyMatches(lngMatch, strFilterText)
+            End If
+        End If
         If (lngMatchCount > 0) Then
-            ReDim alngList(lngMatchCount - 1, 1) As String
+            ReDim lngList(lngMatchCount - 1, 1) As String
             For lngListCount = 0 To lngMatchCount - 1 Step 1
-                alngList(lngListCount, 0) = alngMatch(lngListCount)
-                alngList(lngListCount, 1) = prePresentation.Slides(alngMatch(lngListCount)).Tags("WorshipServiceAssistant_TitleDisplay")
-                If (alngMatch(lngListCount) = lngSelectedSlideIndex) Then
-                    lngListIndex = lngListCount
-                End If
+                With .Item(lngMatch(lngListCount))
+                    lngList(lngListCount, 0) = .Index
+                    lngList(lngListCount, 1) = .Title
+                    If (.Index = lngSelectedSlideIndex) Then
+                        lngListIndex = lngListCount
+                    End If
+                End With
             Next
             lngListCount = lngMatchCount
         End If
-    End If
+    End With
     
-    Me.lstSlideSelectionList.Clear
-    If (lngListCount > 0) Then
-        Me.lstSlideSelectionList.List() = alngList
-    End If
-    With Me.lstSlideSelectionList
+    With Me.lstPresentationSlideSelectionList
+        .Clear
+        If (lngListCount > 0) Then
+            .List() = lngList
+        End If
+        
         If (.ListCount > 0) Then
             If (lngListIndex >= 0) Then
                 .ListIndex = lngListIndex
@@ -1475,179 +765,1377 @@ Private Sub mSlideListUpdate _
                 .ListIndex = 0
             End If
             .TopIndex = .ListIndex
-            dwDocumentWindow.View.Slide = prePresentation.Slides(Val(.List(.ListIndex, 0)))
+            udtPresentation.Slides.Item(Val(.List(.ListIndex, 0))).Activate
         Else
-            dwDocumentWindow.View.Slide = prePresentation.Slides(1)
+            udtPresentation.Slides.Item(1).Activate
         End If
     End With
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Updates the fraBannerConfiguration frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
 '-------------------------------------------------------------------------------
-Private Function mblnBodyMatch _
+Private Sub mNavigatorBannerConfiguration_Update _
 ( _
-    ByRef sldCurrent As PowerPoint.Slide, _
-    ByRef strCurrent As String _
-) As Boolean
-    Dim shpCurrent As PowerPoint.Shape
-    
-    mblnBodyMatch = False
-    For Each shpCurrent In sldCurrent.Shapes
-        If (shpCurrent.HasTextFrame) Then
-            If (Not (shpCurrent.TextFrame.TextRange.Find(strCurrent, 0, Office.msoFalse, Office.msoFalse) Is Nothing)) Then
-                mblnBodyMatch = True
-                Exit For
-            End If
-        End If
-    Next
-End Function
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Function mblnPowerPointOptionGet _
-( _
-    ByRef strOptionName As String, _
-    ByRef lngOptionValue As Long _
-) As Boolean
-    Dim lngResult As Long
-    Dim lngKeyHandle As Long
-    Dim strOptionPath As String
-    Dim lngOptionType As Long
-    Dim lngOptionBuffer As Long
-    Dim lngOptionBufferSize As Long
-    
-    mblnPowerPointOptionGet = False
-    
-    strOptionPath = _
-        "Software\Microsoft\Office" & _
-        "\" & Application.VERSION & _
-        "\" & "PowerPoint" & _
-        "\" & "Options"
-    
-    lngResult = modWin32AdvAPI32.RegOpenKeyEx _
-        (modWin32AdvAPI32.HKEY_CURRENT_USER, _
-         strOptionPath, _
-         0, _
-         modWin32AdvAPI32.KEY_QUERY_VALUE, _
-         lngKeyHandle)
-    If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
-        lngResult = modWin32AdvAPI32.RegQueryValueEx _
-            (lngKeyHandle, _
-             strOptionName, _
-             0&, _
-             lngOptionType, _
-             ByVal 0&, _
-             lngOptionBufferSize)
-        If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
-            If (lngOptionType = modWin32AdvAPI32.REG_DWORD) Then
-                lngResult = modWin32AdvAPI32.RegQueryValueEx _
-                    (lngKeyHandle, _
-                     strOptionName, _
-                     0&, _
-                     lngOptionType, _
-                     lngOptionBuffer, _
-                     lngOptionBufferSize)
-                If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
-                    mblnPowerPointOptionGet = True
-                    lngOptionValue = lngOptionBuffer
-                End If
-            End If
-        End If
-        lngResult = modWin32AdvAPI32.RegCloseKey _
-            (lngKeyHandle)
-    End If
-End Function
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub mPowerPointOptionDialogTabSet _
-( _
-    lngIndex As Long _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
 )
-    Dim blnResult As Boolean
-    Dim lngValue As Long
+    ' Enable everything by default.
+    Me.fraBannerConfiguration.Enabled = True
+    Me.cmdBannerConfigurationBannerDisable.Enabled = True
     
-    blnResult = mblnPowerPointOptionGet("Options dialog current tab", lngValue)
-    If ((blnResult = True) And (lngValue <> lngIndex)) Then
-        While ((blnResult = True) And (lngValue <> lngIndex))
-            Application.CommandBars.FindControl(Id:=522).Execute
-            VBA.SendKeys "^{TAB}", True
-            VBA.SendKeys "{ENTER}", True
-            blnResult = mblnPowerPointOptionGet("Options dialog current tab", lngValue)
-        Wend
+    ' Set the default control captions.
+    Me.cmdBannerConfigurationBannerDisable.Caption = "Banner Disable"
+    
+    ' Since the banner is disabled,
+    ' label the banner disable control as 'Banner Enable'.
+    If (WSA.Banner.Enabled = False) Then
+        Me.cmdBannerConfigurationBannerDisable.Caption = "Banner Enable"
     End If
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+'   Updates the fraBannerShow frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
 '-------------------------------------------------------------------------------
-Private Sub mPowerPointOptionsConfigure _
+Private Sub mNavigatorBannerShow_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraBannerShow.Enabled = True
+    Me.cmdBannerShowLoad.Enabled = True
+    Me.cmdBannerShowHide.Enabled = True
+    
+    ' Set the default control captions.
+    Me.cmdBannerShowHide.Caption = "Hide"
+    
+    ' Since the banner is hidden,
+    ' label the hide control as 'Show'.
+    If (WSA.Banner.Visible = False) Then
+        Me.cmdBannerShowHide.Caption = "Show"
+    End If
+    
+    ' Since the banner is disabled,
+    ' disable all the banner show controls.
+    If (WSA.Banner.Enabled = False) Then
+        Me.cmdBannerShowLoad.Enabled = False
+        Me.cmdBannerShowHide.Enabled = False
+        Me.fraBannerShow.Enabled = False
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the fraBannerColor frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColor_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraBannerColor.Enabled = True
+    Me.lblBannerColorName.Enabled = True
+    Me.cmdBannerColorPrev.Enabled = True
+    Me.cmdBannerColorNext.Enabled = True
+    
+    ' Set banner color name color.
+    If (WSA.Banner.Enabled = True) Then
+        With Me.lblBannerColorName
+            .BackColor = VBA.RGB(0, 0, 0)
+            .ForeColor = VBA.RGB(.List(.ListIndex, 1), .List(.ListIndex, 2), .List(.ListIndex, 3))
+        End With
+    Else
+        With Me.lblBannerColorName
+            .BackColor = VBA.RGB(0, 0, 0)
+            .ForeColor = VBA.RGB(0, 0, 0)
+        End With
+    End If
+    
+    ' Since the banner is disabled,
+    ' disable all the banner color controls.
+    If (WSA.Banner.Enabled = False) Then
+        Me.lblBannerColorName.Enabled = False
+        Me.cmdBannerColorPrev.Enabled = False
+        Me.cmdBannerColorNext.Enabled = False
+        Me.fraBannerColor.Enabled = False
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Updates the fraBannerSelection frame to reflect the currently associated
+'   PowerPoint document window (input dwCurrent).
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerSelection_Update _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    ' Enable everything by default.
+    Me.fraBannerSelection.Enabled = True
+    Me.lblBannerSelectionText.Enabled = True
+    Me.cmdBannerSelectionClear.Enabled = True
+    
+    ' Since the banner is disabled,
+    ' disable all the banner selection controls.
+    If (WSA.Banner.Enabled = False) Then
+        Me.lblBannerSelectionText.Enabled = False
+        Me.cmdBannerSelectionClear.Enabled = False
+        Me.fraBannerSelection.Enabled = False
+    End If
+End Sub
+
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' mNavigator*_KeyDown subroutines.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the form.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigator_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    mNavigatorGeneral_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorPresentationSlideShow_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorPresentationSelection_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorPresentationSlideSelection_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorBannerConfiguration_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorBannerShow_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorBannerColor_KeyDown udtPresentation, intKeyCode, intKeyModifier
+    mNavigatorBannerSelection_KeyDown udtPresentation, intKeyCode, intKeyModifier
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraGeneral frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneral_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraGeneral.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    If (intKeyModifier = 0) Then        ' no shift + no control + no alternate
+        Select Case intKeyCode
+            Case 9:                     ' TAB
+                mNavigatorGeneralPageNext_Action udtPresentation
+            Case 112:                   ' F1
+                mNavigatorGeneralHelp_Action udtPresentation
+            Case 27:                    ' ESCAPE
+                mNavigatorGeneralExit_Action
+        End Select
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraPresentationSlideShow frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShow_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraPresentationSlideShow.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 13:                    ' RETURN
+                    mNavigatorPresentationSlideShowLoad_Action udtPresentation
+                Case 46:                    ' DELETE
+                    mNavigatorPresentationSlideSelectionClear_Action udtPresentation
+            End Select
+        Case 2:                             ' no shift + control + no alternate
+            Select Case intKeyCode
+                Case 72, 83:                ' "H", "S"
+                    mNavigatorPresentationSlideShowHide_Action udtPresentation
+                Case 82:                    ' "R"
+                    mNavigatorPresentationSlideShowRun_Action udtPresentation
+                Case 80:                    ' "P"
+                    mNavigatorPresentationSlideShowPause_Action udtPresentation
+                Case 38:                    ' UP_ARROW
+                    mNavigatorPresentationSlideShowEffectPrev_Action udtPresentation
+                Case 40:                    ' DOWN_ARROW
+                    mNavigatorPresentationSlideShowEffectNext_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraPresentationSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelection_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraPresentationSelection.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 37:                    ' LEFT_ARROW
+                    mNavigatorPresentationSelectionPrev_Action udtPresentation
+                Case 39:                    ' RIGHT_ARROW
+                    mNavigatorPresentationSelectionNext_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraPresentationSlideSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelection_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraPresentationSlideSelection.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 38:                    ' UP_ARROW
+                    mNavigatorPresentationSlideSelectionPrev_Action udtPresentation
+                Case 40:                    ' DOWN_ARROW
+                    mNavigatorPresentationSlideSelectionNext_Action udtPresentation
+            End Select
+        Case 2:                             ' no shift + control + no alternate
+            Select Case intKeyCode
+                Case 77:                    ' "M"
+                    mNavigatorPresentationSlideSelectionMode_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraBannerConfiguration frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerConfiguration_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraBannerConfiguration.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 2:                             ' no shift + control + no alternate
+            Select Case intKeyCode
+                Case 68, 69:                ' "D", "E"
+                    mNavigatorBannerConfigurationBannerDisable_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraBannerShow frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerShow_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraBannerColor.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 13:                    ' RETURN
+                    mNavigatorBannerShowLoad_Action udtPresentation
+            End Select
+        Case 2:                             ' no shift + control + no alternate
+            Select Case intKeyCode
+                Case 72, 83:                ' "H", "S"
+                    mNavigatorBannerShowHide_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraBannerColor frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColor_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraBannerColor.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 37:                    ' LEFT_ARROW
+                    mNavigatorBannerColorPrev_Action udtPresentation
+                Case 39:                    ' RIGHT_ARROW
+                    mNavigatorBannerColorNext_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyDown events that effect the fraBannerSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyCode:
+'     The KeyCode to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'   inKeyModifier:
+'     The KeyModifier to be processed. A detailed description can be found in
+'     the VBA help for the KeyDown event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerSelection_KeyDown _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyCode As MSForms.ReturnInteger, _
+    ByRef intKeyModifier As Integer _
+)
+    If (Me.fraBannerSelection.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case intKeyModifier
+        Case 0:                             ' no shift + no control + no alternate
+            Select Case intKeyCode
+                Case 46:                    ' DELETE
+                    mNavigatorBannerSelectionClear_Action udtPresentation
+            End Select
+    End Select
+End Sub
+
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' mNavigator*_KeyPress subroutines.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the form.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigator_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByVal intKeyASCII As MSForms.ReturnInteger _
+)
+    mNavigatorGeneral_KeyPress udtPresentation, intKeyASCII
+    mNavigatorPresentationSlideShow_KeyPress udtPresentation, intKeyASCII
+    mNavigatorPresentationSelection_KeyPress udtPresentation, intKeyASCII
+    mNavigatorPresentationSlideSelection_KeyPress udtPresentation, intKeyASCII
+    mNavigatorBannerConfiguration_KeyPress udtPresentation, intKeyASCII
+    mNavigatorBannerShow_KeyPress udtPresentation, intKeyASCII
+    mNavigatorBannerColor_KeyPress udtPresentation, intKeyASCII
+    mNavigatorBannerSelection_KeyPress udtPresentation, intKeyASCII
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraGeneral frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneral_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraPresentationSlideShow frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShow_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraPresentationSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelection_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraPresentationSlideSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelection_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+    Dim strFilter As String
+    
+    If (Me.fraPresentationSlideSelection.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    If (Me.lblPresentationSlideSelectionNumber <> "") Then
+        strFilter = Me.lblPresentationSlideSelectionNumber.Caption
+    Else
+        strFilter = Me.lblPresentationSlideSelectionText.Caption
+    End If
+        
+    Select Case intKeyASCII
+        Case 8:                   ' <backspace>
+            If (VBA.Len(strFilter) > 0) Then
+                strFilter = VBA.Left(strFilter, VBA.Len(strFilter) - 1)
+            End If
+        Case 32 To 126:           ' <space> or printable character
+            strFilter = strFilter & VBA.Chr(intKeyASCII)
+        Case Else:
+    End Select
+        
+    If (VBA.IsNumeric(strFilter) = True) Then
+        Me.lblPresentationSlideSelectionNumber.Caption = strFilter
+        Me.lblPresentationSlideSelectionText.Caption = ""
+    Else
+        Me.lblPresentationSlideSelectionNumber.Caption = ""
+        Me.lblPresentationSlideSelectionText.Caption = strFilter
+    End If
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraBannerConfiguration frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerConfiguration_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraBannerShow frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerShow_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraBannerColor frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColor_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Processes KeyPress events that effect the fraBannerSelection frame.
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'   inKeyASCII:
+'     The KeyASCII to be processed. A detailed description can be found in
+'     the VBA help for the KeyPress event for UserForm controls.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerSelection_KeyPress _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation, _
+    ByRef intKeyASCII As MSForms.ReturnInteger _
+)
+    Dim strBanner As String
+    
+    If (Me.fraBannerSelection.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    strBanner = Me.lblBannerSelectionText.Caption
+    
+    Select Case intKeyASCII
+        Case 8:                   ' <backspace>
+            If (VBA.Len(strBanner) > 0) Then
+                strBanner = VBA.Left(strBanner, VBA.Len(strBanner) - 1)
+            End If
+        Case 32 To 126:           ' <space> or printable character
+            strBanner = strBanner & VBA.Chr(intKeyASCII)
+        Case Else:
+    End Select
+    
+    Me.lblBannerSelectionText.Caption = strBanner
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' mNavigator*_Action routines.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneralPageNext_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim lngPage As Integer
+    
+    If (Me.cmdGeneralPageNext.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    lngPage = Me.tabPages.Value
+    lngPage = lngPage + 1
+    If (lngPage >= Me.tabPages.Count) Then
+        lngPage = 0
+    End If
+    
+    mblnNavigatorFocusLocked = False
+    Me.tabPages.Value = lngPage
+    mblnNavigatorFocusLocked = True
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneralHelp_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim strHelpFile As String
+    
+    If (Me.cmdGeneralHelp.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    strHelpFile = modHelp.gstrFileNameGet(True)
+    
+    If (strHelpFile = "") Then
+        Exit Sub
+    End If
+    
+    Call modHelp.HtmlHelp( _
+        0&, _
+        strHelpFile, _
+        modHelp.HH_DISPLAY_TOPIC, _
+        modHelp.GstrIDH_TopicPath_WSACommandBarNavigator)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorGeneralExit_Action _
 ( _
 )
-    Dim blnResult As Boolean
-    Dim lngValue As Long
-    
-    blnResult = mblnPowerPointOptionGet("SSRightMouse", lngValue)
-    If (blnResult = False) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%P", True
-        VBA.SendKeys "{ENTER}", True
-        blnResult = mblnPowerPointOptionGet("SSRightMouse", lngValue)
-    End If
-    If ((blnResult = True) And (lngValue <> 0)) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%P", True
-        VBA.SendKeys "{ENTER}", True
+    If (Me.cmdGeneralExit.Enabled = False) Then
+        Exit Sub
     End If
     
-    blnResult = mblnPowerPointOptionGet("SSMenuButton", lngValue)
-    If (blnResult = False) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%S", True
-        VBA.SendKeys "{ENTER}", True
-        blnResult = mblnPowerPointOptionGet("SSMenuButton", lngValue)
-    End If
-    If ((blnResult = True) And (lngValue <> 0)) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%S", True
-        VBA.SendKeys "{ENTER}", True
-    End If
-    
-    blnResult = mblnPowerPointOptionGet("SSEndOnBlankSlide", lngValue)
-    If (blnResult = False) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%E", True
-        VBA.SendKeys "{ENTER}", True
-        blnResult = mblnPowerPointOptionGet("SSEndOnBlankSlide", lngValue)
-    End If
-    If ((blnResult = True) And (lngValue <> 0)) Then
-        mPowerPointOptionDialogTabSet 0
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%E", True
-        VBA.SendKeys "{ENTER}", True
+    VBA.Unload frmNavigator
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowLoad_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowLoad.Enabled = False) Then
+        Exit Sub
     End If
     
-    blnResult = mblnPowerPointOptionGet("SaveAutoRecoveryInfo", lngValue)
-    If (blnResult = False) Then
-        mPowerPointOptionDialogTabSet 4
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%S", True
-        VBA.SendKeys "{ENTER}", True
-        blnResult = mblnPowerPointOptionGet("SaveAutoRecoveryInfo", lngValue)
+    If (udtPresentation.Windows.Item(1).HasActiveSlide = False) Then
+        Exit Sub
     End If
-    If ((blnResult = True) And (lngValue <> 0)) Then
-        mPowerPointOptionDialogTabSet 4
-        Application.CommandBars.FindControl(Id:=522).Execute
-        VBA.SendKeys "%S", True
-        VBA.SendKeys "{ENTER}", True
+
+    Me.Hide
+    
+    udtPresentation.SlideShowWindow.Load Me.lstPresentationSlideSelectionList.Value
+    
+    udtPresentation.Activate
+    
+    Me.lblPresentationSlideSelectionNumber.Caption = ""
+    Me.lblPresentationSlideSelectionText.Caption = ""
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowHide_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowHide.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With udtPresentation.SlideShowWindow
+        .Visible = Not .Visible
+    End With
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowRun_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowRun.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    udtPresentation.SlideShowWindow.Run
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowPause_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowPause.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    udtPresentation.SlideShowWindow.Pause
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowEffectPrev_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowEffectPrev.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    udtPresentation.SlideShowWindow.EffectPrev
+    
+    Me.lblPresentationSlideSelectionNumber = ""
+    Me.lblPresentationSlideSelectionText = ""
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideShowEffectNext_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideShowEffectNext.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    udtPresentation.SlideShowWindow.EffectNext
+    
+    Me.lblPresentationSlideSelectionNumber = ""
+    Me.lblPresentationSlideSelectionText = ""
+    
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelectionPrev_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim lngIndex As Long
+    
+    If (Me.cmdPresentationSelectionPrev.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With WSA.Presentations
+        lngIndex = .Index(udtPresentation) - 1
+        If (lngIndex < 1) Then
+            lngIndex = .Count
+        End If
+        .Item(lngIndex).Activate
+        mNavigator_Update WSA.ActivePresentation
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSelectionNext_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim lngIndex As Long
+    
+    If (Me.cmdPresentationSelectionNext.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With WSA.Presentations
+        lngIndex = .Index(udtPresentation) + 1
+        If (lngIndex > .Count) Then
+            lngIndex = 1
+        End If
+        .Item(lngIndex).Activate
+        mNavigator_Update WSA.ActivePresentation
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionMode_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideSelectionMode.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Select Case Me.cmdPresentationSlideSelectionMode.Tag
+        Case "0"                        ' Title
+            Me.cmdPresentationSlideSelectionMode.Tag = "1"
+        Case "1"                        ' Title and Body
+            Me.cmdPresentationSlideSelectionMode.Tag = "0"
+        Case Else
+            Me.cmdPresentationSlideSelectionMode.Tag = "0"
+    End Select
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionClear_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdPresentationSlideSelectionClear.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    Me.lblPresentationSlideSelectionNumber.Caption = ""
+    Me.lblPresentationSlideSelectionText.Caption = ""
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionUpdate_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim lngIndex As Long
+    
+    If (Me.lstPresentationSlideSelectionList.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    '
+    ' Set slide selected in the presentation to match the
+    ' slide selected in the slide list control
+    '
+    With Me.lstPresentationSlideSelectionList
+        If (.ListIndex >= 0) Then
+            lngIndex = .Value
+            udtPresentation.Slides.Item(lngIndex).Activate
+        End If
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionPrev_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.lstPresentationSlideSelectionList.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With Me.lstPresentationSlideSelectionList
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex > 0) Then
+            .ListIndex = .ListIndex - 1
+        Else
+            .ListIndex = .ListCount - 1
+        End If
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorPresentationSlideSelectionNext_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.lstPresentationSlideSelectionList.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With Me.lstPresentationSlideSelectionList
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex < .ListCount - 1) Then
+            .ListIndex = .ListIndex + 1
+        Else
+            .ListIndex = 0
+        End If
+    End With
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerConfigurationBannerDisable_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdBannerConfigurationBannerDisable.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With WSA.Banner
+        .Enabled = Not .Enabled
+    End With
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerShowLoad_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    Dim intRed As Integer
+    Dim intGreen As Integer
+    Dim intBlue As Integer
+    
+    If (Me.cmdBannerShowLoad.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With Me.lblBannerColorName
+        If (.ListIndex >= 0) Then
+            intRed = .List(.ListIndex, 1)
+            intGreen = .List(.ListIndex, 2)
+            intBlue = .List(.ListIndex, 3)
+        Else
+            intRed = 0
+            intGreen = 0
+            intBlue = 0
+        End If
+    End With
+    
+    WSA.Banner.Load Me.lblBannerSelectionText.Caption, intRed, intGreen, intBlue
+    mNavigatorBannerSelectionClear_Action udtPresentation
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerShowHide_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdBannerShowHide.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With WSA.Banner
+        .Visible = Not .Visible
+    End With
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColorPrev_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdBannerColorPrev.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With Me.lblBannerColorName
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex > 0) Then
+            .ListIndex = .ListIndex - 1
+        Else
+            .ListIndex = .ListCount - 1
+        End If
+    End With
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerColorNext_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdBannerColorNext.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    With Me.lblBannerColorName
+        If (.ListCount <= 1) Then
+            Exit Sub
+        End If
+        If (.ListIndex < .ListCount - 1) Then
+            .ListIndex = .ListIndex + 1
+        Else
+            .ListIndex = 0
+        End If
+    End With
+    mNavigator_Update udtPresentation
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   dwCurrent:
+'     The current PowerPoint document window with which the form is associated.
+'-------------------------------------------------------------------------------
+Private Sub mNavigatorBannerSelectionClear_Action _
+( _
+    ByRef udtPresentation As WorshipServiceAssistant.WSAPresentation _
+)
+    If (Me.cmdBannerSelectionClear.Enabled = False) Then
+        Exit Sub
+    End If
+    
+    If (WSA.Banner.Enabled = False) Then
+        Exit Sub
+    End If
+    Me.lblBannerSelectionText.Caption = ""
+    mNavigator_Update udtPresentation
+End Sub
+
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+' Support subroutines and functions.
+'=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+'-------------------------------------------------------------------------------
+' Purpose:
+'   Checks whether or not it is valid for the form to be used. It is valid
+'   for the form to be used if there is an active PowerPoint document window
+'   with which the form can be associated.
+' Effects:
+'   Hides the form if it is not valid for the form to be used.
+' Returns:
+'   A boolean that is true only if it is valid for the form to be used.
+'-------------------------------------------------------------------------------
+Private Function mblnValid _
+( _
+) As Boolean
+    mblnValid = True
+    If (WSA.Presentations.Count >= 1) Then
+        If (WSA.HasActivePresentation <> Office.msoTrue) Then
+            mblnValid = False
+            Me.Hide
+        End If
+    End If
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   intCancel:
+'     The routine sets this value to a non-zero value if initialization
+'     is was canceled.
+'-------------------------------------------------------------------------------
+Private Sub mInitialize _
+( _
+    ByRef intCancel As Integer _
+)
+    mblnNavigatorFormLoaded = False
+
+    Set WSA = New WorshipServiceAssistant.WSAApplication
+    WSA.Initialize Application
+    
+    If (WSA.HasActivePresentation <> Office.msoTrue) Then
+        If (WSA.Presentations.Count >= 1) Then
+            WSA.Presentations.Item(1).Activate
+        End If
+    End If
+    
+    Application.Left = Application.Left + Me.Width
+    Application.Width = Application.Width - Me.Width
+    
+    mNavigator_Initialize
+    
+    mNavigator_Update WSA.ActivePresentation
+    
+    mblnNavigatorFormLoaded = True
+    
+    intCancel = 0
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub mTerminate _
+( _
+)
+    ' Exit without unloading form, because the form was never loaded.
+    If (mblnNavigatorFormLoaded = False) Then
+        Exit Sub
+    End If
+    
+    Me.Hide
+    WSA.Terminate
+    Set WSA = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+'   intCancel:
+'     The routine sets this value to a non-zero value if initialization
+'     is was canceled.
+'-------------------------------------------------------------------------------
+Private Sub mQueryClose _
+( _
+    ByRef intCancel As Integer, _
+    ByRef intCloseMode As Integer _
+)
+    Dim intResponse As VBA.VbMsgBoxResult
+    
+    ' Exit without unloading form, because the form was never loaded.
+    If (mblnNavigatorFormLoaded = False) Then
+        mblnNavigatorFocusLocked = False
+        intCancel = 0
+        Exit Sub
+    End If
+    
+    If ((intCloseMode = VBA.vbFormControlMenu) Or _
+        (intCloseMode = VBA.vbFormCode)) Then
+        intResponse = VBA.MsgBox( _
+            buttons:= _
+                VBA.vbYesNo + VBA.vbDefaultButton2 + VBA.vbExclamation, _
+            Title:= _
+                modProject.GstrNamePretty, _
+            Prompt:= _
+                "Are you sure you want to exit the Navigator?")
+        If (intResponse = VBA.vbYes) Then
+            mblnNavigatorFocusLocked = False
+            intCancel = 0
+        Else
+            intCancel = 1
+        End If
     End If
 End Sub
 
@@ -1657,600 +2145,418 @@ End Sub
 '===============================================================================
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub UserForm_Initialize _
 ( _
 )
-    Dim prePresentation As PowerPoint.Presentation
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    Dim tlbTemp As Office.CommandBar
+    Dim intCancel As Integer
     
-    mblnNavigatorFormLoaded = False
+    intCancel = 0
     
-    If (modPresentation.gblnExists = False) Then
+    mInitialize intCancel
+    
+    If (intCancel <> 0) Then
         VBA.Unload frmNavigator
         Exit Sub
     End If
-    
-    mblnNavigatorFormLoaded = True
-    
-    mblnNavigatorFormLocked = True
-    
-    '
-    ' Configure the PowerPoint options to the most appropiate values
-    ' for running the Navigator.
-    '
-    mPowerPointOptionsConfigure
-
-    '
-    ' Hide any floating or pop-up menus so that they do not interfere with
-    ' the Navigator form.
-    '
-    For Each tlbTemp In Application.CommandBars
-        If ((tlbTemp.Position = Office.msoBarFloating) Or _
-            (tlbTemp.Position = Office.msoBarPopup)) Then
-            If (tlbTemp.Visible = True) Then
-                tlbTemp.Visible = False
-            End If
-        End If
-    Next
-    
-    If (modPresentation.gblnIsPresentation(Application.ActiveWindow.Presentation) = False) Then
-        If (modPresentation.gblnExists = True) Then
-            For Each prePresentation In Application.Presentations
-                If (modPresentation.gblnIsPresentation(prePresentation) = True) Then
-                    If (prePresentation.Windows.Count > 0) Then
-                        prePresentation.Windows(1).Activate
-                    End If
-                End If
-            Next
-        End If
-    End If
-    
-    Set dwDocumentWindow = Application.ActiveWindow
-    
-    modBanner.gCreate
-    
-    For Each prePresentation In Application.Presentations
-        If (modSlideShow.gblnIsSlideShow(prePresentation) = True) Then
-            modSlideShow.gSetup prePresentation
-        End If
-    Next
-    dwDocumentWindow.Activate
-    For Each prePresentation In Application.Presentations
-        If (modSlideShow.gblnIsSlideShow(prePresentation) = True) Then
-            mSlideTitlesUpdate prePresentation
-        End If
-    Next
-    dwDocumentWindow.Activate
-    For Each prePresentation In Application.Presentations
-        If (modSlideShow.gblnIsSlideShow(prePresentation) = True) Then
-            mPresentationViewLoad prePresentation
-        End If
-    Next
-    dwDocumentWindow.Activate
-    
-    mApplicationViewUpdate True
-    
-    mApplicationViewSet
-    
-    Me.tabPages.Value = Me.tabPages("tabPresentation").Index
-    
-    Me.cmdSlideSelectionMode.Tag = "0"
-    Me.lblSlideSelectionNumber.Caption = ""
-    Me.lblSlideSelectionText.Caption = ""
-    Me.lblBannerSelectionText.Caption = ""
-    
-    Me.StartUpPosition = 0
-    Me.Left = Application.Left - Me.Width
-    Me.Top = Application.Top
-    
-    mFormInitialize
-    
-    Me.gRefresh
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub UserForm_Terminate _
+( _
+)
+    mTerminate
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
 '-------------------------------------------------------------------------------
 Private Sub UserForm_QueryClose _
 ( _
     ByRef intCancel As Integer, _
     ByRef intCloseMode As Integer _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    Dim prePresentation As PowerPoint.Presentation
-    Dim intResponse As VBA.VbMsgBoxResult
-    
-    '
-    ' Exit without unloading form, because the form was never loaded.
-    '
-    If (mblnNavigatorFormLoaded = False) Then
-        Exit Sub
-    End If
-    
-    intResponse = VBA.MsgBox( _
-        buttons:= _
-            VBA.vbYesNo + VBA.vbDefaultButton2 + VBA.vbExclamation, _
-        Title:= _
-            modProject.GstrNamePretty, _
-        Prompt:= _
-            "Are you sure you want to exit the Navigator?")
-
-    If (intResponse = VBA.vbYes) Then
-        intCancel = 0
-        
-        Me.Hide
-        
-        Set dwDocumentWindow = Application.ActiveWindow
-        For Each prePresentation In Application.Presentations
-            If (modSlideShow.gblnIsSlideShow(prePresentation) = True) Then
-                mPresentationViewUnload prePresentation
-            End If
-        Next
-        dwDocumentWindow.Activate
-        
-        mApplicationViewUpdate False
-        
-        '
-        ' Work around a PowerPoint 2002 bug that causes the
-        ' user to be prompted to save the banner presentation,
-        ' even though the banner presentation was marked
-        ' as saved after all changes were made.
-        '
-        For Each prePresentation In Application.Presentations
-            If (modBanner.gblnIsBanner(prePresentation)) Then
-                prePresentation.Saved = Office.msoTrue
-            End If
-        Next
-    Else
-        intCancel = 1
-    End If
+    mQueryClose intCancel, intCloseMode
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub UserForm_Activate _
 ( _
 )
-    mblnNavigatorFormLocked = True
-    mblnNavigatorValid
+    mblnNavigatorFocusLocked = True
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub tabPages_Change _
 ( _
 )
-    frmNavigator.gRefresh
+    mNavigator_Update WSA.ActivePresentation
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub cmdGeneralExit_Click _
-( _
-)
-    VBA.Unload frmNavigator
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub cmdGeneralHelp_Click _
-( _
-)
-    Dim strHelpFile As String
-    
-    strHelpFile = modHelp.gstrFileNameGet(True)
-    
-    If (strHelpFile = "") Then
-        Exit Sub
-     End If
-        Call modHelp.HtmlHelp( _
-        0&, _
-        strHelpFile, _
-        modHelp.HH_DISPLAY_TOPIC, _
-        modHelp.GstrIDH_TopicPath_WSACommandBarNavigator)
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdGeneralPageNext_Click _
 ( _
 )
-    mGeneralPageNext Application.ActiveWindow
-    mblnNavigatorValid
-End Sub
-
-'-------------------------------------------------------------------------------
-' Description:
-'-------------------------------------------------------------------------------
-Private Sub cmdSlideShowLoad_Click _
-( _
-)
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowLoad Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorGeneralPageNext_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideShowHide_Click _
+Private Sub cmdGeneralHelp_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowHide Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorGeneralHelp_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideShowRun_Click _
+Private Sub cmdGeneralExit_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowRun Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorGeneralExit_Action
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideShowPause_Click _
+Private Sub cmdPresentationSlideShowLoad_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowPause Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideShowLoad_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideShowEffectPrev_Click _
+Private Sub cmdPresentationSlideShowHide_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowEffectPrev Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideShowHide_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideShowEffectNext_Click _
+Private Sub cmdPresentationSlideShowRun_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideShowEffectNext Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideShowRun_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub cmdPresentationSlideShowPause_Click _
+( _
+)
+    If (mblnValid = False) Then
+        Exit Sub
+    End If
+    mNavigatorPresentationSlideShowPause_Action WSA.ActivePresentation
+    mblnValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub cmdPresentationSlideShowEffectPrev_Click _
+( _
+)
+    If (mblnValid = False) Then
+        Exit Sub
+    End If
+    mNavigatorPresentationSlideShowEffectPrev_Action WSA.ActivePresentation
+    mblnValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+'-------------------------------------------------------------------------------
+Private Sub cmdPresentationSlideShowEffectNext_Click _
+( _
+)
+    If (mblnValid = False) Then
+        Exit Sub
+    End If
+    mNavigatorPresentationSlideShowEffectNext_Action WSA.ActivePresentation
+    mblnValid
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdPresentationSelectionPrev_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mPresentationSelectionPrev Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSelectionPrev_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdPresentationSelectionNext_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mPresentationSelectionNext Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSelectionNext_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideSelectionMode_Click _
+Private Sub cmdPresentationSlideSelectionMode_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideSelectionMode Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideSelectionMode_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub cmdSlideSelectionClear_Click _
+Private Sub cmdPresentationSlideSelectionClear_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideSelectionClear Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideSelectionClear_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
-Private Sub lstSlideSelectionList_Click _
+Private Sub lstPresentationSlideSelectionList_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mSlideSelectionUpdate Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorPresentationSlideSelectionUpdate_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerConfigurationBannerDisable_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerConfigurationBannerDisable Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerConfigurationBannerDisable_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerShowLoad_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerShowLoad Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerShowLoad_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerShowHide_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerShowHide Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerShowHide_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerColorPrev_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerColorPrev Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerColorPrev_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerColorNext_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerColorNext Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerColorNext_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub cmdBannerSelectionClear_Click _
 ( _
 )
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    mBannerSelectionClear Application.ActiveWindow
-    mblnNavigatorValid
+    mNavigatorBannerSelectionClear_Action WSA.ActivePresentation
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
-'   This event handler forces the 'Empty' frame to hold the focus.
+' Purpose:
+'   Forces the fraEmpty frame to hold the focus if the form's focus is locked.
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub fraEmpty_Exit _
 ( _
     ByVal Cancel As MSForms.ReturnBoolean _
 )
-    Cancel = mblnNavigatorFormLocked
+    Cancel = mblnNavigatorFocusLocked
     If (Cancel = True) Then
-        mblnNavigatorValid
+        mblnValid
     End If
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub fraEmpty_KeyPress _
 ( _
     ByVal intKeyASCII As MSForms.ReturnInteger _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    Dim strFilterText As String
-    Dim strBannerText As String
-    
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-    
-    Set dwDocumentWindow = Application.ActiveWindow
-        
-    If (Me.tabPages(Me.tabPages.Value).Name = "tabPresentation") Then
-        If (Me.lblSlideSelectionNumber <> "") Then
-            strFilterText = Me.lblSlideSelectionNumber.Caption
-        Else
-            strFilterText = Me.lblSlideSelectionText.Caption
-        End If
-        
-        Select Case intKeyASCII
-            Case 8:                   ' <backspace>
-                If (VBA.Len(strFilterText) > 0) Then
-                    strFilterText = VBA.Left(strFilterText, VBA.Len(strFilterText) - 1)
-                End If
-            Case 32 To 127:           ' <space> or printable character
-                strFilterText = strFilterText & VBA.Chr(intKeyASCII)
-            Case Else:
-        End Select
-                
-        If (VBA.IsNumeric(strFilterText) = True) Then
-            Me.lblSlideSelectionNumber.Caption = strFilterText
-            Me.lblSlideSelectionText.Caption = ""
-        Else
-            Me.lblSlideSelectionNumber.Caption = ""
-            Me.lblSlideSelectionText.Caption = strFilterText
-        End If
-        
-        mSlideListUpdate dwDocumentWindow
-    ElseIf (Me.tabPages(Me.tabPages.Value).Name = "tabBanner") Then
-        If (modBanner.gblnEnabled = True) Then
-            strBannerText = Me.lblBannerSelectionText.Caption
-            Select Case intKeyASCII
-                Case 8:                   ' <backspace>
-                    If (VBA.Len(strBannerText) > 0) Then
-                        strBannerText = VBA.Left(strBannerText, VBA.Len(strBannerText) - 1)
-                    End If
-                Case 32 To 127:           ' <space> or printable character
-                    strBannerText = strBannerText & VBA.Chr(intKeyASCII)
-                Case Else:
-            End Select
-            Me.lblBannerSelectionText.Caption = strBannerText
-        End If
-    End If
-    
-    mControlsUpdate dwDocumentWindow
-    mblnNavigatorValid
+    mNavigator_KeyPress WSA.ActivePresentation, intKeyASCII
+    mblnValid
 End Sub
 
 '-------------------------------------------------------------------------------
-' Description:
+' Purpose:
+' Assumptions:
+' Effects:
 '-------------------------------------------------------------------------------
 Private Sub fraEmpty_KeyDown _
 ( _
     ByVal intKeyCode As MSForms.ReturnInteger, _
     ByVal intKeyModifier As Integer _
 )
-    Dim dwDocumentWindow As PowerPoint.DocumentWindow
-    Dim blnShift As Boolean
-    Dim blnControl As Boolean
-    Dim blnAlternate As Boolean
-    
-    If (mblnNavigatorValid = False) Then
+    If (mblnValid = False) Then
         Exit Sub
     End If
-
-    Set dwDocumentWindow = Application.ActiveWindow
-    
-    blnShift = intKeyModifier And 1
-    blnControl = intKeyModifier And 2
-    blnAlternate = intKeyModifier And 4
-    
-    If (Me.tabPages(Me.tabPages.Value).Name = "tabPresentation") Then
-        If ((blnShift = False) And (blnControl = False) And (blnAlternate = False)) Then
-            Select Case intKeyCode
-                Case 13:                    ' RETURN
-                    mSlideShowLoad dwDocumentWindow
-                Case 46:                    ' DELETE
-                    mSlideSelectionClear dwDocumentWindow
-                Case 37:                    ' LEFT_ARROW
-                    mPresentationSelectionPrev dwDocumentWindow
-                Case 39:                    ' RIGHT_ARROW
-                    mPresentationSelectionNext dwDocumentWindow
-                Case 38:                    ' UP_ARROW
-                    mSlideSelectionPrev dwDocumentWindow
-                Case 40:                    ' DOWN_ARROW
-                    mSlideSelectionNext dwDocumentWindow
-            End Select
-        ElseIf ((blnShift = False) And (blnControl = True) And (blnAlternate = False)) Then
-            Select Case intKeyCode
-                Case 72, 83:                ' "H", "S"
-                    mSlideShowHide dwDocumentWindow
-                Case 82:                    ' "R"
-                    mSlideShowRun dwDocumentWindow
-                Case 80:                    ' "P"
-                    mSlideShowPause dwDocumentWindow
-                Case 38:                    ' UP_ARROW
-                    mSlideShowEffectPrev dwDocumentWindow
-                Case 40:                    ' DOWN_ARROW
-                    mSlideShowEffectNext dwDocumentWindow
-                Case 77:                    ' "M"
-                    mSlideSelectionMode dwDocumentWindow
-            End Select
-        End If
-    ElseIf (Me.tabPages(Me.tabPages.Value).Name = "tabBanner") Then
-        If ((blnShift = False) And (blnControl = False) And (blnAlternate = False)) Then
-            Select Case intKeyCode
-                Case 13:                    ' RETURN
-                    mBannerShowLoad dwDocumentWindow
-                Case 46:                    ' DELETE
-                    mBannerSelectionClear dwDocumentWindow
-                Case 37:                    ' LEFT_ARROW
-                    mBannerColorPrev dwDocumentWindow
-                Case 39:                    ' RIGHT_ARROW
-                    mBannerColorNext dwDocumentWindow
-            End Select
-        ElseIf ((blnShift = False) And (blnControl = True) And (blnAlternate = False)) Then
-            Select Case intKeyCode
-                Case 72, 83:                ' "H", "S"
-                    mBannerShowHide dwDocumentWindow
-                Case 68, 69:                ' "D", "E"
-                    mBannerConfigurationBannerDisable dwDocumentWindow
-            End Select
-        End If
-    End If
-    If ((blnShift = False) And (blnControl = False) And (blnAlternate = False)) Then
-        Select Case intKeyCode
-            Case 9:                     ' TAB
-                mGeneralPageNext dwDocumentWindow
-            Case 27:                    ' ESCAPE
-                VBA.Unload frmNavigator
-            Case 112:                   ' F1
-                cmdGeneralHelp_Click
-        End Select
-    End If
-    mblnNavigatorValid
+    mNavigator_KeyDown WSA.ActivePresentation, intKeyCode, intKeyModifier
+    mblnValid
 End Sub
-

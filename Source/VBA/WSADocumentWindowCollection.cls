@@ -1,7 +1,15 @@
-Attribute VB_Name = "modSort"
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "WSADocumentWindowCollection"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.modSort
+'   WorshipServiceAssistant.WSADocumentWindowCollection
 '
 ' Description:
 '
@@ -9,7 +17,7 @@ Attribute VB_Name = "modSort"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001,2002 Paul Bender
+'   Copyright (c) 2002 Paul Bender
 '
 '   All rights reserved.
 '
@@ -40,20 +48,6 @@ Attribute VB_Name = "modSort"
 '
 ' Change History:
 '   1.04.0000:
-'     (1) Deleted the unused mSortSlidesByCategory routine.
-'     (2) Modified mSortSlidesByCategory routine to use the Slide object
-'         MoveTo method added in PowerPoint 2002.
-'     (3) Modified the gRun routine to remove the code that was added
-'         in 1.00.0001 to collapse the pasted slides, since the use of the
-'         MoveTo method made it unnecessary.
-'     (4) Cleaned up the mSortSlidesByTitle routine.
-'   1.03.0002:
-'     (1) Made changes to the source code so that it follows Microsoft's
-'         Visual Basic coding conventions.
-'   1.00.0001:
-'     (1) Modified the gRun routine to collapse the pasted slides in the
-'         outline pane.
-'   1.00.0000:
 '     Initial revision.
 '===============================================================================
 
@@ -61,7 +55,6 @@ Attribute VB_Name = "modSort"
 '===============================================================================
 ' Options.
 '===============================================================================
-Option Private Module
 Option Explicit
 Option Compare Text
 Option Base 0
@@ -85,10 +78,11 @@ Option Base 0
 '===============================================================================
 ' Private Variables.
 '===============================================================================
+Private mudtCollection As New WorshipServiceAssistant.WSACollection
 
 
 '===============================================================================
-' Public Subroutines and Functions.
+' Public Properties and Methods.
 '===============================================================================
 
 '-------------------------------------------------------------------------------
@@ -98,20 +92,11 @@ Option Base 0
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gRun _
+Public Property Get Count _
 ( _
-    ByRef dwDocumentWindow As PowerPoint.DocumentWindow _
 )
-    mSlidesSortByTitle _
-        prePresentation:=dwDocumentWindow.Presentation, _
-        lngLowerIndex:=1, _
-        lngUpperIndex:=dwDocumentWindow.Presentation.Slides.Count
-End Sub
-
-
-'===============================================================================
-' Private Subroutines and Functions.
-'===============================================================================
+    Count = mudtCollection.Count
+End Property
 
 '-------------------------------------------------------------------------------
 ' Purpose:
@@ -120,75 +105,148 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub mSlidesSortByTitle _
+Public Function Item _
 ( _
-    ByRef prePresentation As PowerPoint.Presentation, _
-    ByRef lngLowerIndex As Long, _
-    ByRef lngUpperIndex As Long _
-)
-    Dim strTitle As String
-    Dim lngDelta As Long
-    Dim lngMatch As Long
-    Dim lngIndex As Long
-    
-    With prePresentation.Slides
-        If ((lngLowerIndex < 1) Or _
-            (lngUpperIndex > .Count) Or _
-            (lngLowerIndex >= lngUpperIndex)) Then
-            Exit Sub
-        End If
-        
-        For lngIndex = lngLowerIndex + 1 To lngUpperIndex Step 1
-            strTitle = mstrTitle(.Item(lngIndex))
-            lngDelta = 1
-            While (lngDelta < (lngIndex - lngLowerIndex + 1))
-                lngDelta = lngDelta * 2
-            Wend
-            lngMatch = lngLowerIndex - 1 + lngDelta / 2
-            While lngDelta > 1
-                lngDelta = lngDelta / 2
-                If (lngMatch - lngDelta >= 1) Then
-                    If (strTitle < mstrTitle(.Item(lngMatch - lngDelta))) Then
-                        lngMatch = lngMatch - lngDelta
-                    End If
-                End If
-                If (lngMatch + lngDelta - 1 < lngIndex) Then
-                    If (strTitle >= mstrTitle(.Item(lngMatch + lngDelta - 1))) Then
-                        lngMatch = lngMatch + lngDelta
-                    End If
-                End If
-            Wend
-            If (lngIndex <> lngMatch) Then
-                .Item(lngIndex).MoveTo lngMatch
-            End If
-        Next
-    End With
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
-Private Function mstrTitle _
-( _
-    ByRef sldSlide As PowerPoint.Slide _
-) As String
-    mstrTitle = ""
-    With sldSlide.Shapes
-        If (.HasTitle = Office.msoTrue) Then
-            With .Title
-                If (.HasTextFrame = Office.msoTrue) Then
-                    With .TextFrame
-                        If (.HasText = Office.msoTrue) Then
-                            mstrTitle = .TextRange.Text
-                        End If
-                    End With
-                End If
-            End With
-        End If
-    End With
+    ByRef lngIndex As Long _
+) As WorshipServiceAssistant.WSADocumentWindow
+    Set Item = mudtCollection.Item(lngIndex)
 End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Function Index _
+( _
+    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
+) As Long
+    Index = mudtCollection.Index(udtWindow)
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Add _
+( _
+    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
+)
+    mudtCollection.Add udtWindow
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Remove _
+( _
+    ByRef udtWindow As WorshipServiceAssistant.WSADocumentWindow _
+)
+    mudtCollection.Remove udtWindow
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Initialize _
+( _
+)
+    mudtCollection.Initialize
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Terminate _
+( _
+)
+    mudtCollection.Terminate
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub ConfigurationSave _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub ConfigurationRestore _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub ConfigurationInitialize _
+( _
+)
+End Sub
+
+
+'===============================================================================
+' Private Properties and Methods.
+'===============================================================================
+
+
+'===============================================================================
+' Private Event Handlers.
+'===============================================================================
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub Class_Initialize _
+( _
+)
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Sub Class_Terminate _
+( _
+)
+End Sub
 

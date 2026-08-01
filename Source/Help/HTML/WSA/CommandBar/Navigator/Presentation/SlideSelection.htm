@@ -38,11 +38,12 @@ When filtering on number, only the slide with the corresponding slide number wil
 If the filter criteria is not numeric, then the Navigator assumes that the filter is slide text. When the Navigator is assuming that the filter is slide text, then Navigator places the filter text in the 'Slide Selection'
 <a href="SlideSelection/text.htm"
    title="Get help on the Text display">'Text' display</a>.
-When filtering on the title, only slides that have titles beginning with the filter text will appear in the 'Slide Selection'
+When filtering on text, the Navigator matches the text starting at word boundaries.
+In addition, the Navigator window attempts to be somewhat forgiving.  Capitalization, punctuation and white space are not considered when filtering.  For example, the filter <em>"lord i lift"</em> will match the text <em>"Lord, I lift"</em>.
+When the filter mode is "Filter matching Number and Title", only slides whose title begins with the filter text will appear in the 'Slide Selection'
 <a href="SlideSelection/List.htm"
    title="Get help on the List display">'List' display</a>.
-When filtering on the title, the Navigator window attempts to be somewhat forgiving.  Capitalization, punctuation and white space are not considered when filtering.  For example, the filter <em>"lord i lift"</em> will match titles beginning with <em>"Lord, I lift"</em>.
-When filtering on body, any slides with body text that matches the filter text will appear in the 'Slide Selection'
+When the filter mode is "Filter matching Number and Title and Body", only slides whose title or body contains the filter text will appear in the 'Slide Selection'
 <a href="SlideSelection/List.htm"
    title="Get help on the List display">'List' display</a>.
 </p>
