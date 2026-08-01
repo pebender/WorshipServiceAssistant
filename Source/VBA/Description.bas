@@ -47,12 +47,18 @@ Attribute VB_Name = "Description"
 '===============================================================================
 ' WSA                                   WSAApplication
 '   Banner                              WSABanner
+'     Presentation                      WSAPresentation
+'       Windows                         WSAWindowCollection
+'         Window                        WSAWindow
+'       Slides                          WSASlideCollection
+'         Slide                         WSASlide
+'       SlideShowWindow                 WSASlideShowWindow
 '   Presentations                       WSAPresentationCollection
 '     Presentation                      WSAPresentation
 '       Windows                         WSAWindowCollection
 '         Window                        WSAWindow
 '       Slides                          WSASlideCollection
 '         Slide                         WSASlide
-'     SlideShowWindow                   WSASlideShowWindow
+'       SlideShowWindow                 WSASlideShowWindow
 '===============================================================================
 

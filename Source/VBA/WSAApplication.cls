@@ -83,7 +83,7 @@ Private mappDoppelganger As PowerPoint.Application
 
 Private mudtBanner As New WorshipServiceAssistant.WSABanner
 Private mudtPresentations As New WorshipServiceAssistant.WSAPresentationCollection
-Private mlngSlideShowWindowDisplay As Long
+Private mlngSlideShowWindowMonitor As Long
 Private mlngSlideShowWindowSize As Long
 
 Private mblnWindowWindowStateMax As Boolean
@@ -193,7 +193,7 @@ Public Sub Initialize _
     
     Set mappDoppelganger = appDoppelganger
     
-    mlngSlideShowWindowDisplay = modProject.glngSlideShowWindowDisplay
+    mlngSlideShowWindowMonitor = modProject.glngSlideShowWindowMonitor
     mlngSlideShowWindowSize = modProject.glngSlideShowWindowSize
     
     mblnWindowWindowStateMax = False
@@ -266,11 +266,11 @@ Public Sub Terminate _
     mblnWindowWindowStateMax = False
     
     mlngSlideShowWindowSize = 0
-    mlngSlideShowWindowDisplay = 0
+    mlngSlideShowWindowMonitor = 0
     
     Set mappDoppelganger = Nothing
     
-    mlngSlideShowWindowDisplay = 0
+    mlngSlideShowWindowMonitor = 0
     mlngSlideShowWindowSize = 0
 
     If ((dwCurrent Is Nothing) = False) Then
@@ -298,10 +298,10 @@ End Property
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Property Get SlideShowWindowDisplay _
+Public Property Get SlideShowWindowMonitor _
 ( _
 )
-    SlideShowWindowDisplay = mlngSlideShowWindowDisplay
+    SlideShowWindowMonitor = mlngSlideShowWindowMonitor
 End Property
 
 '-------------------------------------------------------------------------------
@@ -422,7 +422,7 @@ Private Sub mConfigurationInitialize _
     mblnOptionSet "SaveAutoRecoveryInfo", 0
 
     ' Hide any floating, pop-up and other annoying command bars.
-    With Application.CommandBars
+    With Me.Doppelganger.CommandBars
         For lngIndex = 1 To .Count Step 1
             With .Item(lngIndex)
                 If ((.Position = Office.msoBarFloating) Or _
@@ -463,7 +463,7 @@ Private Function mblnOptionGet _
     mblnOptionGet = False
     strOptionPath = _
         "Software\Microsoft\Office" & _
-        "\" & Application.VERSION & _
+        "\" & Me.Doppelganger.VERSION & _
         "\" & "PowerPoint" & _
         "\" & "Options"
     
@@ -539,14 +539,14 @@ Private Function mblnOptionSet _
         blnResultValid = mblnOptionGet(strOptionName, lngResultValue)
         If (blnResultValid = False) Then
             mOptionDialogTabSet lngOptionTab
-            Application.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "%" & strOptionShortcutKey, True
             VBA.SendKeys "{ENTER}", True
             blnResultValid = mblnOptionGet(strOptionName, lngResultValue)
         End If
         If ((blnResultValid = True) And (lngResultValue <> lngOptionValue)) Then
             mOptionDialogTabSet lngOptionTab
-            Application.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "%" & strOptionShortcutKey, True
             VBA.SendKeys "{ENTER}", True
         End If
@@ -571,7 +571,7 @@ Private Sub mOptionDialogTabSet _
     blnResult = mblnOptionGet("Options dialog current tab", lngValue)
     If ((blnResult = True) And (lngValue <> lngIndex)) Then
         While ((blnResult = True) And (lngValue <> lngIndex))
-            Application.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "^{TAB}", True
             VBA.SendKeys "{ENTER}", True
             blnResult = mblnOptionGet("Options dialog current tab", lngValue)

@@ -53,6 +53,9 @@ Attribute VB_Name = "modToolbar"
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0001:
+'     (1) Changed the name of the "Debug" menu's menu "SSW Display" to
+'         "SSW Monitor".
 '   1.04.0000:
 '     (1) Removed the checks from the pop-up menu actions, because deleting
 '         the pop-up menu from inside the action causes PowerPoint 2002 to
@@ -128,7 +131,7 @@ Private mcmdWSASongEditSort         As Office.CommandBarButton
 Private mcmdWSASongEditCreateIndex  As Office.CommandBarButton
 Private mcboWSACategory             As Office.CommandBarComboBox
 Private mmnuWSADebug                As Office.CommandBarPopup
-Private mmnuWSADebugSSWDisplay      As Office.CommandBarPopup
+Private mmnuWSADebugSSWMonitor      As Office.CommandBarPopup
 Private mmnuWSADebugSSWSize         As Office.CommandBarPopup
 Private mmnuWSAHelp                 As Office.CommandBarPopup
 Private mcmdWSAHelpDebug            As Office.CommandBarButton
@@ -266,10 +269,10 @@ Public Sub gDisable _
     
     If (mmnuWSADebug.Visible = True) Then
         mmnuWSADebug.Enabled = False
-        mmnuWSADebugSSWDisplay.Enabled = False
+        mmnuWSADebugSSWMonitor.Enabled = False
         mmnuWSADebugSSWSize.Enabled = False
-        For lngIndex = 1 To mmnuWSADebugSSWDisplay.Controls.Count Step 1
-            mmnuWSADebugSSWDisplay.Controls(lngIndex).State = Office.msoButtonUp
+        For lngIndex = 1 To mmnuWSADebugSSWMonitor.Controls.Count Step 1
+            mmnuWSADebugSSWMonitor.Controls(lngIndex).State = Office.msoButtonUp
         Next
         For lngIndex = 1 To mmnuWSADebugSSWSize.Controls.Count Step 1
             mmnuWSADebugSSWSize.Controls(lngIndex).State = Office.msoButtonUp
@@ -307,7 +310,7 @@ Public Sub gRefresh _
     mcboWSACategory.Enabled = False
     If (mmnuWSADebug.Visible = True) Then
         mmnuWSADebug.Enabled = True
-        mmnuWSADebugSSWDisplay.Enabled = True
+        mmnuWSADebugSSWMonitor.Enabled = True
         mmnuWSADebugSSWSize.Enabled = True
     End If
     mmnuWSAHelp.Enabled = True
@@ -346,10 +349,10 @@ Public Sub gRefresh _
         mcmdWSAHelpDebug.State = Office.msoButtonDown
         
         mmnuWSADebug.Enabled = True
-        mmnuWSADebugSSWDisplay.Enabled = True
+        mmnuWSADebugSSWMonitor.Enabled = True
         mmnuWSADebugSSWSize.Enabled = True
         
-        mmnuWSADebugSSWDisplay.Controls(modProject.glngSlideShowWindowDisplay + 1).State = Office.msoButtonDown
+        mmnuWSADebugSSWMonitor.Controls(modProject.glngSlideShowWindowMonitor + 1).State = Office.msoButtonDown
         mmnuWSADebugSSWSize.Controls(modProject.glngSlideShowWindowSize + 1).State = Office.msoButtonDown
     End If
 End Sub
@@ -527,7 +530,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWDisplay _
+Public Sub gOnActionDebugSSWMonitor _
 ( _
 )
 End Sub
@@ -539,7 +542,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Public Sub gOnActionDebugSSWDisplayButton _
+Public Sub gOnActionDebugSSWMonitorButton _
 ( _
 )
     ' Load the project if the project is not loaded
@@ -548,7 +551,7 @@ Public Sub gOnActionDebugSSWDisplayButton _
         Exit Sub
     End If
     
-    modProject.glngSlideShowWindowDisplay = CommandBars.ActionControl.Index - 1
+    modProject.glngSlideShowWindowMonitor = CommandBars.ActionControl.Index - 1
     modToolbar.gRefresh
 End Sub
 
@@ -838,7 +841,7 @@ Public Sub gOnActionHelpDebug _
     
     mmnuWSADebug.Visible = Not mmnuWSADebug.Visible
     
-    modProject.glngSlideShowWindowDisplay = 0
+    modProject.glngSlideShowWindowMonitor = 0
     modProject.glngSlideShowWindowSize = 0
     modToolbar.gRefresh
 End Sub
@@ -1036,7 +1039,7 @@ End Sub
 Private Sub DebugControlAdd _
 ( _
 )
-    Dim lngDisplay As Long
+    Dim lngMonitor As Long
     Dim lngSize As Long
     Dim cmdMenuItem As Office.CommandBarButton
     
@@ -1053,12 +1056,12 @@ Private Sub DebugControlAdd _
         .BeginGroup = True
         .Width = 72
         
-        Set mmnuWSADebugSSWDisplay = .Controls.Add( _
+        Set mmnuWSADebugSSWMonitor = .Controls.Add( _
             Type:=Office.msoControlPopup, _
             Temporary:=True)
-        mmnuWSADebugSSWDisplay.Caption = "SSW Display"
-        mmnuWSADebugSSWDisplay.TooltipText = "Set the slide show window monitor"
-        mmnuWSADebugSSWDisplay.BeginGroup = False
+        mmnuWSADebugSSWMonitor.Caption = "SSW Monitor"
+        mmnuWSADebugSSWMonitor.TooltipText = "Set the slide show window monitor"
+        mmnuWSADebugSSWMonitor.BeginGroup = False
         
         Set mmnuWSADebugSSWSize = .Controls.Add( _
             Type:=Office.msoControlPopup, _
@@ -1069,20 +1072,20 @@ Private Sub DebugControlAdd _
         
     End With
     
-    With mmnuWSADebugSSWDisplay
+    With mmnuWSADebugSSWMonitor
         Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
         cmdMenuItem.Caption = "Default"
-        cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWDisplayButton"
+        cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWMonitorButton"
         cmdMenuItem.BeginGroup = False
         cmdMenuItem.State = Office.msoButtonUp
-        lngDisplay = 1
-        While lngDisplay <= modWin32User32.GetSystemMetrics(modWin32User32.SM_CMONITORS)
+        lngMonitor = 1
+        While lngMonitor <= modWin32User32.GetSystemMetrics(modWin32User32.SM_CMONITORS)
             Set cmdMenuItem = .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
-            cmdMenuItem.Caption = "Monitor " & lngDisplay
-            cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWDisplayButton"
+            cmdMenuItem.Caption = "Monitor " & lngMonitor
+            cmdMenuItem.OnAction = "modToolbar.gOnActionDebugSSWMonitorButton"
             cmdMenuItem.BeginGroup = False
             cmdMenuItem.State = Office.msoButtonUp
-            lngDisplay = lngDisplay + 1
+            lngMonitor = lngMonitor + 1
         Wend
         If (.Controls.Count >= 2) Then
             .Controls(2).BeginGroup = True

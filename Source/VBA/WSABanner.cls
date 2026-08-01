@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '===============================================================================
 ' Name:
-'   WorshipServiceAssistant.WSAPresentation
+'   WorshipServiceAssistant.WSABanner
 '
 ' Description:
 '
@@ -47,6 +47,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0001:
+'     (1) Fixed a bug that caused the banner to display on the wrong
+'         monitor. As a result of this fix, the banner presentation window
+'         is no longer hidden.
 '   1.04.0000:
 '     Initial revision.
 '===============================================================================
@@ -218,8 +222,6 @@ Public Sub Initialize _
     ByRef udtApplication As WorshipServiceAssistant.WSAApplication _
 )
     Dim prePresentation As PowerPoint.Presentation
-    Dim objFileSystem As Object
-    Dim strFileName As String
     Dim lngIndex As Long
     
     Set mudtApplication = udtApplication
@@ -231,44 +233,18 @@ Public Sub Initialize _
                 Exit For
             End If
         Next
-        ' Create a new banner presentation.
-        ' Ideally, we could directly create the banner presentation without
-        ' a document window. However, because changing some of the slide
-        ' show window settings requires there to be a document window,
-        ' we must create the banner presentation with a document window
-        ' and then hide the document window later.
         If (lngIndex > .Count) Then
-            ' Create a new banner presentation.
             Set prePresentation = mpreCreate
             prePresentation.Tags.Add MstrBannerTag, "True"
-            
-            ' Configure the slide show window appropriately.
-            With mudtPresentation
-                .Initialize mudtApplication, prePresentation
-                .Terminate
-            End With
-            
-            ' Get a temporary filename.
-            Set objFileSystem = VBA.CreateObject("Scripting.FileSystemObject")
-            strFileName = _
-                objFileSystem.GetSpecialFolder(2) _
-                & "\" & _
-                objFileSystem.GetTempName
-            
-            ' Get rid of the banner presentation document window.
-            prePresentation.SaveAs strFileName
-            prePresentation.Close
-            Set prePresentation = mudtApplication.Doppelganger.Presentations.Open(strFileName, ReadOnly:=Office.msoTrue, WithWindow:=Office.msoFalse)
-                        
-            objFileSystem.DeleteFile strFileName, True
-            
-            Set objFileSystem = Nothing
         End If
     End With
     
     mudtPresentation.Initialize mudtApplication, prePresentation
     
-    mConfigurationInitialize
+    If (mudtPresentation.SlideShowWindow.Exists = False) Then
+        mudtPresentation.SlideShowWindow.Load 1
+        Me.Enabled = False
+    End If
 End Sub
 
 '-------------------------------------------------------------------------------
@@ -281,6 +257,9 @@ End Sub
 Public Sub Terminate _
 ( _
 )
+    ' This should not be needed.
+    mudtPresentation.Doppelganger.Saved = Office.msoTrue
+    
     mudtPresentation.Terminate
     
     Set mudtApplication = Nothing
@@ -354,22 +333,6 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Sub mConfigurationInitialize _
-( _
-)
-    If (mudtPresentation.SlideShowWindow.Exists = False) Then
-        mudtPresentation.SlideShowWindow.Load 1
-        Me.Enabled = False
-    End If
-End Sub
-
-'-------------------------------------------------------------------------------
-' Purpose:
-' Assumptions:
-' Effects:
-' Inputs:
-' Returns:
-'-------------------------------------------------------------------------------
 Private Function mpreCreate _
 ( _
 ) As PowerPoint.Presentation
@@ -379,7 +342,7 @@ Private Function mpreCreate _
     Dim sswActive As PowerPoint.SlideShowWindow
     Dim lngIndex As Long
     
-    Set prePresentation = Application.Presentations.Add(Office.msoTrue)
+    Set prePresentation = mudtApplication.Doppelganger.Presentations.Add
     
     With prePresentation
         With .PageSetup

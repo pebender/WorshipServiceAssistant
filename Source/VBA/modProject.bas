@@ -61,7 +61,7 @@ Option Base 0
 '===============================================================================
 Public Const GstrName As String = "WorshipServiceAssistant"
 Public Const GstrNamePretty As String = "Worship Service Assistant"
-Public Const GstrVersion As String = "1.04.0000"
+Public Const GstrVersion As String = "1.04.0001"
 Public Const GstrAuthor As String = "Paul Bender"
 Public Const GstrCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
 Public Const GstrHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
@@ -78,7 +78,7 @@ Public gblnLoaded As Boolean
 ' This variable contains the list of categories in the 'Set Category' menu.
 Public gastrCategories() As String
 
-Public glngSlideShowWindowDisplay As Long
+Public glngSlideShowWindowMonitor As Long
 Public glngSlideShowWindowSize As Long
 
 
@@ -109,7 +109,7 @@ Public Sub gLoad _
 ( _
 )
     modProject.gblnLoaded = True
-    modProject.glngSlideShowWindowDisplay = 0
+    modProject.glngSlideShowWindowMonitor = 0
     modProject.glngSlideShowWindowSize = 0
     
     modToolbar.gLoad

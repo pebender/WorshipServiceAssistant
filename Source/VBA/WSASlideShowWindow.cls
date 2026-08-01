@@ -73,6 +73,7 @@ Option Base 0
 '===============================================================================
 ' Private Constants.
 '===============================================================================
+Private Const mlngPpControlIdSlideShowSetUpShow As Long = 2744
 
 
 '===============================================================================
@@ -187,7 +188,7 @@ End Property
 '-------------------------------------------------------------------------------
 Public Property Let Visible _
 ( _
-    ByRef blnValue As Boolean _
+    ByRef blnVisible As Boolean _
 )
     ' Abort if no active slide show exists.
     If (Me.Exists = False) Then
@@ -195,7 +196,7 @@ Public Property Let Visible _
     End If
     
     With mudtPresentation.Doppelganger.SlideShowWindow.View
-        If (blnValue = True) Then
+        If (blnVisible = True) Then
             .State = PowerPoint.ppSlideShowRunning
             .State = PowerPoint.ppSlideShowPaused
             .PointerType = PowerPoint.ppSlideShowPointerArrow
@@ -480,11 +481,11 @@ Private Sub mConfigurationInitialize _
     '   the ENTER key.
     If (mudtPresentation.Doppelganger.Windows.Count >= 1) Then
         mudtPresentation.Doppelganger.Windows(1).Activate
-        Application.CommandBars.FindControl(Id:=2744).Execute
+        mudtApplication.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdSlideShowSetUpShow).Execute
         VBA.SendKeys "%o", True
-        If (modProject.glngSlideShowWindowDisplay > 0) Then
+        If (mudtApplication.SlideShowWindowMonitor >= 1) Then
             VBA.SendKeys "{PGUP}", True
-            For lngIndex = 1 To mudtApplication.SlideShowWindowDisplay Step 1
+            For lngIndex = 1 To mudtApplication.SlideShowWindowMonitor Step 1
                 VBA.SendKeys "{DOWN}", True
             Next
             VBA.SendKeys "{ENTER}", True
@@ -508,7 +509,7 @@ Private Sub mCreate _
 ( _
     lngSlideIndex As Long _
 )
-    Dim blnSaved As Boolean
+    Dim blnPresentationSaved As Boolean
     Dim lngHeight As Long
     Dim lngWidth As Long
     Dim lngIndex As Long
@@ -519,7 +520,7 @@ Private Sub mCreate _
             Exit Sub
         End If
     
-        blnSaved = .Saved
+        blnPresentationSaved = .Saved
         
         ' Unfortunately, there appears to be no way to start the slide show
         ' with a black screen.  However, the first slide will flash for a
@@ -541,7 +542,7 @@ Private Sub mCreate _
             
         mudtApplication.Banner.AdjustSlideShowWindow Me
         
-        .Saved = blnSaved
+        .Saved = blnPresentationSaved
     End With
 End Sub
 
