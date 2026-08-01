@@ -13,7 +13,7 @@ Attribute VB_Name = "ToolbarAction"
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2002 Paul Bender
+'   Copyright (c) 2002,2003 Paul Bender
 '
 '   All rights reserved.
 '
@@ -43,6 +43,8 @@ Attribute VB_Name = "ToolbarAction"
 '   of the copyright holder.
 '
 ' Change History:
+'   2.01.0000:
+'     (1) Add support for "Set Template" menu item in "Song Edit" menu.
 '   2.00.0000:
 '     (1) Reset change history.
 '===============================================================================
@@ -98,6 +100,17 @@ Public Sub SongEditSetCategoryButton _
     End If
     
     WorshipServiceAssistant.Application.Toolbar.Control_SongEditSetCategoryValue_Action
+End Sub
+
+Public Sub SongEditSetTemplate _
+( _
+)
+    If (WorshipServiceAssistant.Application Is Nothing) Then
+        WorshipServiceAssistant.Auto_Open
+        Exit Sub
+    End If
+    
+    WorshipServiceAssistant.Application.Toolbar.Control_SongEditSetTemplate_Action
 End Sub
 
 Public Sub SongEditSort _

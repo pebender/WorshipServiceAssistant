@@ -257,6 +257,10 @@
                      <param name="Local" value="HTML\WSA\Toolbar\SongEdit\Category.htm">
                    </OBJECT>
                <LI><OBJECT type="text/sitemap">
+                     <param name="Name" value="Set Template menu item">
+                     <param name="Local" value="HTML\WSA\Toolbar\SongEdit\Template.htm">
+                   </OBJECT>
+               <LI><OBJECT type="text/sitemap">
                      <param name="Name" value="Sort menu item">
                      <param name="Local" value="HTML\WSA\Toolbar\SongEdit\Sort.htm">
                    </OBJECT>

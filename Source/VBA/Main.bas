@@ -58,9 +58,9 @@ Option Base 0
 
 Public Const wsaApplicationName As String = "WorshipServiceAssistant"
 Public Const wsaApplicationNamePretty As String = "Worship Service Assistant"
-Public Const wsaApplicationVersion As String = "2.00.0000"
+Public Const wsaApplicationVersion As String = "2.01.0000"
 Public Const wsaApplicationAuthor As String = "Paul Bender"
-Public Const wsaApplicationCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
+Public Const wsaApplicationCopyright As String = "Copyright (c) 2000,2001,2002,2003 Paul Bender"
 Public Const wsaApplicationHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"
 Public Const wsaApplicationEmail As String = "mailto:pbender@alumni.ucsd.edu"
 

@@ -167,12 +167,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Hide/Show button">
             <param name="Name" value="Hide/Show button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Hide.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\SlideShow\Hide.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Hide/Show button">
             <param name="Name" value="Hide/Show button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\SlideShow\Hide.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Hide.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="History">
@@ -197,12 +197,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Load button">
             <param name="Name" value="Load button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Load.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\SlideShow\Load.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Load button">
             <param name="Name" value="Load button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\SlideShow\Load.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Load.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Mode button">
@@ -227,12 +227,12 @@
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Next button">
             <param name="Name" value="Next button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\PresentationSelection\Next.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerColor\Next.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Next button">
             <param name="Name" value="Next button">
-            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Banner\BannerColor\Next.htm">
+            <param name="Local" value="HTML\WSA\Toolbar\Navigator\Presentation\PresentationSelection\Next.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Next Effect button">
@@ -293,6 +293,11 @@
             <param name="Name" value="Set Category menu">
             <param name="Name" value="Set Category menu">
             <param name="Local" value="HTML\WSA\Toolbar\SongEdit\Category.htm">
+         </OBJECT>
+    <LI><OBJECT type="text/sitemap">
+            <param name="Name" value="Set Template menu item">
+            <param name="Name" value="Set Template menu item">
+            <param name="Local" value="HTML\WSA\Toolbar\SongEdit\Template.htm">
          </OBJECT>
     <LI><OBJECT type="text/sitemap">
             <param name="Name" value="Set Up the Equipment">

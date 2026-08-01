@@ -44,8 +44,9 @@ HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Load.htm
 HTML\WSA\Toolbar\Navigator\Banner\BannerShow\Hide.htm
 HTML\WSA\Toolbar\SongEdit.htm
 HTML\WSA\Toolbar\SongEdit\Category.htm
-HTML\WSA\Toolbar\SongEdit\Index.htm
+HTML\WSA\Toolbar\SongEdit\Template.htm
 HTML\WSA\Toolbar\SongEdit\Sort.htm
+HTML\WSA\Toolbar\SongEdit\Index.htm
 HTML\WSA\Toolbar\Debug.htm
 HTML\WSA\Toolbar\Debug\SSWMonitor.htm
 HTML\WSA\Toolbar\Debug\SSWSize.htm

@@ -17,7 +17,7 @@ Attribute VB_Exposed = False
 '   Paul Bender <pbender@alumni.ucsd.edu>
 '
 ' Copyright:
-'   Copyright (c) 2000,2001,2002 Paul Bender
+'   Copyright (c) 2000,2001,2002,2003 Paul Bender
 '
 '   All rights reserved.
 '
@@ -47,6 +47,8 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   2.01.0000:
+'     (1) Add support for "Set Template" menu item in "Song Edit" menu.
 '   2.00.0000:
 '     (1) Reset change history.
 '===============================================================================
@@ -84,6 +86,7 @@ Private mcmdModeDeveloper       As Office.CommandBarButton
 Private mcmdNavigator           As Office.CommandBarButton
 Private mmnuSongEdit            As Office.CommandBarPopup
 Private mmnuSongEditSetCategory As Office.CommandBarPopup
+Private mcmdSongEditSetTemplate As Office.CommandBarButton
 Private mcmdSongEditSort        As Office.CommandBarButton
 Private mcmdSongEditCreateIndex As Office.CommandBarButton
 Private mcboCategory            As Office.CommandBarComboBox
@@ -288,6 +291,37 @@ Public Sub Control_SongEditSetCategoryValue_Action _
     Set udtSlideSelection = mudtApplication.ActiveSlideSelection
     If (Not udtSlideSelection Is Nothing) Then
         udtSlideSelection.Category = CommandBars.ActionControl.Parameter
+    End If
+    
+    Toolbar_Update
+End Sub
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Public Sub Control_SongEditSetTemplate_Action _
+( _
+)
+    Dim udtPresentation As WorshipServiceAssistant.Presentation
+    
+    Set udtPresentation = mudtApplication.ActivePresentation
+    If (Not udtPresentation Is Nothing) Then
+        With Application.Doppelganger.FileDialog(Type:=msoFileDialogOpen)
+            .InitialFileName = CurDir()
+            .InitialView = msoFileDialogViewList
+            .AllowMultiSelect = False
+            If (.Show = -1) Then
+                With .SelectedItems
+                    If (.Count = 1) Then
+                        udtPresentation.Doppelganger.ApplyTemplate FileName:=.Item(1)
+                    End If
+                End With
+            End If
+        End With
     End If
     
     Toolbar_Update
@@ -671,6 +705,12 @@ Private Sub Control_SongEdit_Add _
             End If
         End With
         With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
+            .Caption = "Set Template"
+            .TooltipText = "Set Song File Template"
+            .OnAction = "ToolbarAction.SongEditSetTemplate"
+            .BeginGroup = False
+        End With
+        With .Controls.Add(Type:=Office.msoControlButton, Temporary:=True)
             .Caption = "Sort"
             .TooltipText = "Sort slides aphabetically"
             .OnAction = "ToolbarAction.SongEditSort"
@@ -685,6 +725,7 @@ Private Sub Control_SongEdit_Add _
     End With
     Set mmnuSongEdit = mtlb.Controls("Song Edit")
     Set mmnuSongEditSetCategory = mmnuSongEdit.Controls("Set Category")
+    Set mcmdSongEditSetTemplate = mmnuSongEdit.Controls("Set Template")
     Set mcmdSongEditSort = mmnuSongEdit.Controls("Sort")
     Set mcmdSongEditCreateIndex = mmnuSongEdit.Controls("Create Index")
 End Sub
@@ -956,6 +997,9 @@ Private Sub Control_SongEdit_Update _
         .Enabled = blnHasWindow And blnHasSlide
         With mmnuSongEditSetCategory
             .Enabled = blnHasWindow And blnHasSlideSelection
+        End With
+        With mcmdSongEditSetTemplate
+            .Enabled = blnHasWindow
         End With
         With mcmdSongEditSort
             .Enabled = blnHasWindow And blnHasSlide
