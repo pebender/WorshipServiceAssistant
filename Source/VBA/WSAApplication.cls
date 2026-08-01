@@ -47,6 +47,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0002:
+'     (1) Added code to set the slide show window monitor using
+'         by directly modifying the registry.
+'     (2) Added code to disable PowerPoint's show presenter view.
 '   1.04.0000:
 '     Initial revision.
 '===============================================================================
@@ -193,7 +197,13 @@ Public Sub Initialize _
     
     Set mappDoppelganger = appDoppelganger
     
-    mlngSlideShowWindowMonitor = modProject.glngSlideShowWindowMonitor
+    If ((modProject.glngSlideShowWindowMonitor >= 1) And _
+        (modProject.glngSlideShowWindowMonitor <= mlngMonitorCountGet)) Then
+        mlngSlideShowWindowMonitor = modProject.glngSlideShowWindowMonitor
+    Else
+        mlngSlideShowWindowMonitor = mlngMonitorCountGet
+    End If
+    
     mlngSlideShowWindowSize = modProject.glngSlideShowWindowSize
     
     mblnWindowWindowStateMax = False
@@ -414,12 +424,18 @@ Private Sub mConfigurationInitialize _
         .Width = lngWidth
     End With
     
+    ' Set the slide show window monitor.
+    mblnOptionSetSZ "DisplayMonitor", mstrMonitorNameGet(Me.SlideShowWindowMonitor)
+    
+    ' Hide presenter view.
+    mblnOptionSetDWORD "UseMonMgr", 0
+    
     ' Configure the PowerPoint options to the most appropiate values
     ' for Worship Service Assistant.
-    mblnOptionSet "SSRightMouse", 0
-    mblnOptionSet "SSMenuButton", 0
-    mblnOptionSet "SSEndOnBlankSlide", 0
-    mblnOptionSet "SaveAutoRecoveryInfo", 0
+    mblnOptionSetDWORDIndirect "SSRightMouse", 0
+    mblnOptionSetDWORDIndirect "SSMenuButton", 0
+    mblnOptionSetDWORDIndirect "SSEndOnBlankSlide", 0
+    mblnOptionSetDWORDIndirect "SaveAutoRecoveryInfo", 0
 
     ' Hide any floating, pop-up and other annoying command bars.
     With Me.Doppelganger.CommandBars
@@ -448,7 +464,7 @@ End Sub
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Function mblnOptionGet _
+Private Function mblnOptionGetDWORD _
 ( _
     ByRef strOptionName As String, _
     ByRef lngOptionValue As Long _
@@ -460,7 +476,7 @@ Private Function mblnOptionGet _
     Dim lngOptionBuffer As Long
     Dim lngOptionBufferSize As Long
     
-    mblnOptionGet = False
+    mblnOptionGetDWORD = False
     strOptionPath = _
         "Software\Microsoft\Office" & _
         "\" & Me.Doppelganger.VERSION & _
@@ -491,7 +507,7 @@ Private Function mblnOptionGet _
                      lngOptionBuffer, _
                      lngOptionBufferSize)
                 If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
-                    mblnOptionGet = True
+                    mblnOptionGetDWORD = True
                     lngOptionValue = lngOptionBuffer
                 End If
             End If
@@ -508,7 +524,100 @@ End Function
 ' Inputs:
 ' Returns:
 '-------------------------------------------------------------------------------
-Private Function mblnOptionSet _
+Private Function mblnOptionSetDWORD _
+( _
+    ByRef strOptionName As String, _
+    ByRef lngOptionValue As Long _
+)
+    Dim lngResult As Long
+    Dim lngKeyHandle As Long
+    Dim strOptionPath As String
+    
+    mblnOptionSetDWORD = False
+    
+    strOptionPath = _
+        "Software\Microsoft\Office" & _
+        "\" & PowerPoint.Application.VERSION & _
+        "\" & "PowerPoint" & _
+        "\" & "Options"
+    
+    lngResult = modWin32AdvAPI32.RegOpenKeyEx _
+        (modWin32AdvAPI32.HKEY_CURRENT_USER, _
+         strOptionPath, _
+         0, _
+         modWin32AdvAPI32.KEY_SET_VALUE, _
+         lngKeyHandle)
+    If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
+        lngResult = modWin32AdvAPI32.RegSetValueEx _
+            (lngKeyHandle, _
+             strOptionName, _
+             0&, _
+             modWin32AdvAPI32.REG_DWORD, _
+             lngOptionValue, _
+             4)
+        If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
+            mblnOptionSetDWORD = True
+        End If
+        lngResult = modWin32AdvAPI32.RegCloseKey _
+            (lngKeyHandle)
+    End If
+End Function
+
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mblnOptionSetSZ _
+( _
+    ByRef strOptionName As String, _
+    ByRef strOptionValue As String _
+) As Boolean
+    Dim lngResult As Long
+    Dim lngKeyHandle As Long
+    Dim strOptionPath As String
+    
+    mblnOptionSetSZ = False
+    
+    strOptionPath = _
+        "Software\Microsoft\Office" & _
+        "\" & PowerPoint.Application.VERSION & _
+        "\" & "PowerPoint" & _
+        "\" & "Options"
+    
+    lngResult = modWin32AdvAPI32.RegOpenKeyEx _
+        (modWin32AdvAPI32.HKEY_CURRENT_USER, _
+         strOptionPath, _
+         0, _
+         modWin32AdvAPI32.KEY_SET_VALUE, _
+         lngKeyHandle)
+    If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
+        lngResult = modWin32AdvAPI32.RegSetValueExSZ _
+            (lngKeyHandle, _
+             strOptionName, _
+             0&, _
+             modWin32AdvAPI32.REG_SZ, _
+             strOptionValue, _
+             Len(strOptionValue) + 1)
+        If (lngResult = modWin32AdvAPI32.ERROR_SUCCESS) Then
+            mblnOptionSetSZ = True
+        End If
+        lngResult = modWin32AdvAPI32.RegCloseKey _
+            (lngKeyHandle)
+    End If
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mblnOptionSetDWORDIndirect _
 ( _
     ByRef strOptionName As String, _
     ByRef lngOptionValue As Long _
@@ -526,7 +635,7 @@ Private Function mblnOptionSet _
     Dim lngOptionTab As Long
     Dim strOptionShortcutKey As String
     
-    mblnOptionSet = False
+    mblnOptionSetDWORDIndirect = False
     For lngOptionIndex = LBound(avntOptionList, 1) To UBound(avntOptionList, 1) Step 1
         If (avntOptionList(lngOptionIndex, 0) = strOptionName) Then
             Exit For
@@ -536,21 +645,21 @@ Private Function mblnOptionSet _
         lngOptionTab = avntOptionList(lngOptionIndex, 1)
         strOptionShortcutKey = avntOptionList(lngOptionIndex, 2)
         
-        blnResultValid = mblnOptionGet(strOptionName, lngResultValue)
+        blnResultValid = mblnOptionGetDWORD(strOptionName, lngResultValue)
         If (blnResultValid = False) Then
             mOptionDialogTabSet lngOptionTab
-            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "%" & strOptionShortcutKey, True
             VBA.SendKeys "{ENTER}", True
-            blnResultValid = mblnOptionGet(strOptionName, lngResultValue)
+            blnResultValid = mblnOptionGetDWORD(strOptionName, lngResultValue)
         End If
         If ((blnResultValid = True) And (lngResultValue <> lngOptionValue)) Then
             mOptionDialogTabSet lngOptionTab
-            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "%" & strOptionShortcutKey, True
             VBA.SendKeys "{ENTER}", True
         End If
-        mblnOptionSet = True
+        mblnOptionSetDWORDIndirect = True
     End If
 End Function
 
@@ -568,17 +677,105 @@ Private Sub mOptionDialogTabSet _
     Dim blnResult As Boolean
     Dim lngValue As Long
     
-    blnResult = mblnOptionGet("Options dialog current tab", lngValue)
+    blnResult = mblnOptionGetDWORD("Options dialog current tab", lngValue)
     If ((blnResult = True) And (lngValue <> lngIndex)) Then
         While ((blnResult = True) And (lngValue <> lngIndex))
-            Me.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdToolsOptions).Execute
+            Me.Doppelganger.CommandBars.FindControl(id:=mlngPpControlIdToolsOptions).Execute
             VBA.SendKeys "^{TAB}", True
             VBA.SendKeys "{ENTER}", True
-            blnResult = mblnOptionGet("Options dialog current tab", lngValue)
+            blnResult = mblnOptionGetDWORD("Options dialog current tab", lngValue)
         Wend
     End If
 End Sub
 
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mlngMonitorCountGet _
+( _
+) As Long
+    mlngMonitorCountGet = modWin32User32.GetSystemMetrics(modWin32User32.SM_CMONITORS)
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mstrMonitorNameGet _
+( _
+    ByRef lngMonitorNumber As Long _
+) As String
+    Dim udtDisplay As modWin32User32.DISPLAY_DEVICE
+    Dim udtMonitor As modWin32User32.DISPLAY_DEVICE
+    Dim lngDisplay As Long
+    Dim lngMonitor As Long
+    Dim strMonitorName As String
+    Dim lngMonitorIndex As Long
+    
+    udtDisplay.cb = Len(udtDisplay)
+    udtMonitor.cb = Len(udtMonitor)
+    
+    lngMonitorIndex = 0
+    
+    ' Loop through the displays.
+    lngDisplay = 0
+    Do While (EnumDisplayDevices(VBA.vbNullString, lngDisplay, udtDisplay, 0) <> 0)
+        ' Skip displays that are not attached to the desktop.
+        If ((udtDisplay.StateFlags And modWin32User32.DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) <> 0) Then
+            ' Skip displays that are not real.
+            If ((udtDisplay.StateFlags And modWin32User32.DISPLAY_DEVICE_MIRRORING_DRIVER) = 0) Then
+                ' Loop through monitors.
+                lngMonitor = 0
+                Do While (EnumDisplayDevices(udtDisplay.DeviceName, lngMonitor, udtMonitor, 0) <> 0)
+                    If ((udtMonitor.StateFlags And modWin32User32.DISPLAY_DEVICE_ACTIVE) <> 0) Then
+                        Exit Do
+                    End If
+                    lngMonitor = lngMonitor + 1
+                Loop
+                lngMonitorIndex = lngMonitorIndex + 1
+                
+                If (lngMonitorIndex = lngMonitorNumber) Then
+                    If (udtMonitor.DeviceName <> "") Then
+                        strMonitorName = mstrC2VBConvert(udtMonitor.DeviceName)
+                    Else
+                        strMonitorName = mstrC2VBConvert(udtDisplay.DeviceName)
+                    End If
+                End If
+            End If
+        End If
+        lngDisplay = lngDisplay + 1
+    Loop
+    mstrMonitorNameGet = strMonitorName
+End Function
+
+'-------------------------------------------------------------------------------
+' Purpose:
+' Assumptions:
+' Effects:
+' Inputs:
+' Returns:
+'-------------------------------------------------------------------------------
+Private Function mstrC2VBConvert(strC As String) As String
+    Dim lngIndex As Long
+    Dim strChar As String
+    Dim strVB As String
+    
+    For lngIndex = 1 To Len(strC) Step 1
+        strChar = Mid(strC, lngIndex, 1)
+        If ((strChar <> VBA.vbNullChar) And (strChar <> VBA.vbNullString)) Then
+            strVB = strVB & strChar
+        End If
+    Next
+    
+    mstrC2VBConvert = strVB
+End Function
 
 '===============================================================================
 ' Private Event Handlers.

@@ -61,7 +61,7 @@ Option Base 0
 '===============================================================================
 Public Const GstrName As String = "WorshipServiceAssistant"
 Public Const GstrNamePretty As String = "Worship Service Assistant"
-Public Const GstrVersion As String = "1.04.0001"
+Public Const GstrVersion As String = "1.04.0002"
 Public Const GstrAuthor As String = "Paul Bender"
 Public Const GstrCopyright As String = "Copyright (c) 2000,2001,2002 Paul Bender"
 Public Const GstrHomepage As String = "http://home.san.rr.com/benderfamily/software/wsa/"

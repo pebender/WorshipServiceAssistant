@@ -47,6 +47,10 @@ Attribute VB_Exposed = False
 '   of the copyright holder.
 '
 ' Change History:
+'   1.04.0002:
+'     (1) Removed code that set the slide show window monitor.
+'         Setting of the slide show window monitor is now being performed
+'         by WSAApplication.
 '   1.04.0000:
 '     Initial revision.
 '===============================================================================
@@ -468,32 +472,6 @@ Private Sub mConfigurationInitialize _
             .ShowWithNarration = Office.msoTrue
         End If
     End With
-    ' Hack to workaround the fact that Slide Show display monitor is
-    ' not part of the PowerPoint 9.0 object hierarchy.
-    ' First, the presentation is activiated.
-    ' Second, the "Set Up Show" dialog box is activated using
-    '   its command bar control identifier.
-    ' Third, the "Show On" dropdown is selected using
-    '   its keyboard shortcut.
-    ' Fourth, the desired monitor is selected using keyboard
-    '   shortcuts.
-    ' Fifth, the "Set Up Show" dialog box is closed using
-    '   the ENTER key.
-    If (mudtPresentation.Doppelganger.Windows.Count >= 1) Then
-        mudtPresentation.Doppelganger.Windows(1).Activate
-        mudtApplication.Doppelganger.CommandBars.FindControl(Id:=mlngPpControlIdSlideShowSetUpShow).Execute
-        VBA.SendKeys "%o", True
-        If (mudtApplication.SlideShowWindowMonitor >= 1) Then
-            VBA.SendKeys "{PGUP}", True
-            For lngIndex = 1 To mudtApplication.SlideShowWindowMonitor Step 1
-                VBA.SendKeys "{DOWN}", True
-            Next
-            VBA.SendKeys "{ENTER}", True
-        Else
-            VBA.SendKeys "{PGDN}", True
-        End If
-        VBA.SendKeys "{ENTER}", True
-    End If
     
     mudtPresentation.Doppelganger.Saved = blnPresentationSaved
 End Sub

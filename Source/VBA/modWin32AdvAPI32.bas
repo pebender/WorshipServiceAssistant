@@ -175,3 +175,12 @@ Public Declare Function RegSetValueEx Lib "advapi32.dll" Alias "RegSetValueExA" 
         ByRef lpData As Any, _
         ByVal cbData As Long _
     ) As Long
+Public Declare Function RegSetValueExSZ Lib "advapi32.dll" Alias "RegSetValueExA" _
+    ( _
+        ByVal HKey As Long, _
+        ByVal lpValueName As String, _
+        ByVal Reserved As Long, _
+        ByVal dwType As Long, _
+        ByVal lpData As String, _
+        ByVal cbData As Long _
+    ) As Long
